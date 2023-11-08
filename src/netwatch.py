@@ -101,11 +101,82 @@ class Netwatch:
        ██║╚██╗██║██╔══╝     ██║   ██║███╗██║██╔══██║   ██║   ██║     ██╔══██║
        ██║ ╚████║███████╗   ██║   ╚███╔███╔╝██║  ██║   ██║   ╚██████╗██║  ██║
        ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
-===================================================================================W
+===================================================================================
+    v2.0.0                                     Noah Sickels (@NCSickels)     
+===================================================================================\n
 '''
 
     def __init__(self):
-        pass
+        # self.createFolders()
+        choice = input(netwatchPrompt)
+        Utilities.commandHistoryUpdate(choice)
+        match choice:
+            case "1":
+                print(InformationGathering.menuLogo)
+                InformationGathering()
+            case "?" | "help":
+                pass
+            case "update":
+                pass
+            case "\r" | "\n" | "" | " " | "back":
+                pass
+            case "history":
+                pass
+            case "history -c" | "history --clear":
+                pass
+            case "clear" | "cls":
+                pass
+            case "path" | "pwd":
+                pass
+            case "exit" | "quit" | "end":
+                pass
+            case _:
+                self.__init__()
+                print(
+                    f'{Color.RED}[-]{Color.END} Unknown input: {choice}. Type "?" for help.')
+                Netwatch()
+
+
+class InformationGathering:
+    menuLogo = '''
+===================================================================================
+                            88 88b 88 888888  dP"Yb
+                            88 88Yb88 88__   dP   Yb
+                            88 88 Y88 88""   Yb   dP
+                            88 88  Y8 88      YbodP
+===================================================================================
+    '''
+
+    def __init__(self):
+        choiceInfo = input(netwatchPrompt)
+        match choiceInfo:
+            case "1":
+                pass  # Nmap
+            case "2":
+                pass  # Port Scanner
+            case "3":
+                pass  # Host2IP
+            case "?" | "help":
+                pass
+            case "clear" | "cls":
+                pass
+            case "clean":
+                pass
+            case "path" | "pwd":
+                pass
+            case "exit" | "quit" | "end":
+                pass
+            case "back":
+                Netwatch()
+            case _:
+                print(
+                    f'{Color.RED}[-]{Color.END} Unknown input: {choiceInfo}. Type "?" for help.')
+                self.__init__()
+        self.completed()
+
+    def completed(self) -> None:
+        input("\nClick [return] to continue...")
+        self.__init__()
 
 
 if __name__ == "__main__":
