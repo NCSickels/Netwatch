@@ -17,6 +17,7 @@ import sys
 import os
 import configparser
 import time
+import json
 
 
 # Common Functions
@@ -68,6 +69,48 @@ class Utilities:
         time.sleep(0.25)
         sys.exit()
 
+    def clean(path: str) -> None:
+        print(
+            f'\n{Color.WARNING}[!] Cleaning {path} directory...{Color.END}\n')
+        if os.path.exists(path):
+            if os.path.exists(path):
+                for root, dirs, files in os.walk(path, topdown=False):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        try:
+                            os.remove(file_path)
+                            print(f'\t - Deleting {file_path} file...')
+                        except Exception as e:
+                            print(e)
+                    for dir in dirs:
+                        dir_path = os.path.join(root, dir)
+                        try:
+                            os.rmdir(dir_path)
+                            print(f'\t - Deleting {dir_path} directory...')
+                        except Exception as e:
+                            print(e)
+                os.rmdir(path)
+                print(
+                    f'\n{Color.OKGREEN}[✔] {path} directory successfully cleaned.{Color.END}\n')
+            else:
+                raise FileNotFoundError(
+                    f'{Color.RED}{path} directory not found!{Color.END}\n')
+        else:
+            raise FileNotFoundError(
+                f'{Color.RED}Path {path} does not exist!{Color.END}\n')
+
+    def printPath(module: str) -> None:
+        split_module = module.split("/")
+        if (len(split_module) <= 1):    # if module is in root directory (Fsoceity/)
+            print(
+                f'\n{Color.OKBLUE}[*]{Color.END} Module: {split_module[0]}\n{Color.OKBLUE}[*]{Color.END} Path: {module+"/"}\n')
+        else:
+            print(
+                f'\n{Color.OKBLUE}[*]{Color.END} Module -> {split_module[len(split_module)-1]}\n{Color.OKBLUE}[*]{Color.END} Path   -> {module+"/"}\n')
+
+    def readJson(file_path: str) -> None:
+        with open(file_path, 'r') as json_file:
+            json_data = json.load(json_file)
 
 # Start Menu Classes
 
@@ -116,25 +159,51 @@ class Netwatch:
                 InformationGathering()
             case "?" | "help":
                 pass
+                # Utilities.helpMenu()
+                # self.__init__()
             case "update":
                 pass
+                # self.update()
             case "\r" | "\n" | "" | " " | "back":
-                pass
-            case "history":
-                pass
-            case "history -c" | "history --clear":
-                pass
-            case "clear" | "cls":
-                pass
-            case "path" | "pwd":
-                pass
-            case "exit" | "quit" | "end":
-                pass
-            case _:
                 self.__init__()
+            case "history":
+                Utilities.commandHistoryPrint()
+                self.__init__()
+            case "history -c" | "history --clear":
+                Utilities.CommandHistoryClear()
+                self.__init__()
+            case "clear" | "cls":
+                Utilities.clearScr()
+                self.__init__()
+            case "clean":
+                Utilities.clean(logDir)
+                Utilities.clean(toolDir)
+                self.__init__()
+            case "path" | "pwd":
+                Utilities.printPath("Netwatch")
+                self.__init__()
+            case "exit" | "quit" | "end":
+                Utilities.endProgram()
+            case _:
                 print(
                     f'{Color.RED}[-]{Color.END} Unknown input: {choice}. Type "?" for help.')
-                Netwatch()
+                self.__init__()
+        self.completed()
+
+    def createFolders(self) -> None:
+        if not os.path.isdir(toolDir):
+            os.makedirs(toolDir)
+        if not os.path.isdir(logDir):
+            os.makedirs(logDir)
+
+    def completed(self) -> None:
+        input("\nClick [return] to continue...")
+        self.__init__()
+
+    def update(self) -> None:
+        os.system("git clone --depth=1 https://github.com/NCSickels/netwatch.git")
+        os.system("cd netwatch && chmod +x update.sh && ./update.sh")
+        os.system("netwatch")
 
 
 class InformationGathering:
