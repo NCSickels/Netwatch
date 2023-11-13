@@ -1,0 +1,138 @@
+{
+    "Main": [
+        {
+            "header": [
+                {
+                    "show_header": true,
+                    "header_style": "bold white",
+                    "title": "Netwatch Help Menu",
+                    "width": 84,
+                    "show_lines": true
+                }
+            ],
+            "columns": [
+                {
+                    "title": "Option",
+                    "justify": "center",
+                    "style": "bright_cyan",
+                    "width": 7
+                },
+                {
+                    "title": "Modules",
+                    "justify": "right",
+                    "style": "magenta"
+                },
+                {
+                    "title": "Description",
+                    "justify": "right",
+                    "style": "bright_black",
+                    "width": 40
+                }
+            ],
+            "rows": [
+                {
+                    "option": "1",
+                    "modules": "Information Gathering",
+                    "description": "Contains modules that gather information about a target (e.g. nmap, Doork, Crips, etc.)"
+                },
+                {
+                    "option": "2",
+                    "modules": "Password Attacks",
+                    "description": "Contains modules that attack passwords (e.g. cupp, brutex, etc.)"
+                },
+                {
+                    "option": "3",
+                    "modules": "Wireless Testing",
+                    "description": "Contains modules that test wireless networks (e.g. reaver, pixiewps, BHGF, etc.)"
+                },
+                {
+                    "option": "4",
+                    "modules": "Exploitation Tools",
+                    "description": "Contains modules that exploit vulnerabilities (e.g. ATSCAN, sqlmap, Shellnoob, commix etc.)"
+                },
+                {
+                    "option": "5",
+                    "modules": "Sniffing & Spoofing",
+                    "description": "Contains modules that sniff and spoof (e.g. SEToolkit, SSLtrip, pyPHISHER, etc.)"
+                },
+                {
+                    "option": "6",
+                    "modules": "Web Hacking",
+                    "description": "Contains modules that hack websites (e.g. Drupal, Inurlbr, WordPress/Joomla Scanner, etc.)"
+                },
+                {
+                    "option": "7",
+                    "modules": "Private Web Hacking",
+                    "description": "Contains modules that hack private websites (e.g. Get all websites, Get joomla websites, Get wordpress websites, etc.)"
+                },
+                {
+                    "option": "8",
+                    "modules": "Post Exploitation",
+                    "description": "Contains modules that are used for post exploitation (e.g. linux-exploit-suggester, windows-exploit-suggester, etc.)"
+                },
+                {
+                    "option": "9",
+                    "modules": "Miscellaneous",
+                    "description": "Contains modules that don't fit in the other categories (e.g. proxychains, hping3, etc.)"
+                }
+            ]
+        }
+    ],
+    "Core": [
+        {
+            "header": [
+                {
+                    "show_header": true,
+                    "header_style": "bold white",
+                    "title": "Netwatch Core Commands (Global)",
+                    "width": 84,
+                    "show_lines": true
+                }
+            ],
+            "columns": [
+                {
+                    "title": "Command",
+                    "justify": "center",
+                    "style": "bright_cyan",
+                    "width": 8
+                },
+                {
+                    "title": "Description",
+                    "justify": "right",
+                    "style": "bright_black",
+                    "width": 50
+                }
+            ],
+            "rows": [
+                {
+                    "command": "help",
+                    "description": "Displays this help menu"
+                },
+                {
+                    "command": "update",
+                    "description": "Updates Netwatch repository to the latest version"
+                },
+                {
+                    "command": "clear",
+                    "description": "Clears the terminal screen"
+                },
+                {
+                    "command": "exit",
+                    "description": "Exits Netwatch (alias of quit and q)"
+                },
+                {
+                    "command": "clean",
+                    "description": "Cleans up log files and temporary files generated from modules"
+                },
+                {
+                    "command": "back",
+                    "description": "Exits to the previous context menu"
+                },
+                {
+                    "command": "path",
+                    "description": "Prints the current working module path"
+                }
+            ]
+        }
+    ]
+}
