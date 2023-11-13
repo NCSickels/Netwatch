@@ -17,6 +17,7 @@ import sys
 import os
 import configparser
 import time
+# from time import gmtime, strftime, sleep
 import json
 from rich.console import Console
 from rich.table import Table
@@ -67,11 +68,18 @@ class Utilities:
         Utilities.command_history.clear()
         print(f'\n{Color.OKGREEN}[✔] Command history cleared.{Color.END}\n')
 
+    def commandHistorySave() -> None:
+        i = 0
+        with open(logDir + "/command_history-" + time.strftime("%Y-%m-%d_%H:%M:%S", time.gmtime()), 'a') as history_log:
+            for command in Utilities.command_history:
+                history_log.write(f"{i}: {command}\n")
+
     def endProgram() -> None:
         print("Finishing up...\n")
         with open(configFile, 'w') as configfile:
             config.write(configfile)
         # TODO: Add terminal output save to log file here
+        Utilities.commandHistorySave()
         time.sleep(0.25)
         sys.exit()
 
@@ -295,7 +303,7 @@ if __name__ == "__main__":
         config.read(configFile)
         toolDir = installDir + config.get('netwatch', 'toolDir')
         logDir = installDir + config.get('netwatch', 'logDir')
-        # yes = config.get('netwatch', 'yes').split()
+        storeHistory = config.get('netwatch', 'storeHistory')
 
         file_path = installDir + "/mainHelpMenuData.json"
         # if not os.path.exists(file_path):
