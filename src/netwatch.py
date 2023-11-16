@@ -108,9 +108,6 @@ class Program:
 
     def end(self) -> None:  # command_history: CommandHistory
         print("Finishing up...\n")
-        # with open(self.configFile, 'w') as configfile:
-        #    self.config.write(configfile)
-        # command_history.save()
         sleep(0.25)
         sys.exit()
 
@@ -156,7 +153,7 @@ class Program:
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def command(self, command: str) -> None:
+    def command(self, command: str, module=None) -> None:
         match command:
             case "update":
                 # TODO: Add command history updates to each of these cases
@@ -170,11 +167,12 @@ class Program:
                 self.clean(self.configManager.getPath("netwatch", "toolDir"))
                 self.clean(self.configManager.getPath("netwatch", "logDir"))
             case "help" | "?":
-                self.tableCreator.displayTableFromFile()
+                self.tableCreator.displayTableFromFile(module)
 
 
 class TableCreator:
     def __init__(self, configManager):
+        self.configManager = configManager
         self.console = Console()
         self.jsonFile = os.path.dirname(os.path.abspath(
             __file__)) + '/' + configManager.get('netwatch', 'mainMenuDataPath')
@@ -215,9 +213,14 @@ class TableCreator:
             self.console.print(table)
             print("\n")
 
-    def displayTableFromFile(self) -> None:
-        jsonData = self.readJson(self.jsonFile)
-        self.displayTable(jsonData)
+    def displayTableFromFile(self, module: str) -> None:
+        if module == "Netwatch":
+            jsonData = self.readJson(self.jsonFile)
+            self.displayTable(jsonData)
+        elif module == "Nmap":
+            jsonData = self.readJson(os.path.dirname(os.path.abspath(
+                __file__)) + '/' + self.configManager.get('nmap', 'nmapMenuDataPath'))
+            self.displayTable(jsonData)
 
 
 # Start Menu Classes
@@ -279,12 +282,12 @@ class Netwatch:
                 print(InformationGathering.menuLogo)
                 InformationGathering()
             case "?" | "help":
-                self.program.command(choice)
+                self.program.command(choice, "Netwatch")
                 # self.commandHistory.update(choice)
                 # self.tableCreator.displayTableFromFile()
                 self.__init__()
             case "update":
-                self.program.command(choice)
+                self.program.command(choice, "Netwatch")
                 # self.__init__()
                 # self.update()
                 self.__init__()
@@ -297,11 +300,11 @@ class Netwatch:
                 # self.commandHistory.clear()
                 self.__init__()
             case "clear" | "cls":
-                self.program.command(choice)
+                self.program.command(choice, "Netwatch")
                 # self.program.clearScr()
                 self.__init__()
             case "clean":
-                self.program.command(choice)
+                self.program.command(choice, "Netwatch")
                 # self.program.clean(self.toolDir)
                 # self.program.clean(self.logDir)
                 self.__init__()
@@ -321,24 +324,21 @@ class Netwatch:
         input("\nClick [return] to continue...")
         self.__init__()
 
-    # # TODO: Check me!
-    # def update(self) -> None:
-    #     os.system("git clone --depth=1 https://github.com/NCSickels/netwatch.git")
-    #     os.system("cd netwatch && chmod +x update.sh && ./update.sh")
-    #     os.system("netwatch")
-
 
 class InformationGathering:
     menuLogo = '''
 ===================================================================================
-                            88 88b 88 888888  dP"Yb
-                            88 88Yb88 88__   dP   Yb
-                            88 88 Y88 88""   Yb   dP
-                            88 88  Y8 88      YbodP
+                        ██╗███╗   ██╗███████╗ ██████╗ 
+                        ██║████╗  ██║██╔════╝██╔═══██╗
+                        ██║██╔██╗ ██║█████╗  ██║   ██║
+                        ██║██║╚██╗██║██╔══╝  ██║   ██║
+                        ██║██║ ╚████║██║     ╚██████╔╝
+                        ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝ 
 ===================================================================================
     '''
 
     def __init__(self):
+        self.program = Program()
         self.configManager = ConfigManager()
         self.netwatchPrompt = self.configManager.get(
             'netwatch', 'prompt') + ' '
@@ -359,16 +359,21 @@ class InformationGathering:
                 print(Host2IP.host2ipLogo)
                 Host2IP()
             case "?" | "help":
-                pass
+                self.program.command(choiceInfo, "Info")
             case "clear" | "cls":
-                pass
+                self.program.command(choiceInfo, "Info")
+                self.__init__()
             case "clean":
-                pass
+                self.program.command(choiceInfo, "Info")
+                self.__init__()
             case "path" | "pwd":
-                pass
+                self.program.printPath("Netwatch/Information_Gathering")
+                self.__init__()
             case "exit" | "quit" | "end":
-                pass
+                self.program.end()
             case "back":
+                print((f'\nReturning to {Color.OKBLUE}Netwatch'
+                       f'{Color.END} menu...\n'))
                 Netwatch()
             case _:
                 print(
@@ -384,10 +389,12 @@ class InformationGathering:
 class Nmap:
     nmapLogo = '''
 ===================================================================================
-                            88b 88 8b    d8    db    88""Yb
-                            88Yb88 88b  d88   dPYb   88__dP
-                            88 Y88 88YbdP88  dP__Yb  88"""
-                            88  Y8 88 YY 88 dP""""Yb 88
+                        ███╗   ██╗███╗   ███╗ █████╗ ██████╗ 
+                        ████╗  ██║████╗ ████║██╔══██╗██╔══██╗
+                        ██╔██╗ ██║██╔████╔██║███████║██████╔╝
+                        ██║╚██╗██║██║╚██╔╝██║██╔══██║██╔═══╝ 
+                        ██║ ╚████║██║ ╚═╝ ██║██║  ██║██║     
+                        ╚═╝  ╚═══╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝                                          
 ===================================================================================
 '''
 
@@ -398,7 +405,8 @@ class Nmap:
             'netwatch', 'prompt') + ' '
         self.nmapDir = self.configManager.getPath('nmap', 'nmapdir')
         self.gitRepo = self.configManager.get('nmap', 'gitrepository')
-        # self.log = self.configManager.getPath('nmap', 'logPath')
+        self.jsonFile = os.path.dirname(os.path.abspath(
+            __file__)) + '/' + self.configManager.get('nmap', 'nmapMenuDataPath')
         self.targetPrompt = "Enter target IP: "
         self.logFileNamePrompt = "Enter log file name: "
 
@@ -429,7 +437,6 @@ class Nmap:
             logName = input(self.logFileNamePrompt)
             logPath = "nmap-" + logName + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-            # logPath = self.nmapDir + input(self.logFileNamePrompt)
             if os.path.isfile(logPath):
                 print(
                     f'\n{Color.WARNING}[!] Log file already exists!{Color.END}\n')
@@ -445,7 +452,6 @@ class Nmap:
             InformationGathering()
 
     def menu(self, target: int, logPath: str) -> None:
-        self.program.clearScr()
         print(self.nmapLogo)
         print(f'\n{Color.OKBLUE}[*]{Color.END} Target(s) -> {target}')
         print(f'{Color.OKBLUE}[*]{Color.END} Log Path  -> {logPath}\n')
@@ -464,7 +470,6 @@ class Nmap:
                         print((f'\nReturning to {Color.OKBLUE}Netwatch'
                               f'{Color.END} menu...\n'))
                         Netwatch()
-                        # InformationGathering()
                 case "intense scan" | "intense" | "intensescan":
                     os.system(f'\nnmap -T4 -A -v -oN {logPath} {target}')  # \n
                     print((f'\n{Color.OKGREEN}[✔] Scan completed, log saved to:'
@@ -477,23 +482,18 @@ class Nmap:
                         print((f'\nReturning to {Color.OKBLUE}Netwatch'
                               f'{Color.END} menu...\n'))
                         Netwatch()
-                        # InformationGathering()
                 case "?" | "help":
-                    self.program.command(choiceNmap)
-                    # self.commandHistory.update(choiceNmap)
-                    # self.tableCreator.displayTableFromFile()
-                    self.menu(target, logPath)
+                    self.program.command(choiceNmap, "Nmap")
                 case "clear" | "cls":
-                    self.program.command(choiceNmap)
-                    # self.program.clearScr()
+                    self.program.command(choiceNmap, "Nmap")
                     self.menu(target, logPath)
                 case "clean":
-                    self.program.command(choiceNmap)
-                    # self.program.clean(self.nmapDir)
+                    self.program.command(choiceNmap, "Nmap")
                     self.menu(target, logPath)
                 case "path" | "pwd":
                     self.program.printPath(
                         "Netwatch/Information_Gathering/Nmap")
+                    self.menu(target, logPath)
                 case "exit" | "quit" | "end":
                     self.program.end()
                 case "back":
@@ -507,12 +507,15 @@ class Nmap:
 class PortScanner:
     portScannerLogo = '''\n
 ===================================================================================
-        d8888b.  .d88b.  d8888b. d888888b .d8888.  .o88b.  .d8b.  d8b   db 
-        88  `8D .8P  Y8. 88  `8D `~~88~~' 88'  YP d8P  Y8 d8' `8b 888o  88 
-        88oodD' 88    88 88oobY'    88    `8bo.   8P      88ooo88 88V8o 88 
-        88~~~   88    88 88`8b      88      `Y8b. 8b      88~~~88 88 V8o88 
-        88      `8b  d8' 88 `88.    88    db   8D Y8b  d8 88   88 88  V888 
-        88       `Y88P'  88   YD    YP    `8888Y'  `Y88P' YP   YP VP   V8P 
+
+      ██████╗  ██████╗ ██████╗ ████████╗    ███████╗ ██████╗ █████╗ ███╗   ██╗
+      ██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝    ██╔════╝██╔════╝██╔══██╗████╗  ██║
+      ██████╔╝██║   ██║██████╔╝   ██║       ███████╗██║     ███████║██╔██╗ ██║
+      ██╔═══╝ ██║   ██║██╔══██╗   ██║       ╚════██║██║     ██╔══██║██║╚██╗██║
+      ██║     ╚██████╔╝██║  ██║   ██║       ███████║╚██████╗██║  ██║██║ ╚████║
+      ╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
+                                                                        
+
 ===================================================================================
     '''
 
@@ -522,29 +525,77 @@ class PortScanner:
         self.logNamePrompt = "Enter log file name: "
 
     def run(self) -> None:
-        target = input(self.targetPrompt)
-        port = input(self.portPrompt)
-        logName = input(self.logNamePrompt)
-        logPath = "portScan-" + logName + "-" + \
-            strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
+        try:
+            target = input(self.targetPrompt)
+            port = input(self.portPrompt)
+            logName = input(self.logNamePrompt)
+            logPath = "portScan-" + logName + "-" + \
+                strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
+
+            ipList = [ipAddr.strip() for ipAddr in self.target.split(',')]
+            portList = [port.strip() for port in self.port.split(',')]
+
+            print(f'\n{Color.OKBLUE}[*]{Color.END} Target(s) -> ', end='')
+            for ip in self.ipList:
+                print(f'{ip}, ', end='')
+            print('\n')
+            print(f'{Color.OKBLUE}[*]{Color.END} Port(s)   -> ', end='')
+            for port in self.portList:
+                print(f'{port}, ', end='')
+            print('\n')
+            print(
+                f'{Color.OKBLUE}[*]{Color.END} Log Path  -> {self.logPath}\n')
+            self.scan()
+        except KeyboardInterrupt:
+            print("\n")
+            InformationGathering()
 
     def scan(self) -> None:
-        pass
+        try:
+            for ipAddr in self.ipList:
+                for port in self.portList:
+                    try:
+                        sock = socket.socket(
+                            socket.AF_INET, socket.SOCK_STREAM)
+                        socket.setdefaulttimeout(1)
+                        result = sock.connect_ex((ipAddr, port))
+                        if result == 0:
+                            print(
+                                f'{Color.OKGREEN}[✔]{Color.END} Discovered open port {port} on {ipAddr}')
+                        else:
+                            pass
+                            # print(
+                            #     f'{color.RED}[-]{color.END} Port {port} is closed')
+                        sock.close()
+                    except KeyboardInterrupt:
+                        print(f'{Color.RED}[-]{Color.END} Exiting program.')
+                        sys.exit()
+                    except socket.gaierror:
+                        print(
+                            f'{Color.RED}[-]{Color.END} Hostname could not be resolved.')
+                        sys.exit()
+                    except socket.error:
+                        print(
+                            f'{Color.RED}[-]{Color.END} Could not connect to server.')
+                        sys.exit()
+        except KeyboardInterrupt:
+            print("\n")
+            InformationGathering()
 
 
 class Host2IP:
-
     host2ipLogo = '''\n
 ===================================================================================
-                    88  88  dP"Yb  .dP"Y8 888888 oP"Yb. 88 88""Yb
-                    88  88 dP   Yb `Ybo."   88   "' dP' 88 88__dP
-                    888888 Yb   dP o.`Y8b   88     dP'  88 88"""
-                    88  88  YbodP  8bodP'   88   .d8888 88 88
+              ██╗  ██╗ ██████╗ ███████╗████████╗██████╗ ██╗██████╗ 
+              ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝╚════██╗██║██╔══██╗
+              ███████║██║   ██║███████╗   ██║    █████╔╝██║██████╔╝
+              ██╔══██║██║   ██║╚════██║   ██║   ██╔═══╝ ██║██╔═══╝ 
+              ██║  ██║╚██████╔╝███████║   ██║   ███████╗██║██║     
+              ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚══════╝╚═╝╚═╝     
 ===================================================================================    
     '''
 
     def __init__(self):
-        # utilities.clearScr()
         host = input("Enter a Host: ")
         ip = socket.gethostbyname(host)
         input(f'{host} has the IP of {ip}')
@@ -557,7 +608,9 @@ def main():
         commandHistory = CommandHistory()
         Netwatch()
     except KeyboardInterrupt:
-        Program.end()
+        print("Finishing up...\n")
+        sleep(0.25)
+        sys.exit()
 
 
 if __name__ == "__main__":
