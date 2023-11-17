@@ -107,7 +107,7 @@ class Program:
             os.makedirs(self.configManager.getPath("netwatch", "logDir"))
 
     def end(self) -> None:  # command_history: CommandHistory
-        print("Finishing up...\n")
+        print("\n\nFinishing up...\n")
         sleep(0.25)
         sys.exit()
 
@@ -311,11 +311,11 @@ class Netwatch:
                 # self.commandHistory.clear()
                 self.__init__()
             case "clear" | "cls":
-                self.program.command(choice, "Netwatch")
+                self.program.command(choice)
                 # self.program.clearScr()
                 self.__init__()
             case "clean":
-                self.program.command(choice, "Netwatch")
+                self.program.command(choice)
                 # self.program.clean(self.toolDir)
                 # self.program.clean(self.logDir)
                 self.__init__()
@@ -371,11 +371,12 @@ class InformationGathering:
                 Host2IP()
             case "?" | "help":
                 self.program.command(choiceInfo, "Info")
+                self.__init__()
             case "clear" | "cls":
-                self.program.command(choiceInfo, "Info")
+                self.program.command(choiceInfo)
                 self.__init__()
             case "clean":
-                self.program.command(choiceInfo, "Info")
+                self.program.command(choiceInfo)
                 self.__init__()
             case "path" | "pwd":
                 self.program.printPath("Netwatch/Information_Gathering")
@@ -493,8 +494,22 @@ class Nmap:
                         print((f'\nReturning to {Color.OKBLUE}Netwatch'
                               f'{Color.END} menu...\n'))
                         Netwatch()
+                case _ if choiceNmap.startswith("set "):
+                    _, param, value = choiceNmap.split(" ", 2)
+                    if param == "target":
+                        target = value
+                        self.menu(target, logPath)
+                    elif param == "log":
+                        logName, _, logPath = value.partition(" ")
+                        if not logPath:
+                            logPath = "nmap-" + logName + "-" + \
+                                strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
+                        logPath = "nmap-" + logName + "-" + \
+                            strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
+                        self.menu(target, logPath)
                 case "?" | "help":
                     self.program.command(choiceNmap, "Nmap")
+                    self.menu(target, logPath)
                 case "clear" | "cls":
                     self.program.command(choiceNmap, "Nmap")
                     self.menu(target, logPath)
@@ -508,10 +523,13 @@ class Nmap:
                 case "exit" | "quit" | "end":
                     self.program.end()
                 case "back":
+                    print((f'\nReturning to {Color.OKBLUE}Information Gathering'
+                           f'{Color.END} menu...\n'))
                     InformationGathering()
                 case _:
                     self.menu(target, logPath)
         except KeyboardInterrupt:
+            print("\n")
             InformationGathering()
 
 
