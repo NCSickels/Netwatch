@@ -112,6 +112,7 @@ class Program:
         sys.exit()
 
     def clean(self, path: str) -> None:
+        # TODO: Update with new file check method
         print(
             f'\n{Color.WARNING}[!] Cleaning {path} directory...{Color.END}\n')
         if os.path.exists(path):
@@ -295,29 +296,23 @@ class Netwatch:
             case "?" | "help":
                 self.program.command(choice, "Netwatch")
                 # self.commandHistory.update(choice)
-                self.__init__()
             case "update":
                 self.program.command(choice, "Netwatch")
-                # self.__init__()
-                # self.update()
-                self.__init__()
             case "\r" | "\n" | "" | " " | "back":
-                self.__init__()
+                pass
             case "history":
+                pass
                 # self.commandHistory.print()
-                self.__init__()
             case "history -c" | "history --clear":
+                pass
                 # self.commandHistory.clear()
-                self.__init__()
             case "clear" | "cls":
                 self.program.command(choice)
-                self.__init__()
             case "clean":
                 self.program.command(choice)
-                self.__init__()
             case "path" | "pwd":
+                # Print path using Program.command instead?
                 self.program.printPath("netwatch")
-                self.__init__()
             case "exit" | "quit" | "end":
                 self.program.end()
                 # self.program.end(self.commandHistory.save())
@@ -325,7 +320,7 @@ class Netwatch:
                 print(
                     f'{Color.RED}[-]{Color.END} Unknown input: {choice}. Type "?" for help.')
                 self.__init__()
-        self.completed()
+        self.__init__()
 
     def completed(self) -> None:
         input("\nClick [return] to continue...")
@@ -358,7 +353,6 @@ class InformationGathering:
             case "1":
                 print(Nmap.nmapLogo)
                 Nmap()
-                pass
             case "2":
                 print(PortScanner.portScannerLogo)
                 PortScanner()
@@ -367,16 +361,14 @@ class InformationGathering:
                 Host2IP()
             case "?" | "help":
                 self.program.command(choiceInfo, "Info")
-                self.__init__()
             case "clear" | "cls":
                 self.program.command(choiceInfo)
-                self.__init__()
             case "clean":
                 self.program.command(choiceInfo)
-                self.__init__()
+                self.completed()
             case "path" | "pwd":
                 self.program.printPath("Netwatch/Information_Gathering")
-                self.__init__()
+                # self.__init__()
             case "exit" | "quit" | "end":
                 self.program.end()
             case "back":
@@ -387,7 +379,7 @@ class InformationGathering:
                 print(
                     f'{Color.RED}[-]{Color.END} Unknown input: {choiceInfo}. Type "?" for help.')
                 self.__init__()
-        self.completed()
+        self.__init__()
 
     def completed(self) -> None:
         input("\nClick [return] to continue...")
@@ -496,7 +488,6 @@ class Nmap:
                     _, param, value = choiceNmap.split(" ", 2)
                     if param == "target":
                         target = value
-                        self.menu(target, logPath)
                     elif param == "log":
                         logName, _, logPath = value.partition(" ")
                         if not logPath:
@@ -504,16 +495,12 @@ class Nmap:
                                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
                         logPath = "nmap-" + logName + "-" + \
                             strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-                        self.menu(target, logPath)
                 case "?" | "help":
                     self.program.command(choiceNmap, "Nmap")
-                    self.menu(target, logPath)
                 case "clear" | "cls":
                     self.program.command(choiceNmap, "Nmap")
-                    self.menu(target, logPath)
                 case "clean":
                     self.program.command(choiceNmap, "Nmap")
-                    self.menu(target, logPath)
                 case "path" | "pwd":
                     self.program.printPath(
                         "Netwatch/Information_Gathering/Nmap")
@@ -526,6 +513,7 @@ class Nmap:
                     InformationGathering()
                 case _:
                     self.menu(target, logPath)
+            self.menu(target, logPath)
         except KeyboardInterrupt:
             print("\n")
             InformationGathering()
@@ -588,8 +576,6 @@ class PortScanner:
                                 f'{Color.OKGREEN}[✔]{Color.END} Discovered open port {port} on {ipAddr}')
                         else:
                             pass
-                            # print(
-                            #     f'{color.RED}[-]{color.END} Port {port} is closed')
                         sock.close()
                     except KeyboardInterrupt:
                         print(f'{Color.RED}[-]{Color.END} Exiting program.')
