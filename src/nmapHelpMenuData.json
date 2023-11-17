@@ -1,0 +1,103 @@
+{
+    "Nmap": [
+        {
+            "header": [
+                {
+                    "show_header": true,
+                    "header_style": "bold white",
+                    "title": "Nmap Help Menu",
+                    "width": 84,
+                    "show_lines": true
+                }
+            ],
+            "columns": [
+                {
+                    "title": "Scan Type",
+                    "justify": "center",
+                    "style": "bright_cyan",
+                    "width": 20
+                },
+                {
+                    "title": "Options",
+                    "justify": "center",
+                    "style": "magenta"
+                },
+                {
+                    "title": "Description",
+                    "justify": "right",
+                    "style": "bright_black",
+                    "width": 50
+                }
+            ],
+            "rows": [
+                {
+                    "type": "Quick Scan",
+                    "options": "-T4 -F -v -oN PATH TARGET",
+                    "description": "Quick scan of the most common ports."
+                },
+                {
+                    "type": "Intense Scan",
+                    "options": "-T4 -A -v -oN PATH TARGET",
+                    "description": "Intense scan of all ports."
+                }
+            ]
+        }
+    ],
+    "Core": [
+        {
+            "header": [
+                {
+                    "show_header": true,
+                    "header_style": "bold white",
+                    "title": "Netwatch Core Commands (Global)",
+                    "width": 84,
+                    "show_lines": true
+                }
+            ],
+            "columns": [
+                {
+                    "title": "Command",
+                    "justify": "center",
+                    "style": "bright_cyan",
+                    "width": 8
+                },
+                {
+                    "title": "Description",
+                    "justify": "right",
+                    "style": "bright_black",
+                    "width": 50
+                }
+            ],
+            "rows": [
+                {
+                    "command": "help",
+                    "description": "Displays this help menu"
+                },
+                {
+                    "command": "update",
+                    "description": "Updates Netwatch repository to the latest version"
+                },
+                {
+                    "command": "clear",
+                    "description": "Clears the terminal screen"
+                },
+                {
+                    "command": "exit",
+                    "description": "Exits Netwatch (alias of quit and q)"
+                },
+                {
+                    "command": "clean",
+                    "description": "Cleans up log files and temporary files generated from modules"
+                },
+                {
+                    "command": "back",
+                    "description": "Exits to the previous context menu"
+                },
+                {
+                    "command": "path",
+                    "description": "Prints the current working module path"
+                }
+            ]
+        }
+    ]
+}
