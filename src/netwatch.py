@@ -183,35 +183,46 @@ class TableCreator:
             data = json.load(json_file)
             return data
 
-    def createTable(self, header_data: dict, column_data: list, row_data: list) -> None:
+    def createTable(self, header_data: dict, column_data: list, row_data: list, column_keys: list) -> None:
         table = Table(
             show_header=header_data.get("show_header", True),
             header_style=header_data.get("header_style", "bold white"),
             title=header_data.get("title", ""),
             width=int(header_data.get("width", 84)),
             show_lines=True)
-        for column in column_data:
+        # column_keys = ["type", "options", "description", "command", "option"]
+        for i, column in enumerate(column_data):
+            # for column in column_data:
             table.add_column(
                 column.get("title", ""),
                 style=column.get("style", ""),
                 justify=column.get("justify", "right"),
                 width=column.get("width", 30))
-        column_names = [column.get("title", "").lower()
-                        for column in column_data]
+        # column_names = [column.get("title", "").lower().replace(" ", "")
+        #                 for column in column_data]
+        column_keys += [None] * (len(column_data) - len(column_keys))
         for row in row_data:
-            row_values = [str(row.get(column_name, ""))
-                          for column_name in column_names]
+            row_values = [str(row.get(column_keys[i], ""))
+                          for i in range(len(column_data))]
             table.add_row(*row_values)
         return table
 
     def displayTable(self, jsonData: dict) -> None:
+        column_keys_dict = {
+            "Nmap": ["type", "options", "description"],
+            "Core": ["command", "description"],
+            "Main": ["option", "modules", "description"]
+        }
         for tableName, tableData in jsonData.items():
-            header_data = tableData[0]['header'][0]
-            column_data = tableData[0]['columns']
-            row_data = tableData[0]['rows']
-            table = self.createTable(header_data, column_data, row_data)
-            self.console.print(table)
-            print("\n")
+            for table in tableData:
+                header_data = table.get("header", [{}])[0]
+                column_data = table.get("columns", [])
+                row_data = table.get("rows", [])
+                column_keys = column_keys_dict.get(tableName, [])
+                table = self.createTable(
+                    header_data, column_data, row_data, column_keys)
+                self.console.print(table)
+                print("\n")
 
     def displayTableFromFile(self, module: str) -> None:
         if module == "Netwatch":
@@ -507,15 +518,12 @@ class Nmap:
 class PortScanner:
     portScannerLogo = '''\n
 ===================================================================================
-
       ██████╗  ██████╗ ██████╗ ████████╗    ███████╗ ██████╗ █████╗ ███╗   ██╗
       ██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝    ██╔════╝██╔════╝██╔══██╗████╗  ██║
       ██████╔╝██║   ██║██████╔╝   ██║       ███████╗██║     ███████║██╔██╗ ██║
       ██╔═══╝ ██║   ██║██╔══██╗   ██║       ╚════██║██║     ██╔══██║██║╚██╗██║
       ██║     ╚██████╔╝██║  ██║   ██║       ███████║╚██████╗██║  ██║██║ ╚████║
       ╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
-                                                                        
-
 ===================================================================================
     '''
 

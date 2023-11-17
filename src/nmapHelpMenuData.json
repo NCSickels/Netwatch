@@ -15,7 +15,7 @@
                     "title": "Scan Type",
                     "justify": "center",
                     "style": "bright_cyan",
-                    "width": 10
+                    "width": 20
                 },
                 {
                     "title": "Options",
