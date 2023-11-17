@@ -295,7 +295,6 @@ class Netwatch:
             case "?" | "help":
                 self.program.command(choice, "Netwatch")
                 # self.commandHistory.update(choice)
-                # self.tableCreator.displayTableFromFile()
                 self.__init__()
             case "update":
                 self.program.command(choice, "Netwatch")
@@ -312,12 +311,9 @@ class Netwatch:
                 self.__init__()
             case "clear" | "cls":
                 self.program.command(choice)
-                # self.program.clearScr()
                 self.__init__()
             case "clean":
                 self.program.command(choice)
-                # self.program.clean(self.toolDir)
-                # self.program.clean(self.logDir)
                 self.__init__()
             case "path" | "pwd":
                 self.program.printPath("netwatch")
@@ -429,7 +425,7 @@ class Nmap:
             self.run()
 
     def installed(self) -> bool:
-        return ((os.path.isfile("/usr/bin/nmap") or os.path.isfile("/usr/local/bin/nmap")))
+        return any(os.path.isfile(path) for path in ["/usr/bin/nmap", "/usr/local/bin/nmap"])
 
     def install(self) -> None:
         print(
@@ -439,9 +435,11 @@ class Nmap:
         if exitStatus == 0:
             print(
                 f'\n{Color.OKGREEN}[✔] Nmap successfully installed.{Color.END}\n')
+            self.run()
         else:
-            print(
-                f'\n{Color.RED}[-]{Color.END} Error installing Nmap.\n')
+            print((
+                f'\n{Color.RED}[-]{Color.END} Error installing Nmap.\n'
+                f'Returning to {Color.OKBLUE}Information Gathering{Color.END} menu...\n'))
 
     def run(self) -> None:
         try:
@@ -476,7 +474,7 @@ class Nmap:
                            f'{Color.END} {logPath}'))
                     response = input(
                         "\nWould you like to run another scan? [y/n]: ").lower()
-                    if response == "y" or response == "yes":
+                    if response in ["y", "yes"]:
                         self.menu(target, logPath)
                     else:
                         print((f'\nReturning to {Color.OKBLUE}Netwatch'
@@ -488,7 +486,7 @@ class Nmap:
                            f'{Color.END} {logPath}'))
                     response = input(
                         "\nWould you like to run another scan? [y/n]: ").lower()
-                    if response == "y" or response == "yes":
+                    if response in ["y", "yes"]:
                         self.menu(target, logPath)
                     else:
                         print((f'\nReturning to {Color.OKBLUE}Netwatch'
