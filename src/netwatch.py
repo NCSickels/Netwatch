@@ -233,8 +233,8 @@ class TableCreator:
                 __file__)) + '/' + self.configManager.get('nmap', 'nmapMenuDataPath'))
             self.displayTable(jsonData)
 
-
 # Start Menu Classes
+
 
 class Netwatch:
     netwatchLogo = '''
@@ -540,19 +540,19 @@ class PortScanner:
             logPath = "portScan-" + logName + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
 
-            ipList = [ipAddr.strip() for ipAddr in self.target.split(',')]
-            portList = [port.strip() for port in self.port.split(',')]
+            ipList = [ipAddr.strip() for ipAddr in target.split(',')]
+            portList = [port.strip() for port in port.split(',')]
 
             print(f'\n{Color.OKBLUE}[*]{Color.END} Target(s) -> ', end='')
-            for ip in self.ipList:
+            for ip in ipList:
                 print(f'{ip}, ', end='')
             print('\n')
             print(f'{Color.OKBLUE}[*]{Color.END} Port(s)   -> ', end='')
-            for port in self.portList:
+            for port in portList:
                 print(f'{port}, ', end='')
             print('\n')
             print(
-                f'{Color.OKBLUE}[*]{Color.END} Log Path  -> {self.logPath}\n')
+                f'{Color.OKBLUE}[*]{Color.END} Log Path  -> {logPath}\n')
             self.scan()
         except KeyboardInterrupt:
             print("\n")
