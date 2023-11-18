@@ -19,6 +19,9 @@ import configparser
 import json
 import socket
 from time import gmtime, strftime, sleep
+import argparse
+import logging
+import subprocess
 from rich.console import Console
 from rich.table import Table
 
@@ -158,10 +161,11 @@ class Program:
         match command:
             case "update":
                 # TODO: Add command history updates to each of these cases
-                os.system(
-                    "git clone --depth=1 https://github.com/NCSickels/netwatch.git")
-                os.system("cd netwatch && chmod +x update.sh && ./update.sh")
-                os.system("netwatch")
+                try:
+                    subprocess.check_call(["../scripts/update.sh"], shell=True)
+                except subprocess.CalledProcessError as e:
+                    print(
+                        f'{Color.RED}[-]{Color.END} Error occurred with update script: {e}')
             case "clear" | "cls":
                 self.clearScr()
             case "clean":
@@ -169,6 +173,8 @@ class Program:
                 self.clean(self.configManager.getPath("netwatch", "logDir"))
             case "help" | "?":
                 self.tableCreator.displayTableFromFile(module)
+
+# TODO: Add a default case for global commands, and ability to specify which help menu to display, regardless of currnet module path
 
 
 class TableCreator:
@@ -210,9 +216,10 @@ class TableCreator:
 
     def displayTable(self, jsonData: dict) -> None:
         column_keys_dict = {
-            "Nmap": ["type", "options", "description"],
+            "Main": ["option", "modules", "description"],
             "Core": ["command", "description"],
-            "Main": ["option", "modules", "description"]
+            "Info": ["option", "modules", "description"],
+            "Nmap": ["type", "options", "description"],
         }
         for tableName, tableData in jsonData.items():
             for table in tableData:
@@ -228,6 +235,10 @@ class TableCreator:
     def displayTableFromFile(self, module: str) -> None:
         if module == "Netwatch":
             jsonData = self.readJson(self.jsonFile)
+            self.displayTable(jsonData)
+        elif module == "Information_Gathering":
+            jsonData = self.readJson(os.path.dirname(os.path.abspath(
+                __file__)) + '/' + self.configManager.get('information_gathering', 'infoMenuDataPath'))
             self.displayTable(jsonData)
         elif module == "Nmap":
             jsonData = self.readJson(os.path.dirname(os.path.abspath(
@@ -355,12 +366,14 @@ class InformationGathering:
                 Nmap()
             case "2":
                 print(PortScanner.portScannerLogo)
-                PortScanner()
+                pass
+                # Currently not working
+                # PortScanner()
             case "3":
                 print(Host2IP.host2ipLogo)
                 Host2IP()
             case "?" | "help":
-                self.program.command(choiceInfo, "Info")
+                self.program.command(choiceInfo, "Information_Gathering")
             case "clear" | "cls":
                 self.program.command(choiceInfo)
             case "clean":
@@ -368,7 +381,6 @@ class InformationGathering:
                 self.completed()
             case "path" | "pwd":
                 self.program.printPath("Netwatch/Information_Gathering")
-                # self.__init__()
             case "exit" | "quit" | "end":
                 self.program.end()
             case "back":
@@ -386,6 +398,7 @@ class InformationGathering:
         self.__init__()
 
 
+# Bring user to main prompt first or ask for target IP first as currently implemented?
 class Nmap:
     nmapLogo = '''
 ===================================================================================
@@ -464,26 +477,12 @@ class Nmap:
                     os.system(f'\nnmap -T4 -F -v -oN {logPath} {target}')  # \n
                     print((f'\n{Color.OKGREEN}[✔] Scan completed, log saved to:'
                            f'{Color.END} {logPath}'))
-                    response = input(
-                        "\nWould you like to run another scan? [y/n]: ").lower()
-                    if response in ["y", "yes"]:
-                        self.menu(target, logPath)
-                    else:
-                        print((f'\nReturning to {Color.OKBLUE}Netwatch'
-                              f'{Color.END} menu...\n'))
-                        Netwatch()
+                    self.promptForAnotherScan(target, logPath)
                 case "intense scan" | "intense" | "intensescan":
                     os.system(f'\nnmap -T4 -A -v -oN {logPath} {target}')  # \n
                     print((f'\n{Color.OKGREEN}[✔] Scan completed, log saved to:'
                            f'{Color.END} {logPath}'))
-                    response = input(
-                        "\nWould you like to run another scan? [y/n]: ").lower()
-                    if response in ["y", "yes"]:
-                        self.menu(target, logPath)
-                    else:
-                        print((f'\nReturning to {Color.OKBLUE}Netwatch'
-                              f'{Color.END} menu...\n'))
-                        Netwatch()
+                    self.promptForAnotherScan(target, logPath)
                 case _ if choiceNmap.startswith("set "):
                     _, param, value = choiceNmap.split(" ", 2)
                     if param == "target":
@@ -518,6 +517,18 @@ class Nmap:
             print("\n")
             InformationGathering()
 
+    def promptForAnotherScan(self, target: int, logPath: str) -> None:
+        response = input(
+            "\nWould you like to run another scan? [y/n]: ").lower()
+        if response in ["y", "yes"]:
+            self.menu(target, logPath)
+        else:
+            print((f'\nReturning to {Color.OKBLUE}Netwatch'
+                   f'{Color.END} menu...\n'))
+            Netwatch()
+
+# TODO: Fix this function - IP address is not being passed correctly
+
 
 class PortScanner:
     portScannerLogo = '''\n
@@ -535,6 +546,7 @@ class PortScanner:
         self.targetPrompt = "Enter target IP(s): "
         self.portPrompt = "Enter port(s) to scan: "
         self.logNamePrompt = "Enter log file name: "
+        self.run()
 
     def run(self) -> None:
         try:
@@ -544,7 +556,8 @@ class PortScanner:
             logPath = "portScan-" + logName + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
 
-            ipList = [ipAddr.strip() for ipAddr in target.split(',')]
+            ipList = [self.ip2Int(ipAddr.strip())
+                      for ipAddr in target.split(',')]
             portList = [port.strip() for port in port.split(',')]
 
             print(f'\n{Color.OKBLUE}[*]{Color.END} Target(s) -> ', end='')
@@ -557,20 +570,20 @@ class PortScanner:
             print('\n')
             print(
                 f'{Color.OKBLUE}[*]{Color.END} Log Path  -> {logPath}\n')
-            self.scan()
+            self.scan(ipList, portList)
         except KeyboardInterrupt:
             print("\n")
             InformationGathering()
 
-    def scan(self) -> None:
+    def scan(self, ipList: list, portList: list) -> None:
         try:
-            for ipAddr in self.ipList:
-                for port in self.portList:
+            for ipAddr in ipList:
+                for port in portList:
                     try:
                         sock = socket.socket(
                             socket.AF_INET, socket.SOCK_STREAM)
                         socket.setdefaulttimeout(1)
-                        result = sock.connect_ex((ipAddr, port))
+                        result = sock.connect_ex((ipAddr, int(port)))
                         if result == 0:
                             print(
                                 f'{Color.OKGREEN}[✔]{Color.END} Discovered open port {port} on {ipAddr}')
@@ -591,6 +604,11 @@ class PortScanner:
         except KeyboardInterrupt:
             print("\n")
             InformationGathering()
+
+    def ip2Int(self, ip: str) -> int:
+        octets = ip.split('.')
+        return ((int(octets[0]) << 24) + (int(octets[1]) << 16) +
+                (int(octets[2]) << 8) + int(octets[3]))
 
 
 class Host2IP:

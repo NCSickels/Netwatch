@@ -1,0 +1,108 @@
+{
+    "Info": [
+        {
+            "header": [
+                {
+                    "show_header": true,
+                    "header_style": "bold white",
+                    "title": "Information Gathering Help Menu",
+                    "width": 84,
+                    "show_lines": true
+                }
+            ],
+            "columns": [
+                {
+                    "title": "Option",
+                    "justify": "center",
+                    "style": "bright_cyan",
+                    "width": 7
+                },
+                {
+                    "title": "Modules",
+                    "justify": "center",
+                    "style": "magenta"
+                },
+                {
+                    "title": "Description",
+                    "justify": "right",
+                    "style": "bright_black",
+                    "width": 40
+                }
+            ],
+            "rows": [
+                {
+                    "option": "1",
+                    "modules": "Nmap",
+                    "description": "Network Mapper - Port Scanner"
+                },
+                {
+                    "option": "2",
+                    "modules": "Custom Port Scanner",
+                    "description": "Alternative to Nmap if installation is unavailable."
+                },
+                {
+                    "option": "3",
+                    "modules": "Host2IP",
+                    "description": "Converts a hostname to an IP address."
+                }
+            ]
+        }
+    ],
+    "Core": [
+        {
+            "header": [
+                {
+                    "show_header": true,
+                    "header_style": "bold white",
+                    "title": "Netwatch Core Commands (Global)",
+                    "width": 84,
+                    "show_lines": true
+                }
+            ],
+            "columns": [
+                {
+                    "title": "Command",
+                    "justify": "center",
+                    "style": "bright_cyan",
+                    "width": 8
+                },
+                {
+                    "title": "Description",
+                    "justify": "right",
+                    "style": "bright_black",
+                    "width": 50
+                }
+            ],
+            "rows": [
+                {
+                    "command": "help",
+                    "description": "Displays this help menu"
+                },
+                {
+                    "command": "update",
+                    "description": "Updates Netwatch repository to the latest version"
+                },
+                {
+                    "command": "clear",
+                    "description": "Clears the terminal screen"
+                },
+                {
+                    "command": "exit",
+                    "description": "Exits Netwatch (alias of quit and q)"
+                },
+                {
+                    "command": "clean",
+                    "description": "Cleans up log files and temporary files generated from modules"
+                },
+                {
+                    "command": "back",
+                    "description": "Exits to the previous context menu"
+                },
+                {
+                    "command": "path",
+                    "description": "Prints the current working module path"
+                }
+            ]
+        }
+    ]
+}
