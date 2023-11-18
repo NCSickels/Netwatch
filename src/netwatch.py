@@ -48,8 +48,8 @@ class CommandHistory:
     def __init__(self):
         self.configManager = ConfigManager()
         self.storeHistory = self.configManager.getbool(
-            'netwatch', 'storeHistory')
-        self.logDir = self.configManager.getPath('netwatch', 'logDir')
+            'general_config', 'storeHistory')
+        self.logDir = self.configManager.getPath('general_config', 'logDir')
         self.history = []  # set()
 
     def update(self, command: str) -> None:
@@ -97,6 +97,9 @@ class Program:
         self.tableCreator = TableCreator(self.configManager)
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.cfg'
+        # self.original_stdout = sys.stdout
+        # self.log_file = open('typescript.log', 'w')
+        # sys.stdout = self.log_file
 
     def start(self) -> None:
         self.clearScr()
@@ -104,10 +107,11 @@ class Program:
         print(Netwatch.netwatchLogo)
 
     def createFolders(self) -> None:
-        if not os.path.isdir(self.configManager.getPath("netwatch", "toolDir")):
-            os.makedirs(self.configManager.getPath("netwatch", "toolDir"))
-        if not os.path.isdir(self.configManager.getPath("netwatch", "logDir")):
-            os.makedirs(self.configManager.getPath("netwatch", "logDir"))
+        if not os.path.isdir(self.configManager.getPath("general_config", "toolDir")):
+            os.makedirs(self.configManager.getPath(
+                "general_config", "toolDir"))
+        if not os.path.isdir(self.configManager.getPath("general_config", "logDir")):
+            os.makedirs(self.configManager.getPath("general_config", "logDir"))
 
     def end(self) -> None:  # command_history: CommandHistory
         print("\n\nFinishing up...\n")
@@ -156,6 +160,7 @@ class Program:
 
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
+    # TODO: Implement 'cd' function
 
     def command(self, command: str, module=None) -> None:
         match command:
@@ -169,10 +174,17 @@ class Program:
             case "clear" | "cls":
                 self.clearScr()
             case "clean":
-                self.clean(self.configManager.getPath("netwatch", "toolDir"))
-                self.clean(self.configManager.getPath("netwatch", "logDir"))
+                self.clean(self.configManager.getPath(
+                    "general_config", "toolDir"))
+                self.clean(self.configManager.getPath(
+                    "general_config", "logDir"))
             case "help" | "?":
                 self.tableCreator.displayTableFromFile(module)
+
+    def __del__(self):
+        # sys.stdout = self.original_stdout
+        # self.log_file.close()
+        pass
 
 # TODO: Add a default case for global commands, and ability to specify which help menu to display, regardless of currnet module path
 
@@ -285,11 +297,11 @@ class Netwatch:
     def __init__(self):
         self.configManager = ConfigManager()
         self.netwatchPrompt = self.configManager.get(
-            'netwatch', 'prompt') + ' '
-        self.toolDir = self.configManager.getPath('netwatch', 'toolDir')
-        self.logDir = self.configManager.getPath('netwatch', 'logDir')
+            'general_config', 'prompt') + ' '
+        self.toolDir = self.configManager.getPath('general_config', 'toolDir')
+        self.logDir = self.configManager.getPath('general_config', 'logDir')
         self.storeHistory = self.configManager.getbool(
-            'netwatch', 'storeHistory')
+            'general_config', 'storeHistory')
 
         self.commandHistory = CommandHistory()
         self.program = Program()  # Program(config, configFile)
@@ -354,7 +366,7 @@ class InformationGathering:
         self.program = Program()
         self.configManager = ConfigManager()
         self.netwatchPrompt = self.configManager.get(
-            'netwatch', 'prompt') + ' '
+            'general_config', 'prompt') + ' '
 
         self.run()
 
@@ -415,7 +427,7 @@ class Nmap:
         self.configManager = ConfigManager()
         self.program = Program()
         self.netwatchPrompt = self.configManager.get(
-            'netwatch', 'prompt') + ' '
+            'general_config', 'prompt') + ' '
         self.nmapDir = self.configManager.getPath('nmap', 'nmapdir')
         self.gitRepo = self.configManager.get('nmap', 'gitrepository')
         self.jsonFile = os.path.dirname(os.path.abspath(
