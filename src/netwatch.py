@@ -180,6 +180,7 @@ class Program:
                     "general_config", "logDir"))
             case "help" | "?":
                 self.tableCreator.displayTableFromFile(module)
+                # self.tableCreator.displayTableFromFile("Core")
 
     def __del__(self):
         # sys.stdout = self.original_stdout
@@ -190,16 +191,16 @@ class Program:
 
 
 class TableCreator:
-    def __init__(self, configManager):
+    def __init__(self, configManager, jsonFile=None):
         self.configManager = configManager
         self.console = Console()
         self.jsonFile = os.path.dirname(os.path.abspath(
-            __file__)) + '/' + configManager.get('netwatch', 'mainMenuDataPath')
+            __file__)) + '/' + configManager.get('general_config', 'menuDataPath')
 
     @staticmethod
     def readJson(file_path: str) -> dict:
-        with open(file_path) as json_file:
-            data = json.load(json_file)
+        with open(file_path) as f:
+            data = json.load(f)
             return data
 
     def createTable(self, header_data: dict, column_data: list, row_data: list, column_keys: list) -> None:
@@ -209,16 +210,12 @@ class TableCreator:
             title=header_data.get("title", ""),
             width=int(header_data.get("width", 84)),
             show_lines=True)
-        # column_keys = ["type", "options", "description", "command", "option"]
         for i, column in enumerate(column_data):
-            # for column in column_data:
             table.add_column(
                 column.get("title", ""),
                 style=column.get("style", ""),
                 justify=column.get("justify", "right"),
                 width=column.get("width", 30))
-        # column_names = [column.get("title", "").lower().replace(" ", "")
-        #                 for column in column_data]
         column_keys += [None] * (len(column_data) - len(column_keys))
         for row in row_data:
             row_values = [str(row.get(column_keys[i], ""))
@@ -226,36 +223,26 @@ class TableCreator:
             table.add_row(*row_values)
         return table
 
-    def displayTable(self, jsonData: dict) -> None:
+    def displayTable(self, jsonData: dict, module: str) -> None:
         column_keys_dict = {
             "Main": ["option", "modules", "description"],
             "Core": ["command", "description"],
-            "Info": ["option", "modules", "description"],
+            "Information_Gathering": ["option", "modules", "description"],
             "Nmap": ["type", "options", "description"],
         }
-        for tableName, tableData in jsonData.items():
-            for table in tableData:
-                header_data = table.get("header", [{}])[0]
-                column_data = table.get("columns", [])
-                row_data = table.get("rows", [])
-                column_keys = column_keys_dict.get(tableName, [])
-                table = self.createTable(
-                    header_data, column_data, row_data, column_keys)
-                self.console.print(table)
-                print("\n")
+        for table in jsonData[module]:
+            header_data = table.get("header", [{}])[0]
+            column_data = table.get("columns", [])
+            row_data = table.get("rows", [])
+            column_keys = column_keys_dict.get(module, [])
+            table = self.createTable(
+                header_data, column_data, row_data, column_keys)
+            self.console.print(table)
+            print("\n")
 
     def displayTableFromFile(self, module: str) -> None:
-        if module == "Netwatch":
-            jsonData = self.readJson(self.jsonFile)
-            self.displayTable(jsonData)
-        elif module == "Information_Gathering":
-            jsonData = self.readJson(os.path.dirname(os.path.abspath(
-                __file__)) + '/' + self.configManager.get('information_gathering', 'infoMenuDataPath'))
-            self.displayTable(jsonData)
-        elif module == "Nmap":
-            jsonData = self.readJson(os.path.dirname(os.path.abspath(
-                __file__)) + '/' + self.configManager.get('nmap', 'nmapMenuDataPath'))
-            self.displayTable(jsonData)
+        jsonData = self.readJson(self.jsonFile)
+        self.displayTable(jsonData, module)
 
 # Start Menu Classes
 
@@ -317,7 +304,8 @@ class Netwatch:
                 print(InformationGathering.menuLogo)
                 InformationGathering()
             case "?" | "help":
-                self.program.command(choice, "Netwatch")
+                self.program.command(choice, "Main")
+                self.program.command(choice, "Core")
                 # self.commandHistory.update(choice)
             case "update":
                 self.program.command(choice, "Netwatch")
@@ -384,8 +372,11 @@ class InformationGathering:
             case "3":
                 print(Host2IP.host2ipLogo)
                 Host2IP()
+            case "4":  # Sagemode
+                pass
             case "?" | "help":
                 self.program.command(choiceInfo, "Information_Gathering")
+                self.program.command(choiceInfo, "Core")
             case "clear" | "cls":
                 self.program.command(choiceInfo)
             case "clean":
@@ -430,8 +421,6 @@ class Nmap:
             'general_config', 'prompt') + ' '
         self.nmapDir = self.configManager.getPath('nmap', 'nmapdir')
         self.gitRepo = self.configManager.get('nmap', 'gitrepository')
-        self.jsonFile = os.path.dirname(os.path.abspath(
-            __file__)) + '/' + self.configManager.get('nmap', 'nmapMenuDataPath')
         self.targetPrompt = "Enter target IP: "
         self.logFileNamePrompt = "Enter log file name: "
 
@@ -508,6 +497,7 @@ class Nmap:
                             strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
                 case "?" | "help":
                     self.program.command(choiceNmap, "Nmap")
+                    self.program.command(choiceNmap, "Core")
                 case "clear" | "cls":
                     self.program.command(choiceNmap, "Nmap")
                 case "clean":
@@ -523,6 +513,8 @@ class Nmap:
                            f'{Color.END} menu...\n'))
                     InformationGathering()
                 case _:
+                    print(
+                        f'{Color.RED}[-]{Color.END} Unknown input: {choiceNmap}. Type "?" for help.')
                     self.menu(target, logPath)
             self.menu(target, logPath)
         except KeyboardInterrupt:
