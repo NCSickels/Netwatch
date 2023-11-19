@@ -154,6 +154,9 @@ sites = {
     "Clapper": "https://clapperapp.com/{}",
     "Bikemap": "https://www.bikemap.net/en/u/{}/routes/created/",
     "BioHacking": "https://forum.dangerousthings.com/u/{}",
+    "Minecraft": "https://namemc.com/profile/{}",
+    "Planet Minecraft": "https://www.planetminecraft.com/member/{}",
+    "Hypixel": "https://hypixel.net/members/{}",
 }
 
 # indicators for false positive 200 responses

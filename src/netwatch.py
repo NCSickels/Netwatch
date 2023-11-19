@@ -32,7 +32,6 @@ from rich.console import Console
 from rich.table import Table
 from bs4 import BeautifulSoup
 
-from accessories import Notify
 from sites import sites, soft404_indicators, user_agents
 
 # Common Functions
@@ -53,6 +52,56 @@ class Color:
     UNDERLINE = '\033[4m'
     BOLD = '\033[1m'
     LOGGING = '\33[34m'
+
+
+class Notify:
+    "A helper class for notifications of Netwatch process"
+
+    @staticmethod
+    def start(username: str, number_of_sites) -> str:
+        # start(ascii_art, delay=0.1)
+        if username or sites is not None:
+            return f"[yellow][[bright_red]*[yellow][yellow]] [bright_blue]Searching {number_of_sites} sites for target: [bright_yellow]{username}"
+
+    # notify the user how many sites the username has been found
+    @staticmethod
+    def positive_res(username: str, count) -> str:
+        return f"\n[yellow][[bright_red]+[yellow]][bright_green] Found [bright_red]{username} [bright_green]on [bright_magenta]{count}[bright_green] sites"
+
+    # notify the user where the result is stored
+    @staticmethod
+    def stored_result(result_file: str) -> str:
+        return f"[bright_green][[yellow]@[bright_green]] [orange3]Results stored in: [bright_green]{result_file}\n"
+
+    @staticmethod
+    def not_found(site: str, status_code="") -> str:
+        if status_code:
+            return f"[black][[red]-[black]] [blue]{site}: [yellow]Not Found! {status_code}"
+        return f"[black][[red]-[black]] [blue]{site}: [yellow]Not Found!"
+
+    @staticmethod
+    def found(site: str, url: str) -> str:
+        return f"[red][[green]+[red]] [green]{site}: [blue]{url}"
+
+    @staticmethod
+    def update(local_version: str, remote_version: str) -> str:
+        return (
+            "[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
+            + f"[red][[yellow]![red]] [bright_yellow]You are running Version: [bright_green]{local_version}\n"
+            + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remote_version}"
+        )
+
+    @staticmethod
+    def update_error(error: str) -> str:
+        return f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while checking for an update: [bright_red]{error}"
+
+    @staticmethod
+    def version(version: str) -> str:
+        return f"[bright_yellow]Sagemode [bright_red]{version}"
+
+    @staticmethod
+    def exception(site, error):
+        return f"[black][[red]![black]] [blue]{site}: [bright_red]{error}..."
 
 
 class CommandHistory:
@@ -102,6 +151,39 @@ class ConfigManager:
 
     def getbool(self, section, option):
         return self.config.getboolean(section, option)
+
+
+class CommandHandler:
+    def __init__(self):
+        self.program = Program()
+        self.configManager = ConfigManager()
+        self.tableCreator = TableCreator(self.configManager)
+
+    def execute(self, command: str, module=None) -> None:
+        match command:
+            case "update":
+                # TODO: Add command history updates to each of these cases
+                # TODO: Implement 'cd' function
+                try:
+                    subprocess.check_call(["../scripts/update.sh"], shell=True)
+                except subprocess.CalledProcessError as e:
+                    print(
+                        f'{Color.RED}[-]{Color.END} Error occurred with update script: {e}')
+            case "clear" | "cls":
+                self.program.clearScr()
+            case "clean":
+                self.program.clean(self.configManager.getPath(
+                    "general_config", "toolDir"))
+                self.program.clean(self.configManager.getPath(
+                    "general_config", "logDir"))
+                self.program.clean(
+                    self.configManager.getPath("sagemode", "dataDir"))
+                self.completed()
+            case "help" | "?":
+                self.tableCreator.displayTableFromFile(module)
+
+    def completed(self) -> None:
+        input("\nClick [return] to continue...")
 
 
 class Program:
@@ -156,7 +238,7 @@ class Program:
                             print(f'\t - Deleting {dir_path} directory...')
                         except Exception as e:
                             print(e)
-                os.rmdir(path)
+                # os.rmdir(path)
                 print(
                     f'\n{Color.OKGREEN}[✔] {path} directory successfully cleaned.{Color.END}\n')
             else:
@@ -177,28 +259,6 @@ class Program:
 
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
-    # TODO: Implement 'cd' function
-
-    def command(self, command: str, module=None) -> None:
-        match command:
-            case "update":
-                # TODO: Add command history updates to each of these cases
-                try:
-                    subprocess.check_call(["../scripts/update.sh"], shell=True)
-                except subprocess.CalledProcessError as e:
-                    print(
-                        f'{Color.RED}[-]{Color.END} Error occurred with update script: {e}')
-            case "clear" | "cls":
-                self.clearScr()
-            case "clean":
-                self.clean(self.configManager.getPath(
-                    "general_config", "toolDir"))
-                self.clean(self.configManager.getPath(
-                    "general_config", "logDir"))
-                self.clean(self.configManager.getPath("sagemode", "dataDir"))
-            case "help" | "?":
-                self.tableCreator.displayTableFromFile(module)
-                # self.tableCreator.displayTableFromFile("Core")
 
     def __del__(self):
         # sys.stdout = self.original_stdout
@@ -266,7 +326,8 @@ class TableCreator:
             "Main": ["option", "modules", "description"],
             "Core": ["command", "description"],
             "Information_Gathering": ["option", "modules", "description"],
-            "Nmap": ["type", "options", "description"],
+            "Nmap_Scans": ["type", "options", "description"],
+            "Nmap_Commands": ["command", "description"],
         }
         for table in jsonData[module]:
             header_data = table.get("header", [{}])[0]
@@ -316,12 +377,16 @@ class Netwatch:
        ██║ ╚████║███████╗   ██║   ╚███╔███╔╝██║  ██║   ██║   ╚██████╗██║  ██║
        ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 ===================================================================================
-    v2.0.0                                     Noah Sickels (@NCSickels)     
+    v2.1.9                                     Noah Sickels (@NCSickels)     
 ===================================================================================\n
 '''
 
     def __init__(self):
+        self.program = Program()  # Program(config, configFile)
         self.configManager = ConfigManager()
+        self.commandHandler = CommandHandler()
+        self.tableCreator = TableCreator(self.configManager)
+
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
         self.toolDir = self.configManager.getPath('general_config', 'toolDir')
@@ -329,51 +394,34 @@ class Netwatch:
         self.storeHistory = self.configManager.getbool(
             'general_config', 'storeHistory')
 
-        self.commandHistory = CommandHistory()
-        self.program = Program()  # Program(config, configFile)
-        self.configManager = ConfigManager()
-        self.tableCreator = TableCreator(self.configManager)
         self.run()
 
     def run(self) -> None:
         choice = input(self.netwatchPrompt)
-        self.commandHistory.update(choice)
         match choice:
             case "1":
                 print(InformationGathering.menuLogo)
                 InformationGathering()
             case "?" | "help":
-                self.program.command(choice, "Main")
-                self.program.command(choice, "Core")
-                # self.commandHistory.update(choice)
+                [self.commandHandler.execute(choice, module)
+                    for module in ["Main", "Core"]]
             case "update":
-                self.program.command(choice, "Netwatch")
+                self.commandHandler.execute(choice)
             case "\r" | "\n" | "" | " " | "back":
                 pass
-            case "history":
-                pass
-                # self.commandHistory.print()
-            case "history -c" | "history --clear":
-                pass
-                # self.commandHistory.clear()
             case "clear" | "cls":
-                self.program.command(choice)
+                self.commandHandler.execute(choice)
             case "clean":
-                self.program.command(choice)
+                self.commandHandler.execute(choice)
             case "path" | "pwd":
                 # Print path using Program.command instead?
                 self.program.printPath("netwatch")
             case "exit" | "quit" | "end":
                 self.program.end()
-                # self.program.end(self.commandHistory.save())
             case _:
                 print(
                     f'{Color.RED}[-]{Color.END} Unknown input: {choice}. Type "?" for help.')
                 self.__init__()
-        self.__init__()
-
-    def completed(self) -> None:
-        input("\nClick [return] to continue...")
         self.__init__()
 
 
@@ -393,6 +441,8 @@ class InformationGathering:
     def __init__(self):
         self.program = Program()
         self.configManager = ConfigManager()
+        self.commandHandler = CommandHandler()
+
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
 
@@ -414,13 +464,12 @@ class InformationGathering:
                 print(Host2IP.host2ipLogo)
                 Host2IP()
             case "?" | "help":
-                self.program.command(choiceInfo, "Information_Gathering")
-                self.program.command(choiceInfo, "Core")
+                [self.commandHandler.execute(choiceInfo, choice) for choice in [
+                    "Information_Gathering", "Core"]]
             case "clear" | "cls":
-                self.program.command(choiceInfo)
+                self.commandHandler.execute(choiceInfo)
             case "clean":
-                self.program.command(choiceInfo)
-                self.completed()
+                self.commandHandler.execute(choiceInfo)
             case "path" | "pwd":
                 self.program.printPath("Netwatch/Information_Gathering")
             case "exit" | "quit" | "end":
@@ -433,10 +482,6 @@ class InformationGathering:
                 print(
                     f'{Color.RED}[-]{Color.END} Unknown input: {choiceInfo}. Type "?" for help.')
                 self.__init__()
-        self.__init__()
-
-    def completed(self) -> None:
-        input("\nClick [return] to continue...")
         self.__init__()
 
 
@@ -454,8 +499,10 @@ class Nmap:
 '''
 
     def __init__(self):
-        self.configManager = ConfigManager()
         self.program = Program()
+        self.configManager = ConfigManager()
+        self.commandHandler = CommandHandler()
+
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
         self.nmapDir = self.configManager.getPath('nmap', 'nmapdir')
@@ -489,8 +536,9 @@ class Nmap:
     def run(self) -> None:
         try:
             target = input(self.targetPrompt)
-            logName = input(self.logFileNamePrompt)
-            logPath = "nmap-" + logName + "-" + \
+            # logName = input(self.logFileNamePrompt)
+            # logPath = "nmap-" + logName + "-" + \
+            logPath = "nmap-" + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
             if os.path.isfile(logPath):
                 print(
@@ -535,12 +583,12 @@ class Nmap:
                         logPath = "nmap-" + logName + "-" + \
                             strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
                 case "?" | "help":
-                    self.program.command(choiceNmap, "Nmap")
-                    self.program.command(choiceNmap, "Core")
+                    [self.commandHandler.execute(choiceNmap, choice) for choice in [
+                        "Nmap_Scans", "Nmap_Commands", "Core"]]
                 case "clear" | "cls":
-                    self.program.command(choiceNmap, "Nmap")
+                    self.commandHandler.execute(choiceNmap, "Nmap")
                 case "clean":
-                    self.program.command(choiceNmap, "Nmap")
+                    self.commandHandler.execute(choiceNmap, "Nmap")
                 case "path" | "pwd":
                     self.program.printPath(
                         "Netwatch/Information_Gathering/Nmap")
@@ -569,56 +617,6 @@ class Nmap:
             print((f'\nReturning to {Color.OKBLUE}Netwatch'
                    f'{Color.END} menu...\n'))
             Netwatch()
-
-
-class Notify:
-    "A helper class for notifications of Sagemode process"
-
-    @staticmethod
-    def start(username: str, number_of_sites) -> str:
-        # start(ascii_art, delay=0.1)
-        if username or sites is not None:
-            return f"[yellow][[bright_red]*[yellow][yellow]] [bright_blue]Searching {number_of_sites} sites for target: [bright_yellow]{username}"
-
-    # notify the user how many sites the username has been found
-    @staticmethod
-    def positive_res(username: str, count) -> str:
-        return f"\n[yellow][[bright_red]+[yellow]][bright_green] Found [bright_red]{username} [bright_green]on [bright_magenta]{count}[bright_green] sites"
-
-    # notify the user where the result is stored
-    @staticmethod
-    def stored_result(result_file: str) -> str:
-        return f"[bright_green][[yellow]@[bright_green]] [orange3]Results stored in: [bright_green]{result_file}\n"
-
-    @staticmethod
-    def not_found(site: str, status_code="") -> str:
-        if status_code:
-            return f"[black][[red]-[black]] [blue]{site}: [yellow]Not Found! {status_code}"
-        return f"[black][[red]-[black]] [blue]{site}: [yellow]Not Found!"
-
-    @staticmethod
-    def found(site: str, url: str) -> str:
-        return f"[red][[green]+[red]] [green]{site}: [blue]{url}"
-
-    @staticmethod
-    def update(local_version: str, remote_version: str) -> str:
-        return (
-            "[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
-            + f"[red][[yellow]![red]] [bright_yellow]You are running Version: [bright_green]{local_version}\n"
-            + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remote_version}"
-        )
-
-    @staticmethod
-    def update_error(error: str) -> str:
-        return f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while checking for an update: [bright_red]{error}"
-
-    @staticmethod
-    def version(version: str) -> str:
-        return f"[bright_yellow]Sagemode [bright_red]{version}"
-
-    @staticmethod
-    def exception(site, error):
-        return f"[black][[red]![black]] [blue]{site}: [bright_red]{error}..."
 
 
 class Sagemode:
@@ -653,7 +651,7 @@ class Sagemode:
         self.console = Console()
         self.notify = Notify
         self.positive_count = 0
-        self.usernamePrompt = "Enter target username: "
+        self.usernamePrompt = "\nEnter target username: "
         self.username = input(self.usernamePrompt)
         self.resultDir = self.configManager.getPath("sagemode", "dataDir")
         self.result_file = self.resultDir + self.username + ".txt"
@@ -890,7 +888,6 @@ def main():
     try:
         program = Program()
         program.start()
-        commandHistory = CommandHistory()
         Netwatch()
     except KeyboardInterrupt:
         print("Finishing up...\n")

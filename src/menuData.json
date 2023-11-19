@@ -189,7 +189,7 @@
             ]
         }
     ],
-    "Nmap": [
+    "Nmap_Scans": [
         {
             "header": [
                 {
@@ -229,6 +229,43 @@
                     "type": "Intense Scan",
                     "options": "-T4 -A -v -oN PATH TARGET",
                     "description": "Intense scan of all ports."
+                }
+            ]
+        }
+    ],
+    "Nmap_Commands": [
+        {
+            "header": [
+                {
+                    "show_header": true,
+                    "header_style": "bold white",
+                    "title": "Nmap Commands",
+                    "width": 84,
+                    "show_lines": true
+                }
+            ],
+            "columns": [
+                {
+                    "title": "Command",
+                    "justify": "center",
+                    "style": "bright_cyan",
+                    "width": 8
+                },
+                {
+                    "title": "Description",
+                    "justify": "right",
+                    "style": "bright_black",
+                    "width": 50
+                }
+            ],
+            "rows": [
+                {
+                    "command": "Set",
+                    "description": "Set local options/variables, e.g. Set (RHOST | RPORT | LOG_NAME)"
+                },
+                {
+                    "command": "Run",
+                    "description": "Run the module with the selected options"
                 }
             ]
         }
