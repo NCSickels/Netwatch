@@ -18,17 +18,27 @@ import os
 import configparser
 import json
 import socket
-from time import gmtime, strftime, sleep
-import argparse
-import logging
+# import argparse
+# import logging
 import subprocess
+import threading
+import requests
+import random
+import datetime
+from time import gmtime, strftime, sleep
+from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
+from bs4 import BeautifulSoup
+
+from accessories import Notify
+from sites import sites, soft404_indicators, user_agents
 
 # Common Functions
 
 
 class Color:
+    "A class for colorizing terminal output"
     HEADER = '\033[95m'
     IMPORTANT = '\33[35m'
     NOTICE = '\033[33m'
@@ -74,6 +84,8 @@ class CommandHistory:
 
 
 class ConfigManager:
+    "A class for managing configuration files"
+
     def __init__(self):
         self.config = configparser.ConfigParser()
         configFile = os.path.dirname(
@@ -92,6 +104,8 @@ class ConfigManager:
 
 
 class Program:
+    "A class for main program functions"
+
     def __init__(self):
         self.configManager = ConfigManager()
         self.tableCreator = TableCreator(self.configManager)
@@ -112,6 +126,8 @@ class Program:
                 "general_config", "toolDir"))
         if not os.path.isdir(self.configManager.getPath("general_config", "logDir")):
             os.makedirs(self.configManager.getPath("general_config", "logDir"))
+        if not os.path.isdir(self.configManager.getPath("sagemode", "dataDir")):
+            os.makedirs(self.configManager.getPath("sagemode", "dataDir"))
 
     def end(self) -> None:  # command_history: CommandHistory
         print("\n\nFinishing up...\n")
@@ -178,6 +194,7 @@ class Program:
                     "general_config", "toolDir"))
                 self.clean(self.configManager.getPath(
                     "general_config", "logDir"))
+                self.clean(self.configManager.getPath("sagemode", "dataDir"))
             case "help" | "?":
                 self.tableCreator.displayTableFromFile(module)
                 # self.tableCreator.displayTableFromFile("Core")
@@ -186,6 +203,26 @@ class Program:
         # sys.stdout = self.original_stdout
         # self.log_file.close()
         pass
+
+
+class BannerPrinter:
+    "A class for printing banners"
+
+    def __init__(self, logo: str):
+        self.logo = logo
+        self.rich_colors = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'bright_black',
+                            'bright_red', 'bright_green', 'bright_yellow', 'bright_blue', 'bright_magenta', 'bright_cyan', 'bright_white']
+        self.print()
+
+    def print(self) -> None:
+        for line in self.logo.split("\n"):
+            for character in line:
+                rprint(
+                    f'[{random.choice(self.rich_colors)}]{character}',
+                    end="",
+                    flush=True
+                )
+            print()
 
 # TODO: Add a default case for global commands, and ability to specify which help menu to display, regardless of currnet module path
 
@@ -248,6 +285,7 @@ class TableCreator:
 
 
 class Netwatch:
+    "A menu class for Netwatch tools"
     netwatchLogo = '''
                     :!?Y5PGGPP5!:             .!JPGBGPY7^.                      
                   ..J#@#Y!75#@@@&P7:     .~7?5#@@&BY77YG#BY:                    
@@ -339,6 +377,7 @@ class Netwatch:
 
 
 class InformationGathering:
+    "A menu class for Information Gathering tools"
     menuLogo = '''
 ===================================================================================
                         ██╗███╗   ██╗███████╗ ██████╗ 
@@ -365,15 +404,14 @@ class InformationGathering:
                 print(Nmap.nmapLogo)
                 Nmap()
             case "2":
-                print(PortScanner.portScannerLogo)
+                Sagemode()
+            case "3":
                 pass
                 # Currently not working
                 # PortScanner()
-            case "3":
+            case "4":
                 print(Host2IP.host2ipLogo)
                 Host2IP()
-            case "4":  # Sagemode
-                pass
             case "?" | "help":
                 self.program.command(choiceInfo, "Information_Gathering")
                 self.program.command(choiceInfo, "Core")
@@ -531,6 +569,242 @@ class Nmap:
                    f'{Color.END} menu...\n'))
             Netwatch()
 
+
+class Notify:
+    "A helper class for notifications of Sagemode process"
+
+    @staticmethod
+    def start(username: str, number_of_sites) -> str:
+        # start(ascii_art, delay=0.1)
+        if username or sites is not None:
+            return f"[yellow][[bright_red]*[yellow][yellow]] [bright_blue]Searching {number_of_sites} sites for target: [bright_yellow]{username}"
+
+    # notify the user how many sites the username has been found
+    @staticmethod
+    def positive_res(username: str, count) -> str:
+        return f"\n[yellow][[bright_red]+[yellow]][bright_green] Found [bright_red]{username} [bright_green]on [bright_magenta]{count}[bright_green] sites"
+
+    # notify the user where the result is stored
+    @staticmethod
+    def stored_result(result_file: str) -> str:
+        return f"[bright_green][[yellow]@[bright_green]] [orange3]Results stored in: [bright_green]{result_file}\n"
+
+    @staticmethod
+    def not_found(site: str, status_code="") -> str:
+        if status_code:
+            return f"[black][[red]-[black]] [blue]{site}: [yellow]Not Found! {status_code}"
+        return f"[black][[red]-[black]] [blue]{site}: [yellow]Not Found!"
+
+    @staticmethod
+    def found(site: str, url: str) -> str:
+        return f"[red][[green]+[red]] [green]{site}: [blue]{url}"
+
+    @staticmethod
+    def update(local_version: str, remote_version: str) -> str:
+        return (
+            "[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
+            + f"[red][[yellow]![red]] [bright_yellow]You are running Version: [bright_green]{local_version}\n"
+            + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remote_version}"
+        )
+
+    @staticmethod
+    def update_error(error: str) -> str:
+        return f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while checking for an update: [bright_red]{error}"
+
+    @staticmethod
+    def version(version: str) -> str:
+        return f"[bright_yellow]Sagemode [bright_red]{version}"
+
+    @staticmethod
+    def exception(site, error):
+        return f"[black][[red]![black]] [blue]{site}: [bright_red]{error}..."
+
+
+class Sagemode:
+    #        ____                __  ___        __
+    #   / __/__ ____ ____   /  |/  /__  ___/ /__
+    #  _\ \/ _ `/ _ `/ -_) / /|_/ / _ \/ _  / -_)
+    # /___/\_,_/\_, /\__/ /_/  /_/\___/\_,_/\__/
+    #          /___/
+    sagemodeLogoText = '''
+
+███████╗ █████╗  ██████╗ ███████╗███╗   ███╗ ██████╗ ██████╗ ███████╗
+██╔════╝██╔══██╗██╔════╝ ██╔════╝████╗ ████║██╔═══██╗██╔══██╗██╔════╝
+███████╗███████║██║  ███╗█████╗  ██╔████╔██║██║   ██║██║  ██║█████╗  
+╚════██║██╔══██║██║   ██║██╔══╝  ██║╚██╔╝██║██║   ██║██║  ██║██╔══╝  
+███████║██║  ██║╚██████╔╝███████╗██║ ╚═╝ ██║╚██████╔╝██████╔╝███████╗
+╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝     ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
+'''
+    sagemodeLogo = '''
+                         @@@%%%%%@@@
+                     @%##`````@`````##&@
+                   @##````````@````````##@
+                 @%#`````````@@@`````````#%@
+                 &#``````````@@@``````````#&
+                @#````@@@@@@@@@@@@@@@@@````#@
+                @%@``@@@@@@@@@@@@@@@@@@@``@%@
+                @%@```@@@@@@@@@@@@@@@@@```#%@
+                @@# `````````@@@``````````#@@
+                 &#``````````@@@``````````#&
+                  @##`````````@`````````##@
+                    @##```````@``````###@
+                       @@#````@````#@@
+                         @@@%%%%%@@@
+    '''
+
+    def __init__(self):  # username: str, found_only=False
+        self.configManager = ConfigManager()
+        self.console = Console()
+        self.notify = Notify
+        self.positive_count = 0
+        self.usernamePrompt = "Enter target username: "
+        self.username = input(self.usernamePrompt)
+        self.resultDir = self.configManager.getPath("sagemode", "dataDir")
+        self.result_file = self.resultDir + self.username + ".txt"
+
+        self.start(self.sagemodeLogo, self.sagemodeLogoText, delay=0.001)
+
+    def printLogo(self) -> None:
+        for line in self.sagemodeLogo.split("\n"):
+            for character in line:
+                if character in ["█"]:
+                    rprint(f"[yellow]{character}", end="", flush=True)
+                else:
+                    rprint(f"[bright_red]{character}", end="", flush=True)
+            print()
+    # this function checks if the url not a false positive result, return false
+
+    def is_soft404(self, html_response: str) -> bool:
+        soup = BeautifulSoup(html_response, "html.parser")
+        page_title = soup.title.string.strip() if soup.title else ""
+        for error_indicator in soft404_indicators:
+            if (
+                # check if the error indicator is in the html string response
+                error_indicator.lower() in html_response.lower()
+                # check for the title bar of the page if there are anyi error_indicator
+                or error_indicator.lower() in page_title.lower()
+                # Specific check sites, since positive result will have the username in the title bar.
+                or page_title.lower() == "instagram"
+                # patreon's removed user
+                or page_title.lower() == "patreon logo"
+                or "sign in" in page_title.lower()
+            ):
+                return True
+        return False
+
+    def check_site(self, site: str, url: str, headers):
+        url = url.format(self.username)
+        # we need headers to avoid being blocked by requesting the website 403 error
+        try:
+            with requests.Session() as session:
+                response = session.get(url, headers=headers)
+                # Raises an HTTPError for bad responses
+            # further check to reduce false positive results
+            if (
+                response.status_code == 200
+                and self.username.lower() in response.text.lower()
+                and not self.is_soft404(response.text)
+            ):
+                # to prevent multiple threads from accessing/modifying the positive
+                # counts simultaneously and prevent race conditions.
+                with threading.Lock():
+                    self.positive_count += 1
+                self.console.print(self.notify.found(site, url))
+                with open(self.result_file, "a") as f:
+                    f.write(f"{url}\n")
+            # the site reurned 404 (user not found)
+            else:
+                if not self.found_only:
+                    self.console.print(self.notify.not_found(site))
+        except Exception as e:
+            self.notify.exception(site, e)
+
+    def start(self, bannerText: str, bannerLogo: str, delay=0.001):
+        """
+        Parameters:
+            banner
+            delay=0.2
+        """
+        for line in bannerLogo.split("\n"):
+            for character in line:
+                if character in ["█"]:
+                    rprint(f"[yellow]{character}", end="", flush=True)
+                else:
+                    rprint(f"[bright_red]{character}", end="", flush=True)
+            print()
+        for line in bannerText.split("\n"):
+            for character in line:
+                if character in ["#", "@", "%", "&"]:
+                    rprint(f"[yellow]{character}", end="", flush=True)
+                else:
+                    rprint(f"[bright_red]{character}", end="", flush=True)
+            print()
+
+        """
+        Start the search.
+        """
+        self.console.print(self.notify.start(self.username, len(sites)))
+
+        current_datetime = datetime.datetime.now()
+        date = current_datetime.strftime("%m/%d/%Y")
+        time = current_datetime.strftime("%I:%M %p")
+        headers = {"User-Agent": random.choice(user_agents)}
+
+        with open(self.result_file, "a") as file:
+            file.write(f"\n\n{29*'#'} {date}, {time} {29*'#'}\n\n")
+
+        # keep track of thread objects.
+        threads = []
+
+        try:
+            with self.console.status(
+                f"[*] Searching for target: {self.username}", spinner="bouncingBall"
+            ):
+                for site, url in sites.items():
+                    # creates a new thread object
+                    thread = threading.Thread(
+                        target=self.check_site, args=(site, url, headers))
+                    # track the thread objects by storing it in the assigned threads list.
+                    threads.append(thread)
+                    # initiate the execution of the thread
+                    thread.start()
+                for thread in threads:
+                    # waits for each thread to finish before proceeding.
+                    # to avoid output problems and maintain desired order of executions
+                    thread.join()
+
+            # notify how many sites the username has been found
+            self.console.print(
+                self.notify.positive_res(self.username, self.positive_count)
+            )
+            # notify where the result is stored
+            self.console.print(self.notify.stored_result(self.result_file))
+
+        except Exception:
+            self.console.print_exception()
+
+    # def check_for_update(self):
+    #     try:
+    #         r = requests.get(
+    #             "https://raw.githubusercontent.com/senran101604/sagemode/master/sagemode.py"
+    #         )
+
+    #         remote_version = str(re.findall('__version__ = "(.*)"', r.text)[0])
+    #         local_version = __version__
+
+    #         if remote_version != local_version:
+    #             self.console.print(self.notify.update(
+    #                 local_version, remote_version))
+
+    #     except Exception as error:
+    #         self.console.print(self.notify.update_error(error))
+
+    # def do_update(self):
+    #     repo_dir = os.path.dirname(os.path.realpath(__file__))
+    #     # ensure we're performing git command in the local git repo directory
+    #     os.chdir(repo_dir)
+    #     subprocess.run(["git", "pull"])
+
 # TODO: Fix this function - IP address is not being passed correctly
 
 
@@ -551,6 +825,15 @@ class PortScanner:
         self.portPrompt = "Enter port(s) to scan: "
         self.logNamePrompt = "Enter log file name: "
         self.run()
+
+    # def print_logo(self) -> None:
+    #     for line in self.portScannerLogo.split("\n"):
+    #         for character in line:
+    #             if character in ["█", "═"]:
+    #                 rprint(f"[yellow]{character}", end="", flush=True)
+    #             else:
+    #                 rprint(f"[bright_red]{character}", end="", flush=True)
+    #         print()
 
     def run(self) -> None:
         try:

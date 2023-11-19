@@ -173,11 +173,16 @@
                 },
                 {
                     "option": "2",
+                    "modules": "Sagemode",
+                    "description": "Track and Unveil Online identities across social media platforms through OSINT."
+                },
+                {
+                    "option": "3",
                     "modules": "Custom Port Scanner",
                     "description": "Alternative to Nmap if installation is unavailable."
                 },
                 {
-                    "option": "3",
+                    "option": "4",
                     "modules": "Host2IP",
                     "description": "Converts a hostname to an IP address."
                 }
