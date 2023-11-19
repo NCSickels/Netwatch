@@ -164,3 +164,7 @@ src/netwatchLogos.yml
 src/data/*.txt
 src/accessories.py
 testRequirements.txt
+netwatchLogos.yml
+nmapHelpMenuData.json
+sagemode.py
+sagemode_old.py

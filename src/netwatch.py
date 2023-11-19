@@ -18,6 +18,7 @@ import os
 import configparser
 import json
 import socket
+import re
 # import argparse
 # import logging
 import subprocess
@@ -661,6 +662,7 @@ class Sagemode:
         self.username = input(self.usernamePrompt)
         self.resultDir = self.configManager.getPath("sagemode", "dataDir")
         self.result_file = self.resultDir + self.username + ".txt"
+        self.__version__ = "1.1.3"
 
         self.start(self.sagemodeLogo, self.sagemodeLogoText, delay=0.001)
 
@@ -790,7 +792,7 @@ class Sagemode:
     #         )
 
     #         remote_version = str(re.findall('__version__ = "(.*)"', r.text)[0])
-    #         local_version = __version__
+    #         local_version = self.__version__
 
     #         if remote_version != local_version:
     #             self.console.print(self.notify.update(
@@ -825,15 +827,6 @@ class PortScanner:
         self.portPrompt = "Enter port(s) to scan: "
         self.logNamePrompt = "Enter log file name: "
         self.run()
-
-    # def print_logo(self) -> None:
-    #     for line in self.portScannerLogo.split("\n"):
-    #         for character in line:
-    #             if character in ["█", "═"]:
-    #                 rprint(f"[yellow]{character}", end="", flush=True)
-    #             else:
-    #                 rprint(f"[bright_red]{character}", end="", flush=True)
-    #         print()
 
     def run(self) -> None:
         try:
