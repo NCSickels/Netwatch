@@ -62,6 +62,13 @@ class Notify:
     def __init__(self):
         self.console = Console()
 
+    def update(self, remoteVersion: str, localVersion: str) -> str:
+        self.console.print(
+            f"[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
+            + f"[red][[yellow]![red]] [bright_yellow]You are running Version: [bright_green]{localVersion}\n"
+            + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remoteVersion}"
+        )
+
     # Methods for Netwatch & General Use
     def endProgram(self) -> None:
         self.console.print(
@@ -208,20 +215,22 @@ class ConfigManager:
 class CommandHandler:
     def __init__(self):
         self.program = Program()
+        self.updateHandler = UpdateHandler()
         self.configManager = ConfigManager()
         self.tableCreator = TableCreator(self.configManager)
         self.notify = Notify()
 
     def execute(self, command: str, module=None) -> None:
+        # TODO: Implement 'cd' function
         match command:
             case "help" | "?":
                 self.tableCreator.displayTableFromFile(module)
             case "update":
-                # TODO: Implement 'cd' function
-                try:
-                    subprocess.check_call(["../scripts/update.sh"], shell=True)
-                except subprocess.CalledProcessError as e:
-                    self.notify.updateScriptError(e)
+                self.updateHandler.checkForUpdate()
+                # try:
+                #     subprocess.check_call(["../scripts/update.sh"], shell=True)
+                # except subprocess.CalledProcessError as e:
+                #     self.notify.updateScriptError(e)
             case "clear" | "cls":
                 self.program.clearScr()
             case "clean":
@@ -322,6 +331,50 @@ class Program:
         pass
 
 
+class UpdateHandler:
+    def __init__(self):
+        self.configManager = ConfigManager()
+        self.notify = Notify()
+        self.console = Console()
+
+        self.local_version = self.configManager.get(
+            "general_config", "__version__")
+        self.checkForUpdate()
+
+    def checkForUpdate(self) -> None:
+        try:
+            r = requests.get(
+                "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.cfg")
+            matches = re.findall('__version__ = "(.*)"', r.text)
+            if matches:
+                remote_version = str(matches[0])
+            else:
+                raise ValueError(
+                    "Unable to find version number in netwatch.cfg")
+
+            if remote_version != self.local_version:
+                self.notify.update(self.local_version, remote_version)
+                self.promptForUpdate()
+            else:
+                pass
+        except Exception as error:
+            self.notify.updateScriptError(error)
+
+    def promptForUpdate(self) -> None:
+        response = input(
+            "\nWould you like to update Netwatch? [y/n]: ").lower()
+        if response in ["y", "yes"]:
+            self.update()
+        else:
+            Netwatch()
+
+    def update(self) -> None:
+        repo_dir = os.path.dirname(os.path.realpath(__file__))
+        # ensure we're performing git command in the local git repo directory
+        os.chdir(repo_dir)
+        subprocess.run(["git", "pull"])
+
+
 class BannerPrinter:
     "A class for printing banners"
 
@@ -404,27 +457,28 @@ class TableCreator:
 
 class Netwatch:
     "A menu class for Netwatch tools"
-    netwatchLogo = '''
-                    :!?Y5PGGPP5!:             .!JPGBGPY7^.                      
-                  ..J#@#Y!75#@@@&P7:     .~7?5#@@&BY77YG#BY:                    
-                  .^7~^.    .!P&@@@&BJ: .7B&@@@@G7.     :!Y!                    
-                               :?G&@&Y: :5@&#BJ^       ..                       
-                   !J!.   .:~!~^  :~^.   .^^:..:~!!~:  ..YJ.                    
-                   7B~ .~5#&@@@&BJ:  .:  .. .JB&@@@@&G~  ~#!                    
-                  .77. !#@@@@@@@@&7  ?Y  J? ^B@@@@&&&@B: :!:                    
-                     .^JY?!~~!?PB!   5J  ?P. !BP?!^::^!!^                       
-                    ::.         .^.~YJ:  .?Y!~:         .:.                     
-                 .^JG~           :5?:  ..  .75^          ?G?:                   
-               .:J&@Y            !Y   ....   ?~          :B@B~.                 
-               ^5@@@G^       .:!J5G57.   .~YGG5?!:.     .^G@@@?                 
-              .J&@@@@#57~~!YBB&@@@@@@BJ7JG@@@@@@@&BPJ775B#@@@&P.                
-               :#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B7                 
-               .J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@GJ:                 
-                .!P#&&&@@@@@@@@@&&&&@@@@@@@@&#&&@@@@@@@@@&P?^.                  
-                   .:^^~!!!!YB@&&G5J?7!!?JYJ?JPPPPJ777!~~^.                     
-                             :Y#@@@@&#BBBB#&@@&#J^                              
-                               :75B&&&&@@&&&BY!:.                               
-                                  .:::^^^^:::.   
+    version = "2.2.0"
+    netwatchLogo = f'''
+                    :!?Y5PGGPP5!:             .!JPGBGPY7^.
+                  ..J#@#Y!75#@@@&P7:     .~7?5#@@&BY77YG#BY:
+                  .^7~^.    .!P&@@@&BJ: .7B&@@@@G7.     :!Y!
+                               :?G&@&Y: :5@&#BJ^       ..
+                   !J!.   .:~!~^  :~^.   .^^:..:~!!~:  ..YJ.
+                   7B~ .~5#&@@@&BJ:  .:  .. .JB&@@@@&G~  ~#!
+                  .77. !#@@@@@@@@&7  ?Y  J? ^B@@@@&&&@B: :!:
+                     .^JY?!~~!?PB!   5J  ?P. !BP?!^::^!!^
+                    ::.         .^.~YJ:  .?Y!~:         .:.
+                 .^JG~           :5?:  ..  .75^          ?G?:
+               .:J&@Y            !Y   ....   ?~          :B@B~.
+               ^5@@@G^       .:!J5G57.   .~YGG5?!:.     .^G@@@?
+              .J&@@@@#57~~!YBB&@@@@@@BJ7JG@@@@@@@&BPJ775B#@@@&P.
+               :#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B7
+               .J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@GJ:
+                .!P#&&&@@@@@@@@@&&&&@@@@@@@@&#&&@@@@@@@@@&P?^.
+                   .:^^~!!!!YB@&&G5J?7!!?JYJ?JPPPPJ777!~~^.
+                             :Y#@@@@&#BBBB#&@@&#J^
+                               :75B&&&&@@&&&BY!:.
+                                  .:::^^^^:::.
 ===================================================================================
        ███╗   ██╗███████╗████████╗██╗    ██╗ █████╗ ████████╗ ██████╗██╗  ██╗
        ████╗  ██║██╔════╝╚══██╔══╝██║    ██║██╔══██╗╚══██╔══╝██╔════╝██║  ██║
@@ -433,7 +487,7 @@ class Netwatch:
        ██║ ╚████║███████╗   ██║   ╚███╔███╔╝██║  ██║   ██║   ╚██████╗██║  ██║
        ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 ===================================================================================
-    v2.1.9                                     Noah Sickels (@NCSickels)     
+    v{version}                                      Noah Sickels (@NCSickels)
 ===================================================================================\n
 '''
 
@@ -831,8 +885,6 @@ class Sagemode:
             self.console.print(
                 self.notifySagemode.stored_result(self.result_file))
             self.notify.previousContextMenu("Information Gathering")
-            # print((f'\n\nReturning to {Color.OKBLUE}Information Gathering'
-            #        f'{Color.END} menu...\n'))
             InformationGathering()
 
         except Exception:
