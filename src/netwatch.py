@@ -53,13 +53,66 @@ class Color:
     BOLD = '\033[1m'
     LOGGING = '\33[34m'
 
+# TODO: Generalize this class for use in other modules
+
 
 class Notify:
     "A helper class for notifications of Netwatch process"
 
+    def __init__(self):
+        self.console = Console()
+
+    # Methods for Netwatch & General Use
+    def endProgram(self) -> None:
+        self.console.print(
+            f"\n[bright_yellow]Finishing up...\n")
+
+    def previousContextMenu(self, module: str) -> None:
+        self.console.print((f"\n[bright_yellow]Returning to "
+                            f"[bright_blue]{module} [bright_yellow]menu...\n"))
+
+    def unknownInput(self, choice: str) -> str:
+        self.console.print(
+            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]Unknown input: [bright_red]{choice}. [bright_yellow]Type [bright_red]'?' [bright_yellow]for help.")
+
+    def cleaningDirectory(self, path: str) -> None:
+        self.console.print(
+            f"\n[red][[yellow]![red]] [bright_yellow]Cleaning [bright_blue]{path} [bright_yellow]directory...")
+
+    def currentDirPath(self, module: any, path=None) -> None:
+        split_module = module.split("/")
+        if (len(split_module) <= 1):    # if module is in root directory (Netwatch/)
+            self.console.print(
+                f"\n[black][[red]*[black]] [bright_yellow]Module [bright_black]-> [bright_red]{split_module[0]}\n[black][[red]*[black]] [bright_yellow]Path [bright_black]  -> [bright_red]{module+'/'}\n")
+        else:
+            self.console.print(
+                f"\n[black][[red]*[black]] [bright_yellow]Module [bright_black]-> [bright_red]{split_module[len(split_module)-1]}\n[black][[red]*[black]] [bright_yellow]Path [bright_black]  -> [bright_red]{module+'/'}\n")
+
+    def updateScriptError(self, error: str):
+        self.console.print(
+            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while updating: [bright_red]{error}")
+
+    # Methods for InformationGathering
+    # Methods for Nmap
+
+    def currentTarget(self, target: str) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow]Target [bright_black]-> [bright_red]{target}")
+
+    def currentLogPath(self, logPath: str) -> None:
+        self.console.print(
+            f"[black][[red]*[black]] [bright_yellow]Log Path [bright_black]-> [bright_red]{logPath}\n")
+
+    def scanCompleted(self, logPath: str) -> None:
+        self.console.print(
+            f'\n[bright_green][✔] Scan completed, log saved to: [bright_blue]{logPath}')
+
+
+class NotifySagemode:
+    "A helper class for notifications of Sagemode process"
+
     @staticmethod
     def start(username: str, number_of_sites) -> str:
-        # start(ascii_art, delay=0.1)
         if username or sites is not None:
             return f"[yellow][[bright_red]*[yellow][yellow]] [bright_blue]Searching {number_of_sites} sites for target: [bright_yellow]{username}"
 
@@ -99,7 +152,6 @@ class Notify:
     def version(version: str) -> str:
         return f"[bright_yellow]Sagemode [bright_red]{version}"
 
-    @staticmethod
     def exception(site, error):
         return f"[black][[red]![black]] [blue]{site}: [bright_red]{error}..."
 
@@ -158,17 +210,18 @@ class CommandHandler:
         self.program = Program()
         self.configManager = ConfigManager()
         self.tableCreator = TableCreator(self.configManager)
+        self.notify = Notify()
 
     def execute(self, command: str, module=None) -> None:
         match command:
+            case "help" | "?":
+                self.tableCreator.displayTableFromFile(module)
             case "update":
-                # TODO: Add command history updates to each of these cases
                 # TODO: Implement 'cd' function
                 try:
                     subprocess.check_call(["../scripts/update.sh"], shell=True)
                 except subprocess.CalledProcessError as e:
-                    print(
-                        f'{Color.RED}[-]{Color.END} Error occurred with update script: {e}')
+                    self.notify.updateScriptError(e)
             case "clear" | "cls":
                 self.program.clearScr()
             case "clean":
@@ -179,8 +232,10 @@ class CommandHandler:
                 self.program.clean(
                     self.configManager.getPath("sagemode", "dataDir"))
                 self.completed()
-            case "help" | "?":
-                self.tableCreator.displayTableFromFile(module)
+            case "path" | "pwd":
+                self.program.printPath(module)
+            case "exit" | "quit" | "end":
+                self.program.end()
 
     def completed(self) -> None:
         input("\nClick [return] to continue...")
@@ -192,6 +247,7 @@ class Program:
     def __init__(self):
         self.configManager = ConfigManager()
         self.tableCreator = TableCreator(self.configManager)
+        self.notify = Notify()
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.cfg'
         # self.original_stdout = sys.stdout
@@ -213,34 +269,40 @@ class Program:
             os.makedirs(self.configManager.getPath("sagemode", "dataDir"))
 
     def end(self) -> None:
-        print("\n\nFinishing up...\n")
+        self.notify.endProgram()
         sleep(0.25)
         sys.exit()
 
     def clean(self, path: str) -> None:
-        # TODO: Update with new file check method
-        print(
-            f'\n{Color.WARNING}[!] Cleaning {path} directory...{Color.END}\n')
         if os.path.exists(path):
+            deleted_files = False
             if os.path.exists(path):
                 for root, dirs, files in os.walk(path, topdown=False):
                     for file in files:
                         file_path = os.path.join(root, file)
                         try:
+                            self.notify.cleaningDirectory(path)
                             os.remove(file_path)
                             print(f'\t - Deleting {file_path} file...')
+                            deleted_files = True
                         except Exception as e:
                             print(e)
                     for dir in dirs:
                         dir_path = os.path.join(root, dir)
                         try:
+                            self.notify.cleaningDirectory(path)
                             os.rmdir(dir_path)
                             print(f'\t - Deleting {dir_path} directory...')
+                            deleted_files = True
                         except Exception as e:
                             print(e)
                 # os.rmdir(path)
-                print(
-                    f'\n{Color.OKGREEN}[✔] {path} directory successfully cleaned.{Color.END}\n')
+                if deleted_files:
+                    print(
+                        f'\n{Color.OKGREEN}[✔] {path} directory successfully cleaned.{Color.END}\n')
+                else:
+                    print((f'\n{Color.OKGREEN}[✔] No files or directories found in'
+                           f'{path}.{Color.END}\n'))
             else:
                 raise FileNotFoundError(
                     f'{Color.RED}{path} directory not found!{Color.END}\n')
@@ -249,13 +311,7 @@ class Program:
                 f'{Color.RED}Path {path} does not exist!{Color.END}\n')
 
     def printPath(self, module: str) -> None:
-        split_module = module.split("/")
-        if (len(split_module) <= 1):    # if module is in root directory (Netwatch/)
-            print(
-                f'\n{Color.OKBLUE}[*]{Color.END} Module: {split_module[0]}\n{Color.OKBLUE}[*]{Color.END} Path: {module+"/"}\n')
-        else:
-            print(
-                f'\n{Color.OKBLUE}[*]{Color.END} Module -> {split_module[len(split_module)-1]}\n{Color.OKBLUE}[*]{Color.END} Path   -> {module+"/"}\n')
+        self.notify.currentDirPath(module)
 
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -385,6 +441,7 @@ class Netwatch:
         self.program = Program()  # Program(config, configFile)
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
+        self.notify = Notify()
         self.tableCreator = TableCreator(self.configManager)
 
         self.netwatchPrompt = self.configManager.get(
@@ -414,13 +471,11 @@ class Netwatch:
             case "clean":
                 self.commandHandler.execute(choice)
             case "path" | "pwd":
-                # Print path using Program.command instead?
-                self.program.printPath("netwatch")
+                self.commandHandler.execute(choice, "Netwatch")
             case "exit" | "quit" | "end":
-                self.program.end()
+                self.commandHandler.execute(choice)
             case _:
-                print(
-                    f'{Color.RED}[-]{Color.END} Unknown input: {choice}. Type "?" for help.')
+                self.notify.unknownInput(choice)
                 self.__init__()
         self.__init__()
 
@@ -442,6 +497,7 @@ class InformationGathering:
         self.program = Program()
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
+        self.notify = Notify()
 
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
@@ -471,16 +527,15 @@ class InformationGathering:
             case "clean":
                 self.commandHandler.execute(choiceInfo)
             case "path" | "pwd":
-                self.program.printPath("Netwatch/Information_Gathering")
+                self.commandHandler.execute(
+                    choiceInfo, "Netwatch/Information_Gathering")
             case "exit" | "quit" | "end":
-                self.program.end()
+                self.commandHandler.execute(choiceInfo)
             case "back":
-                print((f'\nReturning to {Color.OKBLUE}Netwatch'
-                       f'{Color.END} menu...\n'))
+                self.notify.previousContextMenu("Netwatch")
                 Netwatch()
             case _:
-                print(
-                    f'{Color.RED}[-]{Color.END} Unknown input: {choiceInfo}. Type "?" for help.')
+                self.notify.unknownInput(choiceInfo)
                 self.__init__()
         self.__init__()
 
@@ -502,6 +557,7 @@ class Nmap:
         self.program = Program()
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
+        self.notify = Notify()
 
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
@@ -556,20 +612,18 @@ class Nmap:
 
     def menu(self, target: int, logPath: str) -> None:
         print(self.nmapLogo)
-        print(f'\n{Color.OKBLUE}[*]{Color.END} Target(s) -> {target}')
-        print(f'{Color.OKBLUE}[*]{Color.END} Log Path  -> {logPath}\n')
+        self.notify.currentTarget(target)
+        self.notify.currentLogPath(logPath)
         try:
             choiceNmap = input(self.netwatchPrompt)
             match choiceNmap:
                 case "quick scan" | "quick" "quickscan":
-                    os.system(f'\nnmap -T4 -F -v -oN {logPath} {target}')  # \n
-                    print((f'\n{Color.OKGREEN}[✔] Scan completed, log saved to:'
-                           f'{Color.END} {logPath}'))
+                    os.system(f'\nnmap -T4 -F -v -oN {logPath} {target}')
+                    self.notify.scanCompleted(logPath)
                     self.promptForAnotherScan(target, logPath)
                 case "intense scan" | "intense" | "intensescan":
-                    os.system(f'\nnmap -T4 -A -v -oN {logPath} {target}')  # \n
-                    print((f'\n{Color.OKGREEN}[✔] Scan completed, log saved to:'
-                           f'{Color.END} {logPath}'))
+                    os.system(f'\nnmap -T4 -A -v -oN {logPath} {target}')
+                    self.notify.scanCompleted(logPath)
                     self.promptForAnotherScan(target, logPath)
                 case _ if choiceNmap.startswith("set "):
                     _, param, value = choiceNmap.split(" ", 2)
@@ -590,18 +644,16 @@ class Nmap:
                 case "clean":
                     self.commandHandler.execute(choiceNmap, "Nmap")
                 case "path" | "pwd":
-                    self.program.printPath(
-                        "Netwatch/Information_Gathering/Nmap")
+                    self.commandHandler.execute(
+                        choiceNmap, "Netwatch/Information_Gathering/Nmap")
                     self.menu(target, logPath)
                 case "exit" | "quit" | "end":
                     self.program.end()
                 case "back":
-                    print((f'\nReturning to {Color.OKBLUE}Information Gathering'
-                           f'{Color.END} menu...\n'))
+                    self.notify.previousContextMenu("Information Gathering")
                     InformationGathering()
                 case _:
-                    print(
-                        f'{Color.RED}[-]{Color.END} Unknown input: {choiceNmap}. Type "?" for help.')
+                    self.notify.unknownInput(choiceNmap)
                     self.menu(target, logPath)
             self.menu(target, logPath)
         except KeyboardInterrupt:
@@ -614,8 +666,7 @@ class Nmap:
         if response in ["y", "yes"]:
             self.menu(target, logPath)
         else:
-            print((f'\nReturning to {Color.OKBLUE}Netwatch'
-                   f'{Color.END} menu...\n'))
+            self.notify.previousContextMenu("Netwatch")
             Netwatch()
 
 
@@ -649,12 +700,14 @@ class Sagemode:
     def __init__(self):
         self.configManager = ConfigManager()
         self.console = Console()
-        self.notify = Notify
+        self.notifySagemode = NotifySagemode
+        self.notify = Notify()
         self.positive_count = 0
         self.usernamePrompt = "\nEnter target username: "
         self.username = input(self.usernamePrompt)
         self.resultDir = self.configManager.getPath("sagemode", "dataDir")
         self.result_file = self.resultDir + self.username + ".txt"
+        self.found_only = False
         self.__version__ = "1.1.3"
 
         self.start(self.sagemodeLogo, self.sagemodeLogoText, delay=0.001)
@@ -704,15 +757,15 @@ class Sagemode:
                 # counts simultaneously and prevent race conditions.
                 with threading.Lock():
                     self.positive_count += 1
-                self.console.print(self.notify.found(site, url))
+                self.console.print(self.notifySagemode.found(site, url))
                 with open(self.result_file, "a") as f:
                     f.write(f"{url}\n")
             # the site reurned 404 (user not found)
             else:
                 if not self.found_only:
-                    self.console.print(self.notify.not_found(site))
+                    self.console.print(self.notifySagemode.not_found(site))
         except Exception as e:
-            self.notify.exception(site, e)
+            self.notifySagemode.exception(site, e)
 
     def start(self, bannerText: str, bannerLogo: str, delay=0.001):
         """
@@ -738,7 +791,8 @@ class Sagemode:
         """
         Start the search.
         """
-        self.console.print(self.notify.start(self.username, len(sites)))
+        self.console.print(self.notifySagemode.start(
+            self.username, len(sites)))
 
         current_datetime = datetime.datetime.now()
         date = current_datetime.strftime("%m/%d/%Y")
@@ -770,12 +824,15 @@ class Sagemode:
 
             # notify how many sites the username has been found
             self.console.print(
-                self.notify.positive_res(self.username, self.positive_count)
+                self.notifySagemode.positive_res(
+                    self.username, self.positive_count)
             )
             # notify where the result is stored
-            self.console.print(self.notify.stored_result(self.result_file))
-            print((f'\n\nReturning to {Color.OKBLUE}Information Gathering'
-                   f'{Color.END} menu...\n'))
+            self.console.print(
+                self.notifySagemode.stored_result(self.result_file))
+            self.notify.previousContextMenu("Information Gathering")
+            # print((f'\n\nReturning to {Color.OKBLUE}Information Gathering'
+            #        f'{Color.END} menu...\n'))
             InformationGathering()
 
         except Exception:
