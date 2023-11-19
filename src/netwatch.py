@@ -130,7 +130,7 @@ class Program:
         if not os.path.isdir(self.configManager.getPath("sagemode", "dataDir")):
             os.makedirs(self.configManager.getPath("sagemode", "dataDir"))
 
-    def end(self) -> None:  # command_history: CommandHistory
+    def end(self) -> None:
         print("\n\nFinishing up...\n")
         sleep(0.25)
         sys.exit()
@@ -622,11 +622,6 @@ class Notify:
 
 
 class Sagemode:
-    #        ____                __  ___        __
-    #   / __/__ ____ ____   /  |/  /__  ___/ /__
-    #  _\ \/ _ `/ _ `/ -_) / /|_/ / _ \/ _  / -_)
-    # /___/\_,_/\_, /\__/ /_/  /_/\___/\_,_/\__/
-    #          /___/
     sagemodeLogoText = '''
 
 ███████╗ █████╗  ██████╗ ███████╗███╗   ███╗ ██████╗ ██████╗ ███████╗
@@ -653,7 +648,7 @@ class Sagemode:
                          @@@%%%%%@@@
     '''
 
-    def __init__(self):  # username: str, found_only=False
+    def __init__(self):
         self.configManager = ConfigManager()
         self.console = Console()
         self.notify = Notify
@@ -781,31 +776,13 @@ class Sagemode:
             )
             # notify where the result is stored
             self.console.print(self.notify.stored_result(self.result_file))
+            print((f'\n\nReturning to {Color.OKBLUE}Information Gathering'
+                   f'{Color.END} menu...\n'))
+            InformationGathering()
 
         except Exception:
             self.console.print_exception()
 
-    # def check_for_update(self):
-    #     try:
-    #         r = requests.get(
-    #             "https://raw.githubusercontent.com/senran101604/sagemode/master/sagemode.py"
-    #         )
-
-    #         remote_version = str(re.findall('__version__ = "(.*)"', r.text)[0])
-    #         local_version = self.__version__
-
-    #         if remote_version != local_version:
-    #             self.console.print(self.notify.update(
-    #                 local_version, remote_version))
-
-    #     except Exception as error:
-    #         self.console.print(self.notify.update_error(error))
-
-    # def do_update(self):
-    #     repo_dir = os.path.dirname(os.path.realpath(__file__))
-    #     # ensure we're performing git command in the local git repo directory
-    #     os.chdir(repo_dir)
-    #     subprocess.run(["git", "pull"])
 
 # TODO: Fix this function - IP address is not being passed correctly
 
