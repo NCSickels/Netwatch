@@ -161,3 +161,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 src/netwatchLogos.yml
+src/data/*.txt
+src/accessories.py
+testRequirements.txt
+netwatchLogos.yml
+nmapHelpMenuData.json
+sagemode.py
+sagemode_old.py

@@ -1,5 +1,9 @@
 markdown-it-py==3.0.0
 mdurl==0.1.2
 Pygments==2.15.1
-rich==13.4.2
 telnetlib3==2.0.2
+aiohttp
+asyncio
+requests>=2.31.0
+rich>=13.6.0
+beautifulsoup4>=4.12.2
