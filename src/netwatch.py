@@ -26,6 +26,7 @@ import threading
 import requests
 import random
 import datetime
+import glob
 from time import gmtime, strftime, sleep
 from rich import print as rprint
 from rich.console import Console
@@ -34,8 +35,8 @@ from bs4 import BeautifulSoup
 
 from sites import sites, soft404_indicators, user_agents
 
-# Common Functions
 
+# Common Functions
 
 class Color:
     "A class for colorizing terminal output"
@@ -128,7 +129,7 @@ class NotifySagemode:
     "A helper class for notifications of Sagemode process"
 
     @staticmethod
-    def start(username: str, number_of_sites) -> str:
+    def start(username: str, number_of_sites: any) -> str:
         if username or sites is not None:
             return f"[yellow][[bright_red]*[yellow][yellow]] [bright_blue]Searching {number_of_sites} sites for target: [bright_yellow]{username}"
 
@@ -169,7 +170,7 @@ class NotifySagemode:
         return f"[bright_yellow]Sagemode [bright_red]{version}"
 
     @staticmethod
-    def exception(site, error):
+    def exception(site, error: str) -> str:
         return f"[black][[red]![black]] [blue]{site}: [bright_red]{error}..."
 
 
@@ -212,13 +213,13 @@ class ConfigManager:
         self.config.read(configFile)
         self.installDir = os.path.dirname(os.path.abspath(__file__)) + '/'
 
-    def get(self, section, option):
+    def get(self, section: any, option: any) -> str:
         return self.config.get(section, option)
 
-    def getPath(self, section, option):
+    def getPath(self, section: any, option: any) -> str:
         return self.installDir + self.config.get(section, option)
 
-    def getbool(self, section, option):
+    def getbool(self, section: str, option: str) -> bool:
         return self.config.getboolean(section, option)
 
 
@@ -336,6 +337,11 @@ class Program:
 
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
+
+    def find_ovpn_files(self, directory='/') -> None:
+        search_path = os.path.join(directory, '**/*.ovpn')
+        for filename in glob.glob(search_path, recursive=True):
+            print(f'Found .ovpn file: {filename}')
 
     def __del__(self):
         # sys.stdout = self.original_stdout
@@ -475,6 +481,7 @@ class TableCreator:
 
 class Netwatch:
     "A menu class for Netwatch tools"
+
     version = ConfigManager().get("general_config", "__version__")
     netwatchLogo = f'''
                     :!?Y5PGGPP5!:             .!JPGBGPY7^.
@@ -526,6 +533,7 @@ class Netwatch:
         self.run()
 
     def run(self) -> None:
+        # self.program.find_ovpn_files(os.path.expanduser('~'))
         choice = input(self.netwatchPrompt)
         match choice:
             case "1":
@@ -664,8 +672,6 @@ class Nmap:
     def run(self) -> None:
         try:
             target = input(self.targetPrompt)
-            # logName = input(self.logFileNamePrompt)
-            # logPath = "nmap-" + logName + "-" + \
             logPath = "nmap-" + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
             if os.path.isfile(logPath):
@@ -1037,6 +1043,7 @@ class Host2IP:
 def main():
     try:
         program = Program()
+        # program.find_ovpn_files(os.path.expanduser('~'))
         program.start()
         Netwatch()
     except KeyboardInterrupt:

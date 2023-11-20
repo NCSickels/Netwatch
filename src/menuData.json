@@ -31,6 +31,11 @@
             ],
             "rows": [
                 {
+                    "option": "0",
+                    "modules": "Automated Attack Tool",
+                    "description": "Automated tool designed to perform initial vulnerability assessment and enumeration on a target machine (HackTheBox, TryHackMe, etc.)"
+                },
+                {
                     "option": "1",
                     "modules": "Information Gathering",
                     "description": "Contains modules that gather information about a target (e.g. nmap, Doork, Crips, etc.)"
