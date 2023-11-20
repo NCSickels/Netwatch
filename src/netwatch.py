@@ -62,6 +62,8 @@ class Notify:
     def __init__(self):
         self.console = Console()
 
+    # Methods for Netwatch & General Use
+
     def update(self, remoteVersion: str, localVersion: str) -> str:
         self.console.print(
             f"[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
@@ -69,7 +71,10 @@ class Notify:
             + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remoteVersion}"
         )
 
-    # Methods for Netwatch & General Use
+    def upToDate(self) -> str:
+        self.console.print(
+            f"[red][[yellow]![red]] [bright_yellow]Netwatch is up to date.\n")
+
     def endProgram(self) -> None:
         self.console.print(
             f"\n[bright_yellow]Finishing up...\n")
@@ -259,14 +264,16 @@ class Program:
         self.notify = Notify()
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.cfg'
+        self.updateHandler = UpdateHandler()
         # self.original_stdout = sys.stdout
         # self.log_file = open('typescript.log', 'w')
         # sys.stdout = self.log_file
 
     def start(self) -> None:
         self.clearScr()
-        self.createFolders()
         print(Netwatch.netwatchLogo)
+        self.updateHandler.checkForUpdate()
+        self.createFolders()
 
     def createFolders(self) -> None:
         if not os.path.isdir(self.configManager.getPath("general_config", "toolDir")):
@@ -339,7 +346,6 @@ class UpdateHandler:
 
         self.local_version = self.configManager.get(
             "general_config", "__version__")
-        self.checkForUpdate()
 
     def checkForUpdate(self) -> None:
         try:
@@ -349,14 +355,15 @@ class UpdateHandler:
             if matches:
                 remote_version = str(matches[0])
             else:
+                pass
                 raise ValueError(
                     "Unable to find version number in netwatch.cfg")
 
-            if remote_version != self.local_version:
-                self.notify.update(self.local_version, remote_version)
+            if self.is_newer_version(remote_version, self.local_version):
+                self.notify.update(remote_version, self.local_version)
                 self.promptForUpdate()
             else:
-                pass
+                self.notify.upToDate()
         except Exception as error:
             self.notify.updateScriptError(error)
 
@@ -366,7 +373,13 @@ class UpdateHandler:
         if response in ["y", "yes"]:
             self.update()
         else:
+            print(Netwatch.netwatchLogo)
             Netwatch()
+
+    def is_newer_version(self, remote_version: str, local_version: str) -> bool:
+        remote_version_revisions = list(map(int, remote_version.split('.')))
+        local_version_revisions = list(map(int, local_version.split('.')))
+        return remote_version_revisions > local_version_revisions
 
     def update(self) -> None:
         repo_dir = os.path.dirname(os.path.realpath(__file__))
@@ -457,7 +470,7 @@ class TableCreator:
 
 class Netwatch:
     "A menu class for Netwatch tools"
-    version = "2.2.0"
+    version = ConfigManager().get("general_config", "__version__")
     netwatchLogo = f'''
                     :!?Y5PGGPP5!:             .!JPGBGPY7^.
                   ..J#@#Y!75#@@@&P7:     .~7?5#@@&BY77YG#BY:
@@ -999,7 +1012,6 @@ def main():
         program.start()
         Netwatch()
     except KeyboardInterrupt:
-        print("Finishing up...\n")
         sleep(0.25)
         sys.exit()
 
