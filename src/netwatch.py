@@ -19,8 +19,6 @@ import configparser
 import json
 import socket
 import re
-# import argparse
-# import logging
 import subprocess
 import threading
 import requests
@@ -362,7 +360,7 @@ class UpdateHandler:
         try:
             r = requests.get(
                 "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.cfg")
-            matches = re.findall('__version__ = "(.*)"', r.text)
+            matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)
             if matches:
                 remote_version = str(matches[0])
             else:
@@ -384,8 +382,9 @@ class UpdateHandler:
         if response in ["y", "yes"]:
             self.update()
         else:
-            print(Netwatch.netwatchLogo)
-            Netwatch()
+            pass
+            # print(Netwatch.netwatchLogo)
+            # Netwatch()
 
     def is_newer_version(self, remote_version: str, local_version: str) -> bool:
         remote_version_revisions = list(map(int, remote_version.split('.')))
