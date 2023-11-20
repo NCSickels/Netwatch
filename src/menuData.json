@@ -205,7 +205,7 @@
                     "title": "Scan Type",
                     "justify": "center",
                     "style": "bright_cyan",
-                    "width": 20
+                    "width": 25
                 },
                 {
                     "title": "Options",
@@ -220,6 +220,16 @@
                 }
             ],
             "rows": [
+                {
+                    "type": "Default Scan",
+                    "options": "-T4 -v -A -oN PATH TARGET",
+                    "description": "Default scan of target with OS detection, version detection, script scanning, and traceroute."
+                },
+                {
+                    "type": "Vulnerability Scan",
+                    "options": "-T4 -v -sV --script vuln -oN PATH TARGET",
+                    "description": "Scan for vulnerabilities using Nmap Scripting Engine."
+                },
                 {
                     "type": "Quick Scan",
                     "options": "-T4 -F -v -oN PATH TARGET",

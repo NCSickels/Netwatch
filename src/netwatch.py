@@ -9,7 +9,7 @@
 # ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 #
 #
-#   Netwatch v2.0
+#   Netwatch v2.2.1
 #   by: @NCSickels
 
 # Imports
@@ -104,6 +104,10 @@ class Notify:
         self.console.print(
             f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while updating: [bright_red]{error}")
 
+    def exception(self, error: str):
+        self.console.print(
+            f"[black][[red]![black]] [bright_yellow]An error occurred: [bright_red]{error}...")
+
     # Methods for InformationGathering
     # Methods for Nmap
 
@@ -164,6 +168,7 @@ class NotifySagemode:
     def version(version: str) -> str:
         return f"[bright_yellow]Sagemode [bright_red]{version}"
 
+    @staticmethod
     def exception(site, error):
         return f"[black][[red]![black]] [blue]{site}: [bright_red]{error}..."
 
@@ -685,11 +690,19 @@ class Nmap:
             choiceNmap = input(self.netwatchPrompt)
             match choiceNmap:
                 case "quick scan" | "quick" "quickscan":
-                    os.system(f'\nnmap -T4 -F -v -oN {logPath} {target}')
+                    self.runScan("quick", target, logPath)
                     self.notify.scanCompleted(logPath)
                     self.promptForAnotherScan(target, logPath)
                 case "intense scan" | "intense" | "intensescan":
-                    os.system(f'\nnmap -T4 -A -v -oN {logPath} {target}')
+                    self.runScan("intense", target, logPath)
+                    self.notify.scanCompleted(logPath)
+                    self.promptForAnotherScan(target, logPath)
+                case "default" | "default scan" | "defaultscan":
+                    self.runScan("default", target, logPath)
+                    self.notify.scanCompleted(logPath)
+                    self.promptForAnotherScan(target, logPath)
+                case "vuln" | "vuln scan" | "vulnscan" | "vulnerability" | "vulnerability scan":
+                    self.runScan("vuln", target, logPath)
                     self.notify.scanCompleted(logPath)
                     self.promptForAnotherScan(target, logPath)
                 case _ if choiceNmap.startswith("set "):
@@ -726,6 +739,21 @@ class Nmap:
         except KeyboardInterrupt:
             print("\n")
             InformationGathering()
+
+    def runScan(self, choice: str, target: int, logPath: str) -> None:
+        scan_types = {
+            'default': 'nmap -T4 -v -A -oN',
+            'quick': 'nmap -T4 -F -v -oN',
+            'intense': 'nmap -T4 -A -v -oN',
+            'vuln': 'nmap -T4 -v -sV --script=vuln -oN'
+        }
+        for choice, scan_type in scan_types.items():
+            if choice.startswith(choice):
+                try:
+                    os.system(f'\n{scan_type} {logPath} {target}')
+                except Exception as e:
+                    self.notify.exception(e)
+                break
 
     def promptForAnotherScan(self, target: int, logPath: str) -> None:
         response = input(
