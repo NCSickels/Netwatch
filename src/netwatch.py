@@ -39,12 +39,12 @@ class Program:
     "A class for main program functions"
 
     def __init__(self):
+        self.updateHandler = UpdateHandler()
         self.configManager = ConfigManager()
         self.tableCreator = TableCreator(self.configManager)
         self.notify = Notify()
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.cfg'
-        self.updateHandler = UpdateHandler()
         # self.original_stdout = sys.stdout
         # self.log_file = open('typescript.log', 'w')
         # sys.stdout = self.log_file
@@ -113,9 +113,25 @@ class Program:
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def find_ovpn_files(self, directory='/') -> None:
-        search_path = os.path.join(directory, '**/*.ovpn')
-        for filename in glob.glob(search_path, recursive=True):
-            print(f'Found .ovpn file: {filename}')
+        self.notify.findFiles(".ovpn")
+        try:
+            search_path = os.path.join(directory, '**/*.ovpn')
+            files = glob.glob(search_path, recursive=True)
+            if not files:
+                self.notify.noFilesFound(".ovpn")
+                return
+            for filename in files:
+                self.notify.foundFiles(filename, ".ovpn")
+                response = input("Use this file? [y/n]: ").lower()
+                if response in ["y", "yes"]:
+                    self.configManager.set(
+                        "general_config", "ovpnPath", filename)
+                    self.notify.setFiles(filename)
+                    return
+            self.notify.noFilesFound(".ovpn", " other")
+        except Exception as e:
+            self.notify.exception(e)
+            self.notify.noFilesFound(".ovpn")
 
     def __del__(self):
         # sys.stdout = self.original_stdout
@@ -179,13 +195,24 @@ class ConfigManager:
 
     def __init__(self):
         self.config = configparser.ConfigParser()
-        configFile = os.path.dirname(
+        self.notify = Notify()
+        self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.cfg'
-        self.config.read(configFile)
+        self.config.read(self.configFile)
         self.installDir = os.path.dirname(os.path.abspath(__file__)) + '/'
 
     def get(self, section: any, option: any) -> str:
         return self.config.get(section, option)
+
+    def set(self, section: any, key: any, value: any) -> None:
+        try:
+            if not self.config.has_section(section):
+                self.config.add_section(section)
+            self.config.set(section, key, value)
+            with open(self.configFile, 'w') as f:
+                self.config.write(f)
+        except Exception as e:
+            self.notify.exception(e)
 
     def getPath(self, section: any, option: any) -> str:
         return self.installDir + self.config.get(section, option)
@@ -327,6 +354,22 @@ class Notify:
     def updateScriptError(self, error: str):
         self.console.print(
             f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while updating: [bright_red]{error}")
+
+    def findFiles(self, file_type: str) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow]Searching for [bright_blue]{file_type} [bright_yellow]files...\n")
+
+    def foundFiles(self, file: str, file_type: str) -> None:
+        self.console.print((f"\n[red][[yellow]![red]] [bright_yellow]Found [bright_blue]"
+                           f"{file_type} [bright_yellow]file: [bright_red]{file}\n"))
+
+    def noFilesFound(self, file_type: str, modifier="") -> None:
+        self.console.print((f"\n[red][[bright_red]![red]] [yellow]No{modifier}"
+                           f"[bright_blue]{file_type} [bright_yellow]files found. Please add the path to the [red].cfg [bright_yellow]file manually.\n"))
+
+    def setFiles(self, file: str) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow]Selected file: [bright_red]{file}\n")
 
     def exception(self, error: str):
         self.console.print(
@@ -532,8 +575,11 @@ class Netwatch:
 
     def run(self) -> None:
         # self.program.find_ovpn_files(os.path.expanduser('~'))
+        self.program.find_ovpn_files(os.path.expanduser('~'))
         choice = input(self.netwatchPrompt)
-        match choice:
+        match choice:  # .strip()
+            case "0":
+                pass
             case "1":
                 print(InformationGathering.menuLogo)
                 InformationGathering()
@@ -556,6 +602,33 @@ class Netwatch:
                 self.notify.unknownInput(choice)
                 self.__init__()
         self.__init__()
+
+
+class AutoAttack:
+    "A menu class for the Automated Attack Tool for HTB, TryHackMe, etc."
+    menuLogo = '''
+===================================================================================
+                 █████╗ ██╗   ██╗████████╗ ██████╗            
+                ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗           
+                ███████║██║   ██║   ██║   ██║   ██║           
+                ██╔══██║██║   ██║   ██║   ██║   ██║           
+                ██║  ██║╚██████╔╝   ██║   ╚██████╔╝           
+                ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝            
+             █████╗ ████████╗████████╗ █████╗  ██████╗██╗  ██╗
+            ██╔══██╗╚══██╔══╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+            ███████║   ██║      ██║   ███████║██║     █████╔╝ 
+            ██╔══██║   ██║      ██║   ██╔══██║██║     ██╔═██╗ 
+            ██║  ██║   ██║      ██║   ██║  ██║╚██████╗██║  ██╗
+            ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+===================================================================================
+'''
+
+    def __init__(self):
+        self.program = Program()
+        self.configManager = ConfigManager()
+        self.commandHandler = CommandHandler()
+        self.notify = Notify()
+        self.tableCreator = TableCreator(self.configManager)
 
 
 class InformationGathering:
@@ -584,7 +657,7 @@ class InformationGathering:
 
     def run(self) -> None:
         choiceInfo = input(self.netwatchPrompt)
-        match choiceInfo:
+        match choiceInfo:  # .strip()
             case "1":
                 print(Nmap.nmapLogo)
                 Nmap()
@@ -692,7 +765,7 @@ class Nmap:
         self.notify.currentLogPath(logPath)
         try:
             choiceNmap = input(self.netwatchPrompt)
-            match choiceNmap:
+            match choiceNmap:  # .strip()
                 case "quick scan" | "quick" "quickscan":
                     self.runScan("quick", target, logPath)
                     self.notify.scanCompleted(logPath)
