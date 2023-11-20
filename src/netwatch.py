@@ -9,7 +9,7 @@
 # ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 #
 #
-#   Netwatch v2.0
+#   Netwatch v2.2.1
 #   by: @NCSickels
 
 # Imports
@@ -19,13 +19,12 @@ import configparser
 import json
 import socket
 import re
-# import argparse
-# import logging
 import subprocess
 import threading
 import requests
 import random
 import datetime
+import glob
 from time import gmtime, strftime, sleep
 from rich import print as rprint
 from rich.console import Console
@@ -34,8 +33,8 @@ from bs4 import BeautifulSoup
 
 from sites import sites, soft404_indicators, user_agents
 
-# Common Functions
 
+# Common Functions
 
 class Color:
     "A class for colorizing terminal output"
@@ -104,6 +103,10 @@ class Notify:
         self.console.print(
             f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while updating: [bright_red]{error}")
 
+    def exception(self, error: str):
+        self.console.print(
+            f"[black][[red]![black]] [bright_yellow]An error occurred: [bright_red]{error}...")
+
     # Methods for InformationGathering
     # Methods for Nmap
 
@@ -124,7 +127,7 @@ class NotifySagemode:
     "A helper class for notifications of Sagemode process"
 
     @staticmethod
-    def start(username: str, number_of_sites) -> str:
+    def start(username: str, number_of_sites: any) -> str:
         if username or sites is not None:
             return f"[yellow][[bright_red]*[yellow][yellow]] [bright_blue]Searching {number_of_sites} sites for target: [bright_yellow]{username}"
 
@@ -164,7 +167,8 @@ class NotifySagemode:
     def version(version: str) -> str:
         return f"[bright_yellow]Sagemode [bright_red]{version}"
 
-    def exception(site, error):
+    @staticmethod
+    def exception(site, error: str) -> str:
         return f"[black][[red]![black]] [blue]{site}: [bright_red]{error}..."
 
 
@@ -207,13 +211,13 @@ class ConfigManager:
         self.config.read(configFile)
         self.installDir = os.path.dirname(os.path.abspath(__file__)) + '/'
 
-    def get(self, section, option):
+    def get(self, section: any, option: any) -> str:
         return self.config.get(section, option)
 
-    def getPath(self, section, option):
+    def getPath(self, section: any, option: any) -> str:
         return self.installDir + self.config.get(section, option)
 
-    def getbool(self, section, option):
+    def getbool(self, section: str, option: str) -> bool:
         return self.config.getboolean(section, option)
 
 
@@ -332,6 +336,11 @@ class Program:
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
 
+    def find_ovpn_files(self, directory='/') -> None:
+        search_path = os.path.join(directory, '**/*.ovpn')
+        for filename in glob.glob(search_path, recursive=True):
+            print(f'Found .ovpn file: {filename}')
+
     def __del__(self):
         # sys.stdout = self.original_stdout
         # self.log_file.close()
@@ -351,7 +360,7 @@ class UpdateHandler:
         try:
             r = requests.get(
                 "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.cfg")
-            matches = re.findall('__version__ = "(.*)"', r.text)
+            matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)
             if matches:
                 remote_version = str(matches[0])
             else:
@@ -373,8 +382,9 @@ class UpdateHandler:
         if response in ["y", "yes"]:
             self.update()
         else:
-            print(Netwatch.netwatchLogo)
-            Netwatch()
+            pass
+            # print(Netwatch.netwatchLogo)
+            # Netwatch()
 
     def is_newer_version(self, remote_version: str, local_version: str) -> bool:
         remote_version_revisions = list(map(int, remote_version.split('.')))
@@ -470,6 +480,7 @@ class TableCreator:
 
 class Netwatch:
     "A menu class for Netwatch tools"
+
     version = ConfigManager().get("general_config", "__version__")
     netwatchLogo = f'''
                     :!?Y5PGGPP5!:             .!JPGBGPY7^.
@@ -521,6 +532,7 @@ class Netwatch:
         self.run()
 
     def run(self) -> None:
+        # self.program.find_ovpn_files(os.path.expanduser('~'))
         choice = input(self.netwatchPrompt)
         match choice:
             case "1":
@@ -659,8 +671,6 @@ class Nmap:
     def run(self) -> None:
         try:
             target = input(self.targetPrompt)
-            # logName = input(self.logFileNamePrompt)
-            # logPath = "nmap-" + logName + "-" + \
             logPath = "nmap-" + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
             if os.path.isfile(logPath):
@@ -685,11 +695,19 @@ class Nmap:
             choiceNmap = input(self.netwatchPrompt)
             match choiceNmap:
                 case "quick scan" | "quick" "quickscan":
-                    os.system(f'\nnmap -T4 -F -v -oN {logPath} {target}')
+                    self.runScan("quick", target, logPath)
                     self.notify.scanCompleted(logPath)
                     self.promptForAnotherScan(target, logPath)
                 case "intense scan" | "intense" | "intensescan":
-                    os.system(f'\nnmap -T4 -A -v -oN {logPath} {target}')
+                    self.runScan("intense", target, logPath)
+                    self.notify.scanCompleted(logPath)
+                    self.promptForAnotherScan(target, logPath)
+                case "default" | "default scan" | "defaultscan":
+                    self.runScan("default", target, logPath)
+                    self.notify.scanCompleted(logPath)
+                    self.promptForAnotherScan(target, logPath)
+                case "vuln" | "vuln scan" | "vulnscan" | "vulnerability" | "vulnerability scan":
+                    self.runScan("vuln", target, logPath)
                     self.notify.scanCompleted(logPath)
                     self.promptForAnotherScan(target, logPath)
                 case _ if choiceNmap.startswith("set "):
@@ -726,6 +744,21 @@ class Nmap:
         except KeyboardInterrupt:
             print("\n")
             InformationGathering()
+
+    def runScan(self, choice: str, target: int, logPath: str) -> None:
+        scan_types = {
+            'default': 'nmap -T4 -v -A -oN',
+            'quick': 'nmap -T4 -F -v -oN',
+            'intense': 'nmap -T4 -A -v -oN',
+            'vuln': 'nmap -T4 -v -sV --script=vuln -oN'
+        }
+        for choice, scan_type in scan_types.items():
+            if choice.startswith(choice):
+                try:
+                    os.system(f'\n{scan_type} {logPath} {target}')
+                except Exception as e:
+                    self.notify.exception(e)
+                break
 
     def promptForAnotherScan(self, target: int, logPath: str) -> None:
         response = input(
@@ -1009,6 +1042,7 @@ class Host2IP:
 def main():
     try:
         program = Program()
+        # program.find_ovpn_files(os.path.expanduser('~'))
         program.start()
         Netwatch()
     except KeyboardInterrupt:
