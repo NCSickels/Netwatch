@@ -353,13 +353,13 @@ class UpdateHandler:
                 "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.cfg")
             matches = re.findall('__version__ = "(.*)"', r.text)
             if matches:
-                remote_version = str(matches[0])  # .replace('"', '')
+                remote_version = str(matches[0])
             else:
                 pass
                 raise ValueError(
                     "Unable to find version number in netwatch.cfg")
 
-            if remote_version.strip() != self.local_version.strip():
+            if self.is_newer_version(remote_version, self.local_version):
                 self.notify.update(remote_version, self.local_version)
                 self.promptForUpdate()
             else:
@@ -375,6 +375,11 @@ class UpdateHandler:
         else:
             print(Netwatch.netwatchLogo)
             Netwatch()
+
+    def is_newer_version(self, remote_version: str, local_version: str) -> bool:
+        remote_version_revisions = list(map(int, remote_version.split('.')))
+        local_version_revisions = list(map(int, local_version.split('.')))
+        return remote_version_revisions > local_version_revisions
 
     def update(self) -> None:
         repo_dir = os.path.dirname(os.path.realpath(__file__))
@@ -1007,7 +1012,6 @@ def main():
         program.start()
         Netwatch()
     except KeyboardInterrupt:
-        # print("Finishing up...\n")
         sleep(0.25)
         sys.exit()
 
