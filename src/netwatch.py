@@ -575,7 +575,6 @@ class Netwatch:
 
     def run(self) -> None:
         # self.program.find_ovpn_files(os.path.expanduser('~'))
-        self.program.find_ovpn_files(os.path.expanduser('~'))
         choice = input(self.netwatchPrompt)
         match choice:  # .strip()
             case "0":
@@ -608,12 +607,12 @@ class AutoAttack:
     "A menu class for the Automated Attack Tool for HTB, TryHackMe, etc."
     menuLogo = '''
 ===================================================================================
-                 █████╗ ██╗   ██╗████████╗ ██████╗            
-                ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗           
-                ███████║██║   ██║   ██║   ██║   ██║           
-                ██╔══██║██║   ██║   ██║   ██║   ██║           
-                ██║  ██║╚██████╔╝   ██║   ╚██████╔╝           
-                ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝            
+                    █████╗ ██╗   ██╗████████╗ ██████╗            
+                   ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗           
+                   ███████║██║   ██║   ██║   ██║   ██║           
+                   ██╔══██║██║   ██║   ██║   ██║   ██║           
+                   ██║  ██║╚██████╔╝   ██║   ╚██████╔╝           
+                   ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝            
              █████╗ ████████╗████████╗ █████╗  ██████╗██╗  ██╗
             ██╔══██╗╚══██╔══╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
             ███████║   ██║      ██║   ███████║██║     █████╔╝ 
@@ -629,6 +628,9 @@ class AutoAttack:
         self.commandHandler = CommandHandler()
         self.notify = Notify()
         self.tableCreator = TableCreator(self.configManager)
+
+    def run(self) -> None:
+        pass
 
 
 class InformationGathering:
