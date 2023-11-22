@@ -112,7 +112,7 @@ class Program:
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def find_ovpn_files(self, directory='/') -> None:
+    def find_ovpn_files(self, directory='/') -> str:
         self.notify.findFiles(".ovpn")
         try:
             search_path = os.path.join(directory, '**/*.ovpn')
@@ -127,7 +127,7 @@ class Program:
                     self.configManager.set(
                         "general_config", "ovpnPath", filename)
                     self.notify.setFiles(filename)
-                    return
+                    return filename
             self.notify.noFilesFound(".ovpn", " other")
         except Exception as e:
             self.notify.exception(e)
@@ -219,6 +219,34 @@ class ConfigManager:
 
     def getbool(self, section: str, option: str) -> bool:
         return self.config.getboolean(section, option)
+
+
+class CheckProgramInstallation:
+    def __init__(self, program_name):
+        self.program_name = program_name
+        self.notify = Notify()
+
+    def installed(self) -> bool:
+        try:
+            subprocess.check_output(["which", self.program_name])
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def install(self) -> None:
+        try:
+            subprocess.check_call(
+                ["sudo", "apt", "install", "-y", self.program_name])
+        except subprocess.CalledProcessError as e:
+            self.notify.installError(self.program_name)
+            self.notify.exception(e)
+
+    def checkAndInstall(self):
+        if not self.installed():
+            self.notify.programNotInstalled(self.program_name)
+            self.install()
+        else:
+            self.notify.programAlreadyInstalled(self.program_name)
 
 
 class CommandHandler:
@@ -313,16 +341,15 @@ class Notify:
     def __init__(self):
         self.console = Console()
 
-    # Methods for Netwatch & General Use
-
-    def update(self, remoteVersion: str, localVersion: str) -> str:
+    # General Use Methods
+    def update(self, remoteVersion: str, localVersion: str) -> None:
         self.console.print(
             f"[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
             + f"[red][[yellow]![red]] [bright_yellow]You are running Version: [bright_green]{localVersion}\n"
             + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remoteVersion}"
         )
 
-    def upToDate(self) -> str:
+    def upToDate(self) -> None:
         self.console.print(
             f"[red][[yellow]![red]] [bright_yellow]Netwatch is up to date.\n")
 
@@ -334,9 +361,34 @@ class Notify:
         self.console.print((f"\n[bright_yellow]Returning to "
                             f"[bright_blue]{module} [bright_yellow]menu...\n"))
 
-    def unknownInput(self, choice: str) -> str:
+    def unknownInput(self, choice: str) -> None:
         self.console.print(
             f"[bright_red][[bright_red]![bright_red]] [bright_yellow]Unknown input: [bright_red]{choice}. [bright_yellow]Type [bright_red]'?' [bright_yellow]for help.")
+
+    def programNotInstalled(self, program: str) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow] Program: [bright_blue]{program} [bright_yellow]not found. Attempting to install...\n")
+
+    def programAlreadyInstalled(self, program: str) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow] Program: [bright_blue]{program} [bright_yellow]already installed. Skipping installation...\n")
+
+    # File Operations Methods
+    def findFiles(self, file_type: str) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow]Searching for [bright_blue]{file_type} [bright_yellow]files...\n")
+
+    def foundFiles(self, file: str, file_type: str) -> None:
+        self.console.print((f"\n[red][[yellow]![red]] [bright_yellow]Found [bright_blue]"
+                            f"{file_type} [bright_yellow]file: [bright_red]{file}\n"))
+
+    def noFilesFound(self, file_type: str, modifier="") -> None:
+        self.console.print((f"\n[red][[bright_red]![red]] [yellow]No{modifier}"
+                            f"[bright_blue]{file_type} [bright_yellow]files found. Please add the path to the [red].cfg [bright_yellow]file manually.\n"))
+
+    def setFiles(self, file: str) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow]Selected file: [bright_red]{file}\n")
 
     def cleaningDirectory(self, path: str) -> None:
         self.console.print(
@@ -351,33 +403,26 @@ class Notify:
             self.console.print(
                 f"\n[black][[red]*[black]] [bright_yellow]Module [bright_black]-> [bright_red]{split_module[len(split_module)-1]}\n[black][[red]*[black]] [bright_yellow]Path [bright_black]  -> [bright_red]{module+'/'}\n")
 
-    def updateScriptError(self, error: str):
-        self.console.print(
-            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while updating: [bright_red]{error}")
-
-    def findFiles(self, file_type: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Searching for [bright_blue]{file_type} [bright_yellow]files...\n")
-
-    def foundFiles(self, file: str, file_type: str) -> None:
-        self.console.print((f"\n[red][[yellow]![red]] [bright_yellow]Found [bright_blue]"
-                           f"{file_type} [bright_yellow]file: [bright_red]{file}\n"))
-
-    def noFilesFound(self, file_type: str, modifier="") -> None:
-        self.console.print((f"\n[red][[bright_red]![red]] [yellow]No{modifier}"
-                           f"[bright_blue]{file_type} [bright_yellow]files found. Please add the path to the [red].cfg [bright_yellow]file manually.\n"))
-
-    def setFiles(self, file: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Selected file: [bright_red]{file}\n")
-
-    def exception(self, error: str):
+    # Error Handling Methods
+    def exception(self, error: str) -> None:
         self.console.print(
             f"[black][[red]![black]] [bright_yellow]An error occurred: [bright_red]{error}...")
 
+    def installError(self, program: str) -> None:
+        self.console.print(
+            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]An error installing: [bright_blue]{program}[bright_yellow]!\n")
+
+    def updateScriptError(self, error: str) -> None:
+        self.console.print(
+            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while updating: [bright_red]{error}")
+
+    # Methods for AutoAttack Tool
+    def runOvpn(self, ovpnPath: str) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow]Starting OpenVPN profile: [bright_blue]{ovpnPath}\n")
+
     # Methods for InformationGathering
     # Methods for Nmap
-
     def currentTarget(self, target: str) -> None:
         self.console.print(
             f"\n[black][[red]*[black]] [bright_yellow]Target [bright_black]-> [bright_red]{target}")
@@ -443,7 +488,7 @@ class NotifySagemode:
 class BannerPrinter:
     "A class for printing banners"
 
-    def __init__(self, logo: str):
+    def __init__(self, logo):
         self.logo = logo
         self.rich_colors = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'bright_black',
                             'bright_red', 'bright_green', 'bright_yellow', 'bright_blue', 'bright_magenta', 'bright_cyan', 'bright_white']
@@ -452,11 +497,12 @@ class BannerPrinter:
     def print(self) -> None:
         for line in self.logo.split("\n"):
             for character in line:
-                rprint(
-                    f'[{random.choice(self.rich_colors)}]{character}',
-                    end="",
-                    flush=True
-                )
+                if character in ["█"]:
+                    rprint(f"[bright_yellow]{character}", end="", flush=True)
+                elif character in ["="]:
+                    rprint(f"[bright_yellow]{character}", end="", flush=True)
+                else:
+                    rprint(f"[bright_red]{character}", end="", flush=True)
             print()
 
 # TODO: Add a default case for global commands, and ability to specify which help menu to display, regardless of currnet module path
@@ -574,11 +620,11 @@ class Netwatch:
         self.run()
 
     def run(self) -> None:
-        # self.program.find_ovpn_files(os.path.expanduser('~'))
         choice = input(self.netwatchPrompt)
         match choice:  # .strip()
             case "0":
-                pass
+                print(AutoAttack.menuLogo)
+                AutoAttack()
             case "1":
                 print(InformationGathering.menuLogo)
                 InformationGathering()
@@ -621,6 +667,7 @@ class AutoAttack:
             ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 ===================================================================================
 '''
+    # TODO: Implement check for whether user is in CLI or passing through argparser
 
     def __init__(self):
         self.program = Program()
@@ -628,9 +675,27 @@ class AutoAttack:
         self.commandHandler = CommandHandler()
         self.notify = Notify()
         self.tableCreator = TableCreator(self.configManager)
+        self.run()
 
     def run(self) -> None:
-        pass
+        self.program.clearScr()
+        updatedConfigPath = self.program.find_ovpn_files(
+            os.path.expanduser('~'))
+        # Run .ovpn file if found
+        # Check for default value in config file
+        if updatedConfigPath:
+            self.startOvpn()
+
+    def startOvpn(self) -> None:
+        try:
+            self.notify.runOvpn(os.path.basename(
+                self.configManager.get("general_config", "ovpnPath")))
+            # subprocess.run(
+            # ["sudo", "openvpn", self.configManager.get("general_config", "ovpnPath")])
+        except KeyboardInterrupt:
+            print("\n")
+            self.notify.previousContextMenu("Netwatch")
+            Netwatch()
 
 
 class InformationGathering:
@@ -1116,7 +1181,6 @@ class Host2IP:
 def main():
     try:
         program = Program()
-        # program.find_ovpn_files(os.path.expanduser('~'))
         program.start()
         Netwatch()
     except KeyboardInterrupt:
