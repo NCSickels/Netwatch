@@ -141,6 +141,8 @@ class Program:
 
 
 class UpdateHandler:
+    "A class for handling updates for the Netwatch tool"
+
     def __init__(self):
         self.configManager = ConfigManager()
         self.notify = Notify()
@@ -222,7 +224,9 @@ class ConfigManager:
         return self.config.getboolean(section, option)
 
 
-class CheckProgramInstallation:
+class ProgramInstallationManager:
+    "A class for managing program installations for various tools used in Netwatch"
+
     def __init__(self, program_name):
         self.program_name = program_name
         self.notify = Notify()
@@ -254,6 +258,8 @@ class CheckProgramInstallation:
 
 
 class CommandHandler:
+    "A class for handling commands from the user"
+
     def __init__(self):
         self.program = Program()
         self.updateHandler = UpdateHandler()
@@ -288,6 +294,8 @@ class CommandHandler:
 
 
 class CommandHistory:
+    "A class for managing command history"
+
     def __init__(self):
         self.configManager = ConfigManager()
         self.storeHistory = self.configManager.getbool(
@@ -318,6 +326,7 @@ class CommandHistory:
 
 class Color:
     "A class for colorizing terminal output"
+
     HEADER = '\033[95m'
     IMPORTANT = '\33[35m'
     NOTICE = '\033[33m'
@@ -520,6 +529,8 @@ class BannerPrinter:
 
 
 class TableCreator:
+    "A class for creating help menu tables from JSON data"
+
     def __init__(self, configManager, jsonFile=None):
         self.configManager = configManager
         self.console = Console()
@@ -659,9 +670,12 @@ class Netwatch:
                 self.__init__()
         self.__init__()
 
+# TODO: Config file is being modified when running this module, making all values lowercase. Fix this.
+
 
 class AutoAttack:
     "A menu class for the Automated Attack Tool for HTB, TryHackMe, etc."
+
     menuLogo = '''
 ===================================================================================
                     █████╗ ██╗   ██╗████████╗ ██████╗            
@@ -695,15 +709,16 @@ class AutoAttack:
         # Run .ovpn file if found
         # Check for default value in config file
         if updatedConfigPath:
-            self.startOvpn()
+            self.startOvpn(updatedConfigPath)
 
-    def startOvpn(self) -> None:
+    def startOvpn(self, updatedConfigPath: str) -> None:
         try:
-            self.notify.runOvpn(os.path.basename(
-                self.configManager.get("general_config", "ovpnPath")))
-            # subprocess.run(
-            # ["sudo", "openvpn", self.configManager.get("general_config", "ovpnPath")])
-        except KeyboardInterrupt:
+            self.notify.runOvpn(os.path.basename(updatedConfigPath))
+            # print(os.getenv("TERM"))
+            # subprocess.Popen(["gnome-terminal", "--", "sudo", "openvpn", updatedConfigPath])
+            # subprocess.run(["sudo", "openvpn", updatedConfigPath])
+        except subprocess.CalledProcessError as e:
+            self.notify.exception(e)
             print("\n")
             self.notify.previousContextMenu("Netwatch")
             Netwatch()
@@ -711,6 +726,7 @@ class AutoAttack:
 
 class InformationGathering:
     "A menu class for Information Gathering tools"
+
     menuLogo = '''
 ===================================================================================
                         ██╗███╗   ██╗███████╗ ██████╗ 
@@ -771,6 +787,8 @@ class InformationGathering:
 
 # Bring user to main prompt first or ask for target IP first as currently implemented?
 class Nmap:
+    "A menu class for Nmap"
+
     nmapLogo = '''
 ===================================================================================
                         ███╗   ██╗███╗   ███╗ █████╗ ██████╗ 
@@ -798,7 +816,7 @@ class Nmap:
         self.checkInstall()
 
     def checkInstall(self) -> None:
-        checkNmap = CheckProgramInstallation("nmap")
+        checkNmap = ProgramInstallationManager("nmap")
         programIsInstalled = checkNmap.checkAndInstall()
         if programIsInstalled:
             self.run()
@@ -908,6 +926,8 @@ class Nmap:
 
 
 class Sagemode:
+    "An interface for using Sagemode - an OSINT tool for finding usernames"
+
     sagemodeLogoText = '''
 
 ███████╗ █████╗  ██████╗ ███████╗███╗   ███╗ ██████╗ ██████╗ ███████╗
@@ -1078,6 +1098,8 @@ class Sagemode:
 
 
 class PortScanner:
+    "A custom port scanner"
+
     portScannerLogo = '''\n
 ===================================================================================
       ██████╗  ██████╗ ██████╗ ████████╗    ███████╗ ██████╗ █████╗ ███╗   ██╗
@@ -1159,6 +1181,8 @@ class PortScanner:
 
 
 class Host2IP:
+    "A class for converting a hostname to an IP address"
+
     host2ipLogo = '''\n
 ===================================================================================
               ██╗  ██╗ ██████╗ ███████╗████████╗██████╗ ██╗██████╗ 
