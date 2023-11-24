@@ -126,7 +126,7 @@ class Program:
                 response = input("Use this file? [y/n]: ").lower()
                 if response in ["y", "yes"]:
                     self.configManager.set(
-                        "general_config", "ovpnPath", filename)
+                        "general_config", "ovpn_path", filename)
                     self.notify.setFiles(filename)
                     return filename
             self.notify.noFilesFound(".ovpn", " other")
@@ -299,7 +299,7 @@ class CommandHistory:
     def __init__(self):
         self.configManager = ConfigManager()
         self.storeHistory = self.configManager.getbool(
-            'general_config', 'storeHistory')
+            'general_config', 'storehistory')
         self.logDir = self.configManager.getPath('general_config', 'logDir')
         self.history = []  # set()
 
@@ -535,7 +535,7 @@ class TableCreator:
         self.configManager = configManager
         self.console = Console()
         self.jsonFile = os.path.dirname(os.path.abspath(
-            __file__)) + '/' + configManager.get('general_config', 'menuDataPath')
+            __file__)) + '/' + configManager.get('general_config', 'menu_data_path')
 
     @staticmethod
     def readJson(file_path: str) -> dict:
@@ -634,8 +634,8 @@ class Netwatch:
 
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
-        self.toolDir = self.configManager.getPath('general_config', 'toolDir')
-        self.logDir = self.configManager.getPath('general_config', 'logDir')
+        self.toolDir = self.configManager.getPath('general_config', 'tooldir')
+        self.logDir = self.configManager.getPath('general_config', 'logdir')
         self.storeHistory = self.configManager.getbool(
             'general_config', 'storeHistory')
 
@@ -808,7 +808,6 @@ class Nmap:
 
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
-        self.nmapDir = self.configManager.getPath('nmap', 'nmapdir')
         self.gitRepo = self.configManager.get('nmap', 'gitrepository')
         self.targetPrompt = "Enter target IP: "
         self.logFileNamePrompt = "Enter log file name: "
