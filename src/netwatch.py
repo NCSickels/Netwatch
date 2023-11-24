@@ -112,6 +112,7 @@ class Program:
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
 
+    # TODO: Generalize this method for use in other modules
     def find_ovpn_files(self, directory='/') -> str:
         self.notify.findFiles(".ovpn")
         try:
@@ -233,20 +234,23 @@ class CheckProgramInstallation:
         except subprocess.CalledProcessError:
             return False
 
-    def install(self) -> None:
+    def install(self) -> bool:
         try:
             subprocess.check_call(
                 ["sudo", "apt", "install", "-y", self.program_name])
+            return True
         except subprocess.CalledProcessError as e:
             self.notify.installError(self.program_name)
             self.notify.exception(e)
+            return False
 
-    def checkAndInstall(self):
+    def checkAndInstall(self) -> bool:
         if not self.installed():
             self.notify.programNotInstalled(self.program_name)
-            self.install()
+            return self.install()
         else:
             self.notify.programAlreadyInstalled(self.program_name)
+            return True
 
 
 class CommandHandler:
@@ -264,10 +268,6 @@ class CommandHandler:
                 self.tableCreator.displayTableFromFile(module)
             case "update":
                 self.updateHandler.checkForUpdate()
-                # try:
-                #     subprocess.check_call(["../scripts/update.sh"], shell=True)
-                # except subprocess.CalledProcessError as e:
-                #     self.notify.updateScriptError(e)
             case "clear" | "cls":
                 self.program.clearScr()
             case "clean":
@@ -332,8 +332,6 @@ class Color:
     BOLD = '\033[1m'
     LOGGING = '\33[34m'
 
-# TODO: Generalize this class for use in other modules
-
 
 class Notify:
     "A helper class for notifications of Netwatch process"
@@ -352,6 +350,7 @@ class Notify:
     def upToDate(self) -> None:
         self.console.print(
             f"[red][[yellow]![red]] [bright_yellow]Netwatch is up to date.\n")
+    # TODO: Update these lines with [*] and highlighting
 
     def endProgram(self) -> None:
         self.console.print(
@@ -367,11 +366,11 @@ class Notify:
 
     def programNotInstalled(self, program: str) -> None:
         self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow] Program: [bright_blue]{program} [bright_yellow]not found. Attempting to install...\n")
+            f"\n[black][[red]*[black]] [bright_yellow]Program: [bright_blue]{program} [bright_yellow]not found. Attempting to install...\n")
 
     def programAlreadyInstalled(self, program: str) -> None:
         self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow] Program: [bright_blue]{program} [bright_yellow]already installed. Skipping installation...\n")
+            f"\n[black][[red]*[black]] [bright_yellow]Program: [bright_blue]{program} [bright_yellow]already installed. Skipping installation...\n")
 
     # File Operations Methods
     def findFiles(self, file_type: str) -> None:
@@ -423,6 +422,14 @@ class Notify:
 
     # Methods for InformationGathering
     # Methods for Nmap
+    def logFileConflict(self) -> None:
+        self.console.print(
+            f"\n[bright_red][[bright_red]![bright_red]] [bright_yellow]Log file already exists!\n")
+
+    def overwriteLogFile(self) -> None:
+        self.console.print(
+            f"\n[red][[yellow]![red]] [bright_yellow] Would you like to overwrite the log file?")
+
     def currentTarget(self, target: str) -> None:
         self.console.print(
             f"\n[black][[red]*[black]] [bright_yellow]Target [bright_black]-> [bright_red]{target}")
@@ -434,6 +441,10 @@ class Notify:
     def scanCompleted(self, logPath: str) -> None:
         self.console.print(
             f'\n[bright_green][✔] Scan completed, log saved to: [bright_blue]{logPath}')
+
+    # TODO: Finish and check this
+    def promptForAnotherScan(self) -> None:
+        self.console.print()
 
 
 class NotifySagemode:
@@ -784,28 +795,16 @@ class Nmap:
         self.targetPrompt = "Enter target IP: "
         self.logFileNamePrompt = "Enter log file name: "
 
-        if not self.installed():
-            self.install()
+        self.checkInstall()
+
+    def checkInstall(self) -> None:
+        checkNmap = CheckProgramInstallation("nmap")
+        programIsInstalled = checkNmap.checkAndInstall()
+        if programIsInstalled:
             self.run()
         else:
-            self.run()
-
-    def installed(self) -> bool:
-        return any(os.path.isfile(path) for path in ["/usr/bin/nmap", "/usr/local/bin/nmap"])
-
-    def install(self) -> None:
-        print(
-            f'\n{Color.WARNING}[!] Installing Nmap...{Color.END}\n')
-
-        exitStatus = os.system("sudo apt-get install nmap")
-        if exitStatus == 0:
-            print(
-                f'\n{Color.OKGREEN}[✔] Nmap successfully installed.{Color.END}\n')
-            self.run()
-        else:
-            print((
-                f'\n{Color.RED}[-]{Color.END} Error installing Nmap.\n'
-                f'Returning to {Color.OKBLUE}Information Gathering{Color.END} menu...\n'))
+            self.notify.previousContextMenu("Information Gathering")
+            InformationGathering()
 
     def run(self) -> None:
         try:
@@ -813,10 +812,9 @@ class Nmap:
             logPath = "nmap-" + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
             if os.path.isfile(logPath):
-                print(
-                    f'\n{Color.WARNING}[!] Log file already exists!{Color.END}\n')
-                response = input(
-                    f'{Color.WARNING}[!] Would you like to overwrite the log file?{Color.END} [y/n]: ')
+                self.notify.logFileConflict()
+                self.notify.overwriteLogFile()
+                response = input('[y/n]: ')
                 if response.lower() == "y" or response.lower() == "yes":
                     self.menu(target, logPath)
                 else:
