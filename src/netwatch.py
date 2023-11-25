@@ -281,7 +281,7 @@ class CommandHandler:
                     "general_config", "logDir"))
                 self.program.clean(
                     self.configManager.getPath("sagemode", "datadir"))
-                self.completed()
+                # self.completed()
             case "path" | "pwd":
                 self.program.printPath(module)
             case "exit" | "quit" | "end":
@@ -377,6 +377,10 @@ class Notify:
         self.console.print(
             f"\n[black][[red]*[black]] [bright_yellow]Program: [bright_blue]{program} [bright_yellow]already installed. Skipping installation...\n")
 
+    def completed(self) -> None:
+        self.console.print(
+            f"\n[black][[red]*[black]] [bright_yellow]Operation completed.\n")
+
     # File Operations Methods
     def findFiles(self, file_type: str) -> None:
         self.console.print(
@@ -441,7 +445,7 @@ class Notify:
     # Methods for Nmap
     def logFileConflict(self) -> None:
         self.console.print(
-            f"\n[bright_red][[bright_red]![bright_red]] [bright_yellow]Log file already exists!\n")
+            f"\n[bright_red][[bright_red]![bright_red]] [bright_yellow]Log file already exists!")
 
     def overwriteLogFile(self) -> None:
         self.console.print(
@@ -457,7 +461,8 @@ class Notify:
 
     def scanCompleted(self, logPath: str) -> None:
         self.console.print(
-            f"\n[bright_green][✔] Scan completed, log saved to: [bright_blue]{logPath}")
+            # ✔
+            f"\n[black][[red]*[black]] [orange3]Scan completed, log saved to: [bright_blue]{logPath}")
 
     def promptForAnotherScan(self) -> None:
         self.console.print(
@@ -812,8 +817,8 @@ class Nmap:
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
         self.gitRepo = self.configManager.get('nmap', 'gitrepository')
-        self.targetPrompt = "Enter target IP: "
-        self.logFileNamePrompt = "Enter log file name: "
+        self.targetPrompt = "\nEnter target IP: "
+        self.logFileNamePrompt = "\nEnter log file name: "
 
         self.checkInstall()
 
@@ -842,6 +847,7 @@ class Nmap:
             self.menu(target, logPath)
         except KeyboardInterrupt:
             print("\n")
+            self.notify.previousContextMenu("Information Gathering")
             InformationGathering()
 
     def menu(self, target: int, logPath: str) -> None:
@@ -900,6 +906,7 @@ class Nmap:
             self.menu(target, logPath)
         except KeyboardInterrupt:
             print("\n")
+            self.notify.previousContextMenu("Information Gathering")
             InformationGathering()
 
     def runScan(self, choice: str, target: int, logPath: str) -> None:
@@ -1141,6 +1148,7 @@ class PortScanner:
             self.scan(ipList, portList)
         except KeyboardInterrupt:
             print("\n")
+            self.notify.previousContextMenu("Information Gathering")
             InformationGathering()
 
     def scan(self, ipList: list, portList: list) -> None:
@@ -1171,6 +1179,7 @@ class PortScanner:
                         sys.exit()
         except KeyboardInterrupt:
             print("\n")
+            self.notify.previousContextMenu("Information Gathering")
             InformationGathering()
 
     def ip2Int(self, ip: str) -> int:

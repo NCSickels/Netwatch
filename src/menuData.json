@@ -111,7 +111,7 @@
             "rows": [
                 {
                     "command": "help",
-                    "description": "Displays this help menu"
+                    "description": "Displays the help menu for the specified module. Default is the main help menu."
                 },
                 {
                     "command": "update",
