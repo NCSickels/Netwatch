@@ -53,16 +53,15 @@ class Program:
         self.clearScr()
         print(Netwatch.netwatchLogo)
         self.updateHandler.checkForUpdate()
-        self.createFolders()
+        self.createFolders([("general_config", "toolDir"),
+                            ("general_config", "logDir"),
+                            ("sagemode", "datadir")])
 
-    def createFolders(self) -> None:
-        if not os.path.isdir(self.configManager.getPath("general_config", "toolDir")):
-            os.makedirs(self.configManager.getPath(
-                "general_config", "toolDir"))
-        if not os.path.isdir(self.configManager.getPath("general_config", "logDir")):
-            os.makedirs(self.configManager.getPath("general_config", "logDir"))
-        if not os.path.isdir(self.configManager.getPath("sagemode", "dataDir")):
-            os.makedirs(self.configManager.getPath("sagemode", "dataDir"))
+    def createFolders(self, paths: any) -> None:
+        for section, option in paths:
+            path = self.configManager.getPath(section, option)
+            if not os.path.isdir(path):
+                os.makedirs(path)
 
     def end(self) -> None:
         self.notify.endProgram()
@@ -79,7 +78,7 @@ class Program:
                         try:
                             self.notify.cleaningDirectory(path)
                             os.remove(file_path)
-                            print(f'\t - Deleting {file_path} file...')
+                            self.notify.deletingFile(file_path)
                             deleted_files = True
                         except Exception as e:
                             print(e)
@@ -88,17 +87,18 @@ class Program:
                         try:
                             self.notify.cleaningDirectory(path)
                             os.rmdir(dir_path)
-                            print(f'\t - Deleting {dir_path} directory...')
                             deleted_files = True
                         except Exception as e:
                             print(e)
                 # os.rmdir(path)
                 if deleted_files:
-                    print(
-                        f'\n{Color.OKGREEN}[✔] {path} directory successfully cleaned.{Color.END}\n')
+                    self.notify.directoryCleaned(path, deleted_files)
+                    # print(
+                    #     f'\n{Color.OKGREEN}[✔] {path} directory successfully cleaned.{Color.END}\n')
                 else:
-                    print((f'\n{Color.OKGREEN}[✔] No files or directories found in'
-                           f'{path}.{Color.END}\n'))
+                    self.notify.directoryCleaned(path, deleted_files)
+                    # print((f'\n{Color.OKGREEN}[✔] No files or directories found in'
+                    #        f'{path}.{Color.END}\n'))
             else:
                 raise FileNotFoundError(
                     f'{Color.RED}{path} directory not found!{Color.END}\n')
@@ -112,27 +112,26 @@ class Program:
     def clearScr(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    # TODO: Generalize this method for use in other modules
-    def find_ovpn_files(self, directory='/') -> str:
-        self.notify.findFiles(".ovpn")
+    def findFiles(self, file_type: any, directory='/') -> str:
+        self.notify.findFiles(file_type)  # (".ovpn")
         try:
-            search_path = os.path.join(directory, '**/*.ovpn')
+            search_path = os.path.join(directory, '**/*'+file_type)
             files = glob.glob(search_path, recursive=True)
             if not files:
-                self.notify.noFilesFound(".ovpn")
+                self.notify.noFilesFound(file_type)  # (".ovpn")
                 return
             for filename in files:
-                self.notify.foundFiles(filename, ".ovpn")
+                self.notify.foundFiles(filename, file_type)
                 response = input("Use this file? [y/n]: ").lower()
                 if response in ["y", "yes"]:
                     self.configManager.set(
                         "general_config", "ovpn_path", filename)
                     self.notify.setFiles(filename)
                     return filename
-            self.notify.noFilesFound(".ovpn", " other")
+            self.notify.noFilesFound(file_type, " other")
         except Exception as e:
             self.notify.exception(e)
-            self.notify.noFilesFound(".ovpn")
+            self.notify.noFilesFound(file_type)
 
     def __del__(self):
         # sys.stdout = self.original_stdout
@@ -268,7 +267,6 @@ class CommandHandler:
         self.notify = Notify()
 
     def execute(self, command: str, module=None) -> None:
-        # TODO: Implement 'cd' function
         match command:
             case "help" | "?":
                 self.tableCreator.displayTableFromFile(module)
@@ -282,7 +280,7 @@ class CommandHandler:
                 self.program.clean(self.configManager.getPath(
                     "general_config", "logDir"))
                 self.program.clean(
-                    self.configManager.getPath("sagemode", "dataDir"))
+                    self.configManager.getPath("sagemode", "datadir"))
                 self.completed()
             case "path" | "pwd":
                 self.program.printPath(module)
@@ -353,13 +351,11 @@ class Notify:
         self.console.print(
             f"[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
             + f"[red][[yellow]![red]] [bright_yellow]You are running Version: [bright_green]{localVersion}\n"
-            + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remoteVersion}"
-        )
+            + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remoteVersion}")
 
     def upToDate(self) -> None:
         self.console.print(
             f"[red][[yellow]![red]] [bright_yellow]Netwatch is up to date.\n")
-    # TODO: Update these lines with [*] and highlighting
 
     def endProgram(self) -> None:
         self.console.print(
@@ -402,6 +398,18 @@ class Notify:
         self.console.print(
             f"\n[red][[yellow]![red]] [bright_yellow]Cleaning [bright_blue]{path} [bright_yellow]directory...")
 
+    def deletingFile(self, file: str) -> None:
+        self.console.print(
+            f"\n\t[red][[yellow]-[red]] [bright_yellow]Deleting file: [bright_blue]{os.path.basename(file)}[bright_yellow]")
+
+    def directoryCleaned(self, path: str, files_found=False) -> None:
+        if files_found:
+            self.console.print(
+                f"\n[black][[red]*[black]] [bright_yellow]Directory: [bright_blue]{path} [bright_yellow]successfully cleaned.\n")
+        else:
+            self.console.print(
+                f"\n[black][[red]*[black]] [bright_yellow]No files found in [bright_blue]{path} [bright_yellow]directory.\n")
+
     def currentDirPath(self, module: any, path=None) -> None:
         split_module = module.split("/")
         if (len(split_module) <= 1):    # if module is in root directory (Netwatch/)
@@ -437,7 +445,7 @@ class Notify:
 
     def overwriteLogFile(self) -> None:
         self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow] Would you like to overwrite the log file?")
+            f"\n[red][[yellow]![red]] [bright_yellow]Would you like to overwrite the log file?")
 
     def currentTarget(self, target: str) -> None:
         self.console.print(
@@ -449,11 +457,11 @@ class Notify:
 
     def scanCompleted(self, logPath: str) -> None:
         self.console.print(
-            f'\n[bright_green][✔] Scan completed, log saved to: [bright_blue]{logPath}')
+            f"\n[bright_green][✔] Scan completed, log saved to: [bright_blue]{logPath}")
 
-    # TODO: Finish and check this
     def promptForAnotherScan(self) -> None:
-        self.console.print()
+        self.console.print(
+            f"\n[red][[yellow]![red]] [bright_yellow]Would you like to run another scan?")
 
 
 class NotifySagemode:
@@ -524,8 +532,6 @@ class BannerPrinter:
                 else:
                     rprint(f"[bright_red]{character}", end="", flush=True)
             print()
-
-# TODO: Add a default case for global commands, and ability to specify which help menu to display, regardless of currnet module path
 
 
 class TableCreator:
@@ -670,8 +676,6 @@ class Netwatch:
                 self.__init__()
         self.__init__()
 
-# TODO: Config file is being modified when running this module, making all values lowercase. Fix this.
-
 
 class AutoAttack:
     "A menu class for the Automated Attack Tool for HTB, TryHackMe, etc."
@@ -692,7 +696,6 @@ class AutoAttack:
             ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 ===================================================================================
 '''
-    # TODO: Implement check for whether user is in CLI or passing through argparser
 
     def __init__(self):
         self.program = Program()
@@ -704,8 +707,8 @@ class AutoAttack:
 
     def run(self) -> None:
         self.program.clearScr()
-        updatedConfigPath = self.program.find_ovpn_files(
-            os.path.expanduser('~'))
+        updatedConfigPath = self.program.findFiles(
+            '.ovpn', os.path.expanduser('~'))
         # Run .ovpn file if found
         # Check for default value in config file
         if updatedConfigPath:
@@ -831,7 +834,7 @@ class Nmap:
             if os.path.isfile(logPath):
                 self.notify.logFileConflict()
                 self.notify.overwriteLogFile()
-                response = input('[y/n]: ')
+                response = input("[y/n]: ")
                 if response.lower() == "y" or response.lower() == "yes":
                     self.menu(target, logPath)
                 else:
@@ -915,9 +918,9 @@ class Nmap:
                 break
 
     def promptForAnotherScan(self, target: int, logPath: str) -> None:
-        response = input(
-            "\nWould you like to run another scan? [y/n]: ").lower()
-        if response in ["y", "yes"]:
+        self.notify.promptForAnotherScan()
+        response = input("[y/n]: ")
+        if response.lower() in ["y", "yes"]:
             self.menu(target, logPath)
         else:
             self.notify.previousContextMenu("Netwatch")
@@ -961,7 +964,7 @@ class Sagemode:
         self.positive_count = 0
         self.usernamePrompt = "\nEnter target username: "
         self.username = input(self.usernamePrompt)
-        self.resultDir = self.configManager.getPath("sagemode", "dataDir")
+        self.resultDir = self.configManager.getPath("sagemode", "datadir")
         self.result_file = self.resultDir + self.username + ".txt"
         self.found_only = False
         self.__version__ = "1.1.3"
@@ -1091,9 +1094,6 @@ class Sagemode:
 
         except Exception:
             self.console.print_exception()
-
-
-# TODO: Fix this function - IP address is not being passed correctly
 
 
 class PortScanner:
