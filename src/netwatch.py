@@ -359,7 +359,7 @@ class Notify:
 
     def endProgram(self) -> None:
         self.console.print(
-            f"\n[bright_yellow]Finishing up...\n")
+            f"\n[red][[yellow]![red]] [bright_yellow]Finishing up...\n")
 
     def previousContextMenu(self, module: str) -> None:
         self.console.print((f"\n[bright_yellow]Returning to "
@@ -380,7 +380,7 @@ class Notify:
     # File Operations Methods
     def findFiles(self, file_type: str) -> None:
         self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Searching for [bright_blue]{file_type} [bright_yellow]files...\n")
+            f"\n[black][[red]*[black]] [bright_yellow]Searching for [bright_blue]{file_type} [bright_yellow]files...")
 
     def foundFiles(self, file: str, file_type: str) -> None:
         self.console.print((f"\n[red][[yellow]![red]] [bright_yellow]Found [bright_blue]"
@@ -396,7 +396,7 @@ class Notify:
 
     def cleaningDirectory(self, path: str) -> None:
         self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Cleaning [bright_blue]{path} [bright_yellow]directory...")
+            f"\n[red][[yellow]![red]] [bright_yellow]Cleaning [bright_blue]~/Netwatch/src/{os.path.basename(os.path.normpath(path))}/ [bright_yellow]directory...")
 
     def deletingFile(self, file: str) -> None:
         self.console.print(
@@ -405,10 +405,10 @@ class Notify:
     def directoryCleaned(self, path: str, files_found=False) -> None:
         if files_found:
             self.console.print(
-                f"\n[black][[red]*[black]] [bright_yellow]Directory: [bright_blue]{path} [bright_yellow]successfully cleaned.\n")
+                f"\n[black][[green]*[black]] [bright_yellow]Directory: [bright_blue]~/Netwatch/src/{os.path.basename(os.path.normpath(path))}/ [bright_yellow]successfully cleaned.\n")
         else:
             self.console.print(
-                f"\n[black][[red]*[black]] [bright_yellow]No files found in [bright_blue]{path} [bright_yellow]directory.\n")
+                f"\n[black][[green]*[black]] [bright_yellow]No files found in [bright_blue]~/Netwatch/src/{os.path.basename(os.path.normpath(path))}/ [bright_yellow]directory.\n")
 
     def currentDirPath(self, module: any, path=None) -> None:
         split_module = module.split("/")
@@ -480,7 +480,7 @@ class NotifySagemode:
     # notify the user where the result is stored
     @staticmethod
     def stored_result(result_file: str) -> str:
-        return f"[bright_green][[yellow]@[bright_green]] [orange3]Results stored in: [bright_green]{result_file}\n"
+        return f"[bright_green][[yellow]@[bright_green]] [orange3]Results stored in: [bright_green]{os.path.basename(result_file)}\t({result_file})\n"
 
     @staticmethod
     def not_found(site: str, status_code="") -> str:
