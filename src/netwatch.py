@@ -52,16 +52,16 @@ class Program:
         # sys.stdout = self.log_file
 
     def start(self) -> None:
-        self.clearScr()
+        self.clear_screen()
         print(Netwatch.netwatchLogo)
-        self.updateHandler.checkForUpdate()
-        self.createFolders([("general_config", "toolDir"),
+        self.updateHandler.check_for_update()
+        self.create_folders([("general_config", "toolDir"),
                             ("general_config", "logDir"),
                             ("sagemode", "datadir")])
 
-    def createFolders(self, paths: any) -> None:
+    def create_folders(self, paths: any) -> None:
         for section, option in paths:
-            path = self.configManager.getPath(section, option)
+            path = self.configManager.get_path(section, option)
             if not os.path.isdir(path):
                 os.makedirs(path)
 
@@ -108,13 +108,13 @@ class Program:
             raise FileNotFoundError(
                 f'{Color.RED}Path {path} does not exist!{Color.END}\n')
 
-    def printPath(self, module: str) -> None:
+    def print_path(self, module: str) -> None:
         self.notify.currentDirPath(module)
 
-    def clearScr(self) -> None:
+    def clear_screen(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def findFiles(self, file_type: any, directory='/') -> str:
+    def find_files(self, file_type: any, directory='/') -> str:
         self.notify.findFiles(file_type)  # (".ovpn")
         try:
             search_path = os.path.join(directory, '**/*'+file_type)
@@ -152,7 +152,7 @@ class UpdateHandler:
         self.local_version = self.configManager.get(
             "general_config", "__version__")
 
-    def checkForUpdate(self) -> None:
+    def check_for_update(self) -> None:
         try:
             r = requests.get(
                 "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.cfg")
@@ -166,13 +166,13 @@ class UpdateHandler:
 
             if self.is_newer_version(remote_version, self.local_version):
                 self.notify.update(remote_version, self.local_version)
-                self.promptForUpdate()
+                self.prompt_for_update()
             else:
                 self.notify.upToDate()
         except Exception as error:
             self.notify.updateScriptError(error)
 
-    def promptForUpdate(self) -> None:
+    def prompt_for_update(self) -> None:
         response = input(
             "\nWould you like to update Netwatch? [y/n]: ").lower()
         if response in ["y", "yes"]:
@@ -218,10 +218,10 @@ class ConfigManager:
         except Exception as e:
             self.notify.exception(e)
 
-    def getPath(self, section: any, option: any) -> str:
+    def get_path(self, section: any, option: any) -> str:
         return self.installDir + self.config.get(section, option)
 
-    def getbool(self, section: str, option: str) -> bool:
+    def get_bool(self, section: str, option: str) -> bool:
         return self.config.getboolean(section, option)
 
 
@@ -249,7 +249,7 @@ class ProgramInstallationManager:
             self.notify.exception(e)
             return False
 
-    def checkAndInstall(self) -> bool:
+    def check_and_install(self) -> bool:
         if not self.installed():
             self.notify.programNotInstalled(self.program_name)
             return self.install()
@@ -271,21 +271,21 @@ class CommandHandler:
     def execute(self, command: str, module=None) -> None:
         match command:
             case "help" | "?":
-                self.tableCreator.displayTableFromFile(module)
+                self.tableCreator.display_table_from_file(module)
             case "update":
-                self.updateHandler.checkForUpdate()
+                self.updateHandler.check_for_update()
             case "clear" | "cls":
-                self.program.clearScr()
+                self.program.clear_screen()
             case "clean":
-                self.program.clean(self.configManager.getPath(
+                self.program.clean(self.configManager.get_path(
                     "general_config", "toolDir"))
-                self.program.clean(self.configManager.getPath(
+                self.program.clean(self.configManager.get_path(
                     "general_config", "logDir"))
                 self.program.clean(
-                    self.configManager.getPath("sagemode", "datadir"))
+                    self.configManager.get_path("sagemode", "datadir"))
                 # self.completed()
             case "path" | "pwd":
-                self.program.printPath(module)
+                self.program.print_path(module)
             case "exit" | "quit" | "end":
                 self.program.end()
 
@@ -298,9 +298,9 @@ class CommandHistory:
 
     def __init__(self):
         self.configManager = ConfigManager()
-        self.storeHistory = self.configManager.getbool(
+        self.storeHistory = self.configManager.get_bool(
             'general_config', 'storehistory')
-        self.logDir = self.configManager.getPath('general_config', 'logDir')
+        self.logDir = self.configManager.get_path('general_config', 'logDir')
         self.history = []  # set()
 
     def update(self, command: str) -> None:
@@ -551,12 +551,12 @@ class TableCreator:
             __file__)) + '/' + configManager.get('general_config', 'menu_data_path')
 
     @staticmethod
-    def readJson(file_path: str) -> dict:
+    def read_json(file_path: str) -> dict:
         with open(file_path) as f:
             data = json.load(f)
             return data
 
-    def createTable(self, header_data: dict, column_data: list, row_data: list, column_keys: list) -> None:
+    def create_table(self, header_data: dict, column_data: list, row_data: list, column_keys: list) -> None:
         table = Table(
             show_header=header_data.get("show_header", True),
             header_style=header_data.get("header_style", "bold white"),
@@ -576,7 +576,7 @@ class TableCreator:
             table.add_row(*row_values)
         return table
 
-    def displayTable(self, jsonData: dict, module: str) -> None:
+    def display_table(self, jsonData: dict, module: str) -> None:
         column_keys_dict = {
             "Main": ["option", "modules", "description"],
             "Core": ["command", "description"],
@@ -589,14 +589,14 @@ class TableCreator:
             column_data = table.get("columns", [])
             row_data = table.get("rows", [])
             column_keys = column_keys_dict.get(module, [])
-            table = self.createTable(
+            table = self.create_table(
                 header_data, column_data, row_data, column_keys)
             self.console.print(table)
             print("\n")
 
-    def displayTableFromFile(self, module: str) -> None:
-        jsonData = self.readJson(self.jsonFile)
-        self.displayTable(jsonData, module)
+    def display_table_from_file(self, module: str) -> None:
+        jsonData = self.read_json(self.jsonFile)
+        self.display_table(jsonData, module)
 
 # Start Menu Classes
 
@@ -647,9 +647,9 @@ class Netwatch:
 
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
-        self.toolDir = self.configManager.getPath('general_config', 'tooldir')
-        self.logDir = self.configManager.getPath('general_config', 'logdir')
-        self.storeHistory = self.configManager.getbool(
+        self.toolDir = self.configManager.get_path('general_config', 'tooldir')
+        self.logDir = self.configManager.get_path('general_config', 'logdir')
+        self.storeHistory = self.configManager.get_bool(
             'general_config', 'storeHistory')
 
         self.run()
@@ -713,15 +713,15 @@ class AutoAttack:
         self.run()
 
     def run(self) -> None:
-        self.program.clearScr()
-        updatedConfigPath = self.program.findFiles(
+        self.program.clear_screen()
+        updatedConfigPath = self.program.find_files(
             '.ovpn', os.path.expanduser('~'))
         # Run .ovpn file if found
         # Check for default value in config file
         if updatedConfigPath:
-            self.startOvpn(updatedConfigPath)
+            self.start_ovpn(updatedConfigPath)
 
-    def startOvpn(self, updatedConfigPath: str) -> None:
+    def start_ovpn(self, updatedConfigPath: str) -> None:
         try:
             self.notify.runOvpn(os.path.basename(updatedConfigPath))
             # print(os.getenv("TERM"))
@@ -822,11 +822,11 @@ class Nmap:
         self.targetPrompt = "\nEnter target IP: "
         self.logFileNamePrompt = "\nEnter log file name: "
 
-        self.checkInstall()
+        self.check_install()
 
-    def checkInstall(self) -> None:
+    def check_install(self) -> None:
         checkNmap = ProgramInstallationManager("nmap")
-        programIsInstalled = checkNmap.checkAndInstall()
+        programIsInstalled = checkNmap.check_and_install()
         if programIsInstalled:
             self.run()
         else:
@@ -860,21 +860,21 @@ class Nmap:
             choiceNmap = input(self.netwatchPrompt)
             match choiceNmap:  # .strip()
                 case "quick scan" | "quick" "quickscan":
-                    self.runScan("quick", target, logPath)
+                    self.run_scan("quick", target, logPath)
                     self.notify.scanCompleted(logPath)
-                    self.promptForAnotherScan(target, logPath)
+                    self.prompt_for_another_scan(target, logPath)
                 case "intense scan" | "intense" | "intensescan":
-                    self.runScan("intense", target, logPath)
+                    self.run_scan("intense", target, logPath)
                     self.notify.scanCompleted(logPath)
-                    self.promptForAnotherScan(target, logPath)
+                    self.prompt_for_another_scan(target, logPath)
                 case "default" | "default scan" | "defaultscan":
-                    self.runScan("default", target, logPath)
+                    self.run_scan("default", target, logPath)
                     self.notify.scanCompleted(logPath)
-                    self.promptForAnotherScan(target, logPath)
+                    self.prompt_for_another_scan(target, logPath)
                 case "vuln" | "vuln scan" | "vulnscan" | "vulnerability" | "vulnerability scan":
-                    self.runScan("vuln", target, logPath)
+                    self.run_scan("vuln", target, logPath)
                     self.notify.scanCompleted(logPath)
-                    self.promptForAnotherScan(target, logPath)
+                    self.prompt_for_another_scan(target, logPath)
                 case _ if choiceNmap.startswith("set "):
                     _, param, value = choiceNmap.split(" ", 2)
                     if param == "target":
@@ -911,7 +911,7 @@ class Nmap:
             self.notify.previousContextMenu("Information Gathering")
             InformationGathering()
 
-    def runScan(self, choice: str, target: int, logPath: str) -> None:
+    def run_scan(self, choice: str, target: int, logPath: str) -> None:
         scan_types = {
             'default': 'nmap -T4 -v -A -oN',
             'quick': 'nmap -T4 -F -v -oN',
@@ -926,7 +926,7 @@ class Nmap:
                     self.notify.exception(e)
                 break
 
-    def promptForAnotherScan(self, target: int, logPath: str) -> None:
+    def prompt_for_another_scan(self, target: int, logPath: str) -> None:
         self.notify.promptForAnotherScan()
         response = input("[y/n]: ")
         if response.lower() in ["y", "yes"]:
@@ -973,14 +973,14 @@ class Sagemode:
         self.positive_count = 0
         self.usernamePrompt = "\nEnter target username: "
         self.username = input(self.usernamePrompt)
-        self.resultDir = self.configManager.getPath("sagemode", "datadir")
+        self.resultDir = self.configManager.get_path("sagemode", "datadir")
         self.result_file = self.resultDir + self.username + ".txt"
         self.found_only = False
         self.__version__ = "1.1.3"
 
         self.start(self.sagemodeLogo, self.sagemodeLogoText, delay=0.001)
 
-    def printLogo(self) -> None:
+    def print_logo(self) -> None:
         for line in self.sagemodeLogo.split("\n"):
             for character in line:
                 if character in ["█"]:
@@ -1133,7 +1133,7 @@ class PortScanner:
             logPath = "portScan-" + logName + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
 
-            ipList = [self.ip2Int(ipAddr.strip())
+            ipList = [self.ip_2_int(ipAddr.strip())
                       for ipAddr in target.split(',')]
             portList = [port.strip() for port in port.split(',')]
 
@@ -1184,7 +1184,7 @@ class PortScanner:
             self.notify.previousContextMenu("Information Gathering")
             InformationGathering()
 
-    def ip2Int(self, ip: str) -> int:
+    def ip_2_int(self, ip: str) -> int:
         octets = ip.split('.')
         return ((int(octets[0]) << 24) + (int(octets[1]) << 16) +
                 (int(octets[2]) << 8) + int(octets[3]))
