@@ -31,6 +31,8 @@ from rich.console import Console
 from rich.table import Table
 from bs4 import BeautifulSoup
 
+# Custom Imports
+from modules import constants
 from sites import sites, soft404_indicators, user_agents
 
 
@@ -45,16 +47,13 @@ class Program:
         self.notify = Notify()
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.cfg'
-        # self.original_stdout = sys.stdout
-        # self.log_file = open('typescript.log', 'w')
-        # sys.stdout = self.log_file
 
     def start(self) -> None:
-        self.clearScr()
+        self.clearScreen()
         print(Netwatch.netwatchLogo)
         self.updateHandler.checkForUpdate()
-        self.createFolders([("general_config", "toolDir"),
-                            ("general_config", "logDir"),
+        self.createFolders([("general_config", "tooldir"),
+                            ("general_config", "logdir"),
                             ("sagemode", "datadir")])
 
     def createFolders(self, paths: any) -> None:
@@ -92,13 +91,9 @@ class Program:
                             print(e)
                 # os.rmdir(path)
                 if deleted_files:
-                    self.notify.directoryCleaned(path, deleted_files)
-                    # print(
-                    #     f'\n{Color.OKGREEN}[✔] {path} directory successfully cleaned.{Color.END}\n')
+                    self.notify.directoryCleaned(path, deleted_files)  # ✔
                 else:
                     self.notify.directoryCleaned(path, deleted_files)
-                    # print((f'\n{Color.OKGREEN}[✔] No files or directories found in'
-                    #        f'{path}.{Color.END}\n'))
             else:
                 raise FileNotFoundError(
                     f'{Color.RED}{path} directory not found!{Color.END}\n')
@@ -109,7 +104,7 @@ class Program:
     def printPath(self, module: str) -> None:
         self.notify.currentDirPath(module)
 
-    def clearScr(self) -> None:
+    def clearScreen(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def findFiles(self, file_type: any, directory='/') -> str:
@@ -177,8 +172,6 @@ class UpdateHandler:
             self.update()
         else:
             pass
-            # print(Netwatch.netwatchLogo)
-            # Netwatch()
 
     def is_newer_version(self, remote_version: str, local_version: str) -> bool:
         remote_version_revisions = list(map(int, remote_version.split('.')))
@@ -273,7 +266,7 @@ class CommandHandler:
             case "update":
                 self.updateHandler.checkForUpdate()
             case "clear" | "cls":
-                self.program.clearScr()
+                self.program.clearScreen()
             case "clean":
                 self.program.clean(self.configManager.getPath(
                     "general_config", "toolDir"))
@@ -711,7 +704,7 @@ class AutoAttack:
         self.run()
 
     def run(self) -> None:
-        self.program.clearScr()
+        self.program.clearScreen()
         updatedConfigPath = self.program.findFiles(
             '.ovpn', os.path.expanduser('~'))
         # Run .ovpn file if found
