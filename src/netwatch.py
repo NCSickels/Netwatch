@@ -31,6 +31,8 @@ from rich.console import Console
 from rich.table import Table
 from bs4 import BeautifulSoup
 
+# Custom Imports
+import constants
 from sites import sites, soft404_indicators, user_agents
 
 

@@ -7,3 +7,7 @@ asyncio
 requests>=2.31.0
 rich>=13.6.0
 beautifulsoup4>=4.12.2
+colorama
+tabulate
+cmd2
+IPy
