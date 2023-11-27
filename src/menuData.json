@@ -284,5 +284,178 @@
                 }
             ]
         }
+    ],
+    "DataParser": [
+        {
+            "header": [
+                {
+                    "show_header": true,
+                    "header_style": "bold white",
+                    "title": "DataParser Help Menu",
+                    "width": 84,
+                    "show_lines": true
+                }
+            ],
+            "columns": [
+                {
+                    "title": "Command",
+                    "justify": "center",
+                    "style": "bright_cyan",
+                    "width": 25
+                },
+                {
+                    "title": "Description",
+                    "justify": "right",
+                    "style": "bright_black",
+                    "width": 50
+                }
+            ],
+            "rows": [
+                {
+                    "command": "all-hosts",
+                    "description": "Generates a line break separated list of all hosts."
+                },
+                {
+                    "command": "banner [service-name]",
+                    "description": "Extracts a list of all ports with a specific service (e.g. http, ms-wbt-server, smtp, etc.) in host:port format. (Masscan XML output only)"
+                },
+                {
+                    "command": "bloked-ports",
+                    "description": "Extracts all ports in host:port format, which either admin-prohibited or tcpwrapped."
+                },
+                {
+                    "command": "group-by-ports",
+                    "description": "Groups hosts by open TCP ports and generates a human-readable list in the markdown format."
+                },
+                {
+                    "command": "group-by-product",
+                    "description": "Groups open ports by product name and generates a human-readable list in the markdown format. The command ignores ports with empty product name."
+                },
+                {
+                    "command": "group-by-service",
+                    "description": "Groups open ports by service name and generates a human-readable list in the markdown format."
+                },
+                {
+                    "command": "host-ports-protocol",
+                    "description": "Extracts a list of all *open* ports in host:port format and marks the protocol type (tcp, udp)"
+                },
+                {
+                    "command": "host-ports",
+                    "description": "Extracts a list of all *open* ports in host:port format."
+                },
+                {
+                    "command": "hosts-to-port [port]",
+                    "description": "Extracts a list of all hosts that have the given port open in 'host (hostname)' format."
+                },
+                {
+                    "command": "hosts",
+                    "description": "Generates a line break separated list of all hosts with open ports. Can be used to perform an additional scan on this hosts."
+                },
+                {
+                    "command": "http-info",
+                    "description": "Extracts a list of extra information about the HTTP ports from a script scan in the following format: host:port   service-name    service-tunnel  product  http-server-header  http-title   redirect_url"
+                },
+                {
+                    "command": "http-ports",
+                    "description": "Generates a line separated list of all HTTP(s) ports. Script scan output is recommended."
+                },
+                {
+                    "command": "http-title",
+                    "description": "Extracts a list of HTTP HTML titles in the following format: host:port   HTML title"
+                },
+                {
+                    "command": "nmap-cmdline",
+                    "description": "Shows the parameters passed to nmap of the runned scan"
+                },
+                {
+                    "command": "port-info [port]",
+                    "description": "Extracts a list of extra information about the given port in the following format: port;service-name;http-server-header;http title"
+                },
+                {
+                    "command": "ports-reachable",
+                    "description": "Generates a comma-separated list of all reachable ports (open and closed, unfiltered). Can be used to verify if ports reachable from another host or generate port lists for specific environments."
+                },
+                {
+                    "command": "ports",
+                    "description": "Generates a comma-separated list of all open ports."
+                },
+                {
+                    "command": "product",
+                    "description": "Extracts all detected product names."
+                },
+                {
+                    "command": "search-product",
+                    "description": "Search in product names (case sensitive)."
+                },
+                {
+                    "command": "service-names",
+                    "description": "Extracts all detected service names (on open ports)."
+                },
+                {
+                    "command": "service [service-name]",
+                    "description": "Extracts a list of all *open* ports with a specific service (e.g. http, ms-wbt-server, smtp) in host:port format."
+                },
+                {
+                    "command": "show-comments",
+                    "description": "Shows comments added by the comment-* commands."
+                },
+                {
+                    "command": "ssl-common-name",
+                    "description": "Extracts a list of TLS/SSL ports with the commonName and Subject Alternative Name in the following format: host:port  commonName  X509v3 Subject Alternative Name"
+                },
+                {
+                    "command": "tls-ports",
+                    "description": "Extracts a list of all TLS ports in host:port format. Works only reliable after a script scan."
+                },
+                {
+                    "command": "comment-hosts [hosts] [comment]",
+                    "description": " Comments a list of hosts in scan result. Expects a comma-separated list as input. The comment will be displayed in the HTML report."
+                },
+                {
+                    "command": "comment-ports [ports] [comment]",
+                    "description": "Comments a list of ports or hosts with port (in address:port format) in scan result. Expects a comma-separated list as input."
+                },
+                {
+                    "command": "exclude-ports [ports]",
+                    "description": "Excludes a list of ports or ports of a specific host (in address:port format) from a scan result."
+                },
+                {
+                    "command": "exclude [hosts]",
+                    "description": "Excludes a list of hosts from scan result by its IP address. Expects a comma-separated list as input."
+                },
+                {
+                    "command": "include-ports [ports]",
+                    "description": "Filter a scan by a list of ports or ports of a specific host (in address:port format) so that only the specified ports are in the output. Expects a comma-separated list as input."
+                },
+                {
+                    "command": "include [hosts]",
+                    "description": "Filter a scan by a list of hosts so that only the specified hosts are in the output."
+                },
+                {
+                    "command": "mark-ports [ports] [color]",
+                    "description": "Marks a list of ports or hosts with port (in address:port format) with the given color in scan result. Expects a comma-separated list as input. The comment will be displayed in the HTML report."
+                },
+                {
+                    "command": "reachable",
+                    "description": "Removes all hosts where all ports a filtered. Can be used to generate a smaller HTML report."
+                },
+                {
+                    "command": "html-bootstrap",
+                    "description": "Converts the XML output into a fancy HTML report based on Bootstrap."
+                },
+                {
+                    "command": "html",
+                    "description": "Converts a XML output into a HTML report."
+                },
+                {
+                    "command": "to-json",
+                    "description": "Converts a nmap scan output to JSON."
+                },
+                {
+                    "command": "to-csv",
+                    "description": "Converts a nmap scan output to CSV."
+                }
+            ]
+        }
     ]
 }

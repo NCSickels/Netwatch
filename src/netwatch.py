@@ -9,7 +9,7 @@
 # ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 #
 #
-#   Netwatch v2.2.1
+#   Netwatch v2.2.12
 #   by: @NCSickels
 
 # Imports
@@ -291,7 +291,7 @@ class CommandHistory:
         self.configManager = ConfigManager()
         self.storeHistory = self.configManager.getbool(
             'general_config', 'storehistory')
-        self.logDir = self.configManager.getPath('general_config', 'logDir')
+        self.logDir = self.configManager.getPath('general_config', 'logdir')
         self.history = []  # set()
 
     def update(self, command: str) -> None:
@@ -348,7 +348,7 @@ class Notify:
 
     def upToDate(self) -> None:
         self.console.print(
-            f"[red][[yellow]![red]] [bright_yellow]Netwatch is up to date.\n")
+            f"\n[red][[yellow]![red]] [bright_yellow]Netwatch is up to date.\n")
 
     def endProgram(self) -> None:
         self.console.print(
@@ -574,6 +574,7 @@ class TableCreator:
             "Information_Gathering": ["option", "modules", "description"],
             "Nmap_Scans": ["type", "options", "description"],
             "Nmap_Commands": ["command", "description"],
+            "DataParser": ["command", "description"],
         }
         for table in jsonData[module]:
             header_data = table.get("header", [{}])[0]
@@ -626,7 +627,7 @@ class Netwatch:
        ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 ===================================================================================
     v{version}                                      Noah Sickels (@NCSickels)
-===================================================================================\n
+===================================================================================
 '''
 
     def __init__(self):
@@ -641,7 +642,7 @@ class Netwatch:
         self.toolDir = self.configManager.getPath('general_config', 'tooldir')
         self.logDir = self.configManager.getPath('general_config', 'logdir')
         self.storeHistory = self.configManager.getbool(
-            'general_config', 'storeHistory')
+            'general_config', 'storehistory')
 
         self.run()
 
