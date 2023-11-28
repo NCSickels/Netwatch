@@ -9,7 +9,7 @@
 # ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 #
 #
-#   Netwatch v2.2.13
+#   Netwatch v2.2.14
 #   by: @NCSickels
 
 # Imports
@@ -34,6 +34,7 @@ from bs4 import BeautifulSoup
 # Custom Imports
 from modules import constants
 from modules.termutils import Color, Notify, NotifyNmap, NotifySagemode
+from modules.sites import sites, soft404_indicators, user_agents
 
 # Utility Classes
 

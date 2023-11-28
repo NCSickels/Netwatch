@@ -8,15 +8,18 @@ import tabulate
 from IPy import IP
 from rich.console import Console
 from rich import print as rprint
+from colorama import Fore, Style
 
 from modules.sites import sites, soft404_indicators, user_agents
 from config import parsersettings as settings
+from modules import constants
 
 
 class ColorConfig:
     def __init__(self):
         self.console = Console()
 
+    # Source: https://github.com/django/django/blob/master/django/core/management/color.py
     def supportsColor():
         """
         Returns True if the running system's terminal supports color, and False otherwise.
@@ -60,6 +63,12 @@ class LamePrint:
         settings.printHumanFriendlyText
         if (settings.printHumanFriendlyText):
             print(*args, **kwargs)
+
+    def getHeader(self, text: str) -> None:
+        return f"\n{text}\n{'-' * len(text)}\n"
+
+    def header(self, text: str) -> None:
+        print(self.getHeader(text))
 
 
 class Color:
@@ -300,3 +309,53 @@ class BannerPrinter:
                 else:
                     rprint(f"[bright_red]{character}", end="", flush=True)
             print()
+
+
+class TextOutput():
+    def __init__(self):
+        self.entries = []
+
+    def addMain(self, text):
+        self.entries.append(TextOutputEntry(
+            text, constants.TEXT_NORMAL, Fore.RESET))
+
+    def addHumn(self, text):
+        self.entries.append(TextOutputEntry(
+            text, constants.TEXT_FRIENDLY, Style.DIM))
+
+    def addErrr(self, text):
+        self.entries.append(TextOutputEntry(
+            text, constants.TEXT_ERROR, Fore.RED))
+
+    def addGood(self, text):
+        self.entries.append(TextOutputEntry(
+            text, constants.TEXT_SUCCESS, Fore.GREEN))
+
+    def printToConsole(self):
+        for line in self.entries:
+            shouldPrint = False
+            if (line.output == constants.TEXT_NORMAL or line.output == constants.TEXT_ERROR):
+                shouldPrint = True
+            elif (settings.printHumanFriendlyText):
+                shouldPrint = True
+
+            if shouldPrint:
+                print(line.getText())
+
+
+class TextOutputEntry():
+    # Output specified the type of output for the text
+    #   0 - Main output
+    #   1 - Unnecessary but friendly output (e.g. headings)
+    #   2 - Error output
+    #   3 - Success/Good output
+    def __init__(self, text, output, colour):
+        self.text = text
+        self.output = output
+        self.colour = colour
+
+    def getText(self):
+        if settings.colourSupported:
+            return "%s%s%s" % (self.colour, self.text, Style.RESET_ALL)
+        else:
+            return self.text
