@@ -221,8 +221,8 @@ class Notify:
             f"\n[red][[yellow]![red]] [bright_yellow]Would you like to run another scan?")
 
 
-class NotifyNmap:
-    "A helper class for notifications of the Nmap and Data Parser modules"
+class NotifyDataParser:
+    "A helper class for notifications of the Data Parser module"
 
     def __init__(self):
         self.console = Console()
@@ -238,6 +238,13 @@ class NotifyNmap:
     def loadingFileCount(self, count: int, total: int, file: str) -> None:
         self.console.print(
             f"\n[black][[red]*[black]] [bright_yellow]Loading [[{count} of {total}]] [bright_blue]{file}")
+
+
+class NotifyNmap:
+    "A helper class for notifications of the Nmap and Data Parser modules"
+
+    def __init__(self):
+        self.console = Console()
 
     def skippingHostAddress(self, file: str):
         self.console.print(
