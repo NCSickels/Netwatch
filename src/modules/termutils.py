@@ -20,7 +20,7 @@ class ColorConfig:
         self.console = Console()
 
     # Source: https://github.com/django/django/blob/master/django/core/management/color.py
-    def supportsColor():
+    def supportsColor(self):
         """
         Returns True if the running system's terminal supports color, and False otherwise.
         """
@@ -59,7 +59,7 @@ class LamePrint:
         print(*coloredArgs, file=sys.stderr, **kwargs)
 
     # Print only if raw option hasnt been set
-    def hprint(*args, **kwargs) -> None:
+    def hprint(self, *args, **kwargs) -> None:
         settings.printHumanFriendlyText
         if (settings.printHumanFriendlyText):
             print(*args, **kwargs)
@@ -69,6 +69,9 @@ class LamePrint:
 
     def header(self, text: str) -> None:
         print(self.getHeader(text))
+
+    def __str__(self):
+        return ""
 
 
 class Color:
@@ -349,13 +352,13 @@ class TextOutputEntry():
     #   1 - Unnecessary but friendly output (e.g. headings)
     #   2 - Error output
     #   3 - Success/Good output
-    def __init__(self, text, output, colour):
+    def __init__(self, text, output, color):
         self.text = text
         self.output = output
-        self.colour = colour
+        self.color = color
 
     def getText(self):
-        if settings.colourSupported:
-            return "%s%s%s" % (self.colour, self.text, Style.RESET_ALL)
+        if settings.colorSupported:
+            return "%s%s%s" % (self.color, self.text, Style.RESET_ALL)
         else:
             return self.text
