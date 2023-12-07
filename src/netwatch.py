@@ -9,7 +9,7 @@
 # ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 #
 #
-#   Netwatch v3.0.0
+#   Netwatch v3.1.0
 #   by: @NCSickels
 
 # Imports
@@ -33,7 +33,7 @@ from bs4 import BeautifulSoup
 
 # Custom Imports
 from modules import constants
-from modules.termutils import Color, Notify, NotifyNmap, NotifySagemode
+from modules.termutils import Color, Notify, NotifyDataParser, NotifyNmap, NotifySagemode
 from modules.sites import sites, soft404_indicators, user_agents
 
 # Utility Classes
@@ -118,7 +118,7 @@ class Program:
                 self.notify.noFilesFound(file_type)  # (".ovpn")
                 return
             for filename in files:
-                self.notify.foundFiles(filename, file_type)
+                self.notify.foundFiles(filename)
                 response = input("Use this file? [y/n]: ").lower()
                 if response in ["y", "yes"]:
                     self.configManager.set(

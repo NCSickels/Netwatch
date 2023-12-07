@@ -91,6 +91,9 @@ class Color:
     BOLD = '\033[1m'
     LOGGING = '\33[34m'
 
+    # Accent Colors
+    AC1 = '#8696ef'
+
 
 class Notify:
     "A helper class for notifications of Netwatch process"
