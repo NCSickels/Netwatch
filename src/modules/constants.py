@@ -1,4 +1,8 @@
 # from colorama import Fore
+CMD_CAT_CORE = "Core Commands"
+CMD_CAT_FILTER = "Configure Filters"
+CMD_CAT_NMAP = "Nmap Commands"
+
 PROTOCOLS = ['tcp', 'udp']
 TRUE_STRINGS = ["true", "yes", "t", "y", "on", "enabled", "1"]
 OPT_SERVICE_FILTER = "service_filter"
@@ -31,4 +35,7 @@ EXPORT_NESSUS = 'nessus'
 EXPORT_HTML = 'html'
 EXPORT_PDF = 'pdf'
 EXPORT_CSV = 'csv'
-EXPORT_FORMATS = [EXPORT_NESSUS, EXPORT_HTML, EXPORT_PDF, EXPORT_CSV]
+EXPORT_JSON = 'json'
+EXPORT_MARKDOWN = 'markdown'
+EXPORT_FORMATS = [EXPORT_NESSUS, EXPORT_HTML,
+                  EXPORT_PDF, EXPORT_CSV, EXPORT_JSON, EXPORT_MARKDOWN]

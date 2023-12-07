@@ -39,13 +39,14 @@ class NmapOutput:
         self.FilesImported = []
         self.Hosts = {}
         self.Services = []
+        self.Arguments = []
         self.helpers = NmapHelpers()
         self.configColor = ColorConfig()
         self.lamePrint = LamePrint()
         # Import xml files
         self.parseNmapXmlFiles(xmlFiles)
 
-    def parseNmapXmlFiles(self, nmapXmlFilenames):
+    def parseNmapXmlFiles(self, nmapXmlFilenames: list) -> None:
         count = 0
         colorSupport = self.configColor.supportsColor()
         # Loop through all nmap xml files
@@ -56,7 +57,7 @@ class NmapOutput:
             print(f"Trying to open file at: {nmapXmlFilename}")
             try:
                 with open(nmapXmlFilename, 'r') as f:
-                    print("File opened successfully")
+                    pass
             except Exception as e:
                 print(f"Failed to open file: {e}")
             count += 1
@@ -135,8 +136,15 @@ class NmapOutput:
                         curHost.addPort(curProtocol, curPortId, curService)
                         # Store service details in global variable
                         self.addService(curService, ip, curPortId)
+            # TODO: Ensure this is working correctly
+            cmdLineArgsElement = nmap_xml.find('.//nmaprun')
+            if cmdLineArgsElement is not None:
+                cmdLineArgs = cmdLineArgsElement.get('args')
+                if cmdLineArgs not in self.Arguments:
+                    self.Arguments.append(cmdLineArgs)
+                self.Arguments.append(cmdLineArgs)
 
-    def addService(self, serviceName, ip, port):
+    def addService(self, serviceName: str, ip: any, port: int) -> None:
         currentService = self.getService(serviceName)
         currentServiceHost = self.getServiceHost(currentService, ip)
         currentServiceHost.ports = set(currentServiceHost.ports)
@@ -144,7 +152,7 @@ class NmapOutput:
         currentServiceHost.ports.add(port)
         currentService.ports.add(port)
 
-    def getServiceHost(self, service, ip):
+    def getServiceHost(self, service: str, ip: any) -> None:
         for host in service.hosts:
             if host.ip == ip:
                 return host
@@ -152,7 +160,7 @@ class NmapOutput:
         service.hosts.append(newServiceHost)
         return newServiceHost
 
-    def getService(self, serviceName):
+    def getService(self, serviceName: str) -> None:
         for service in self.Services:
             if service.name == serviceName:
                 return service
@@ -161,13 +169,13 @@ class NmapOutput:
         self.Services.append(newService)
         return newService
 
-    def getHostDictionary(self, filters=None):
+    def getHostDictionary(self, filters=None) -> dict:
         hostDictionary = {}
         for host in self.getHosts(filters):
             hostDictionary[host.ip] = host
         return hostDictionary
 
-    def getHosts(self, filters=None):
+    def getHosts(self, filters=None) -> list:
         '''Returns an array of hosts that match filters'''
         if filters == None:
             filters = NmapFilters()
@@ -202,10 +210,10 @@ class NmapOutput:
                 pass
         return matchedHosts
 
-    def getAliveHosts(self, filters=None):
+    def getAliveHosts(self, filters=None) -> list:
         return [host.ip for host in self.getHosts(filters) if host.alive]
 
-    def getServices(self, filters=None):
+    def getServices(self, filters=None) -> list:
         if filters == None:
             filters = NmapFilters()
         matchedServices = []
@@ -220,7 +228,10 @@ class NmapOutput:
                 matchedServices.append(service)
         return matchedServices
 
-    def generateNmapParseXml(self, filename):
+    def getNmapCmdline(self, filters=None) -> list:
+        return self.Arguments
+
+    def generateNmapParseXml(self, filename) -> None:
         # create the file structure
         xNmapParse = ET.Element('nmapparse')
         for ip in self.Hosts:
@@ -266,7 +277,7 @@ class NmapOutput:
             self.lamePrint.eprint("Failed to combine files")
             self.lamePrint.eprint(str(ex))
 
-    def getHostsByFile(self, filters=None):
+    def getHostsByFile(self, filters=None) -> dict:
         '''Returns a dictionary with filenames as ID's and an array of hosts'''
         fileHostDict = {}
         for host in self.getHosts(filters=filters):
@@ -276,12 +287,12 @@ class NmapOutput:
                 fileHostDict[file].append(host)
         return fileHostDict
 
-    def getHostsWithinFile(self, file, filters=None):
+    def getHostsWithinFile(self, file, filters=None) -> list:
         if (filters == None):
             filters = NmapFilters()
         return [host for host in self.getHosts(filters=filters) if file in host.filesWithHost]
 
-    def getUniquePortIds(self, protocol=constants.PORT_OPT_COMBINED, filters=None, hosts=None):
+    def getUniquePortIds(self, protocol=constants.PORT_OPT_COMBINED, filters=None, hosts=None) -> list:
         allPorts = set()
         if (hosts == None):
             hosts = self.getHosts(filters)
@@ -319,13 +330,13 @@ class NmapHost:
         self.matched = True  # Used for filtering
         self.filesWithHost = []  # List of nmap files host was found in
 
-    def getState(self):
+    def getState(self) -> str:
         state = "up"
         if not self.alive:
             state = "down"
         return state
 
-    def addPort(self, protocol, portId, service):
+    def addPort(self, protocol: any, portId: any, service: any) -> None:
         self.addService(service)
         for port in self.ports:
             if port.portId == portId and port.protocol == protocol:
@@ -336,11 +347,11 @@ class NmapHost:
         # Add port if function hasn't already exited
         self.ports.append(NmapPort(protocol, portId, service))
 
-    def addService(self, service):
+    def addService(self, service: any) -> None:
         if service not in self.services:
             self.services.append(service)
 
-    def getUniquePortIds(self, protocol='', port_filter=[], service_filter=[]):
+    def getUniquePortIds(self, protocol='', port_filter=[], service_filter=[]) -> list:
         allPortIds = []
         for port in self.ports:
             if (len(port_filter) > 0 and port.portId not in port_filter):
@@ -353,7 +364,7 @@ class NmapHost:
         uniquePortIds = set(allPortIds)
         return sorted(uniquePortIds)
 
-    def getHostname(self):
+    def getHostname(self) -> str:
         if self.hostname == self.ip:
             return ''
         return self.hostname
@@ -375,19 +386,23 @@ class NmapFilters:
         self.mustHavePorts = defaultBool
         self.onlyAlive = defaultBool
 
-    def areFiltersSet(self):
+    # @property
+    def areFiltersSet(self) -> bool:
         return self.hostFilterSet() or self.portFilterSet() or self.serviceFilterSet() or self.onlyAlive or self.mustHavePorts
 
-    def hostFilterSet(self):
+    # @property
+    def hostFilterSet(self) -> bool:
         return len(self.hosts) > 0
 
-    def portFilterSet(self):
+    # @property
+    def portFilterSet(self) -> bool:
         return len(self.ports) > 0
 
-    def serviceFilterSet(self):
+    # @property
+    def serviceFilterSet(self) -> bool:
         return len(self.services) > 0
 
-    def checkHost(self, ip):
+    def checkHost(self, ip: any) -> bool:
         # Always return true if no filter is set
         if not self.hostFilterSet():
             return True
@@ -410,17 +425,49 @@ class NmapHostFilter:
 
 
 class NmapHelpers:
+    """
+    A class that provides helper methods for working with Nmap.
+
+    Methods:
+    - printUniquePorts: Prints the unique open ports for a given set of hosts.
+    - getUniquePortsOutput: Returns the unique open ports for a given set of hosts as a TextOutput object.
+    - getNmapFiltersString: Returns a string representation of the Nmap filters.
+    - printNmapFilters: Prints the Nmap filters.
+    - getHostListOutput: Returns string representations of filtered hosts output.
+    - printHosts: Prints the filtered hosts output.
+    - sortIpList: Sorts a list of IP addresses in ascending order.
+    - printImportSummary: Prints a summary of the imported files.
+    - getServiceListOutput: Returns string representations of the service list.
+    - printServiceList: Prints the service list.
+    - executeCommands: Executes commands on the hosts that match the filters.
+    - executeCommand: Executes a command on a specific IP address.
+    - printAliveIps: Prints the list of alive IP addresses.
+    - getFilesInDir: Returns a list of files in a directory that match the specified filter.
+    - stringToHostFilter: Converts a string representation of a host filter to a list of filters.
+    """
+
     def __init__(self):
         self.lamePrint = LamePrint()
         self.notify = Notify()
         self.notifyNmap = NotifyNmap()
         # self.textOutput = TextOutput()
 
-    def printUniquePorts(self, hosts, option=constants.PORT_OPT_DEFAULT, filters=None) -> str:
+    def printUniquePorts(self, hosts: any, option=constants.PORT_OPT_DEFAULT, filters=None) -> str:
+        ...
+
+
+class NmapHelpers:
+    def __init__(self):
+        self.lamePrint = LamePrint()
+        self.notify = Notify()
+        self.notifyNmap = NotifyNmap()
+        # self.textOutput = TextOutput()
+
+    def printUniquePorts(self, hosts: any, option=constants.PORT_OPT_DEFAULT, filters=None) -> str:
         textOutput = self.getUniquePortsOutput(hosts, option, filters=filters)
         textOutput.printToConsole()
 
-    def getUniquePortsOutput(self, hosts, option=constants.PORT_OPT_DEFAULT, filters=None):
+    def getUniquePortsOutput(self, hosts: any, option=constants.PORT_OPT_DEFAULT, filters=None):
         if filters == None:
             filters = NmapFilters()
         tcpPorts = set()
@@ -453,7 +500,7 @@ class NmapHelpers:
             output.addMain(re.sub(r'[\[\] ]', '', str(sorted(allPorts))))
         return output
 
-    def getNmapFiltersString(self, filters):
+    def getNmapFiltersString(self, filters: NmapFilters) -> str:
         filterString = ""
         if filters.areFiltersSet():
             filterString += self.lamePrint.getHeader("Output filtered by:")
@@ -474,12 +521,12 @@ class NmapHelpers:
                                  str(filters.onlyAlive)) + os.linesep
         return filterString
 
-    def printNmapFilters(self, filters):
+    def printNmapFilters(self, filters: NmapFilters) -> None:
         filterString = self.getNmapFiltersString(filters)
         if (len(filterString) > 0):
             self.hprint(filterString)
 
-    def getHostListOutput(self, nmapOutput, includePorts=True, filters=None, includeHostname=False, isTable=False):
+    def getHostListOutput(self, nmapOutput: any, includePorts=True, filters=None, includeHostname=False, isTable=False) -> str:
         """Returns string representations of filtered hosts output"""
         if filters == None:
             filters = NmapFilters()
@@ -534,17 +581,17 @@ class NmapHelpers:
                     output.addMain(hostOutput[0])
         return output
 
-    def printHosts(self, nmapOutput, includePorts=True, filters=None):
+    def printHosts(self, nmapOutput: any, includePorts=True, filters=None) -> None:
         textOutput = self.getHostListOutput(
             nmapOutput, includePorts=includePorts, filters=filters)
         textOutput.printToConsole()
 
-    def sortIpList(self, ip_list):
+    def sortIpList(self, ip_list: list) -> list:
         ipl = [(IP(ip).int(), ip) for ip in ip_list]
         ipl.sort()
         return [ip[1] for ip in ipl]
 
-    def printImportSummary(self, nmapOutput, detailed=True):
+    def printImportSummary(self, nmapOutput: any, detailed=True) -> None:
         if (detailed):
             for file in nmapOutput.FilesImported:
                 self.lamePrint.sprint("Successfully loaded " + file)
@@ -555,7 +602,7 @@ class NmapHelpers:
             for file in nmapOutput.FilesFailedToImport:
                 self.lamePrint.eprint("\t" + file)
 
-    def getServiceListOutput(self, nmapOutput, filters=None, verbose=False, includePorts=True):
+    def getServiceListOutput(self, nmapOutput: any, filters=None, verbose=False, includePorts=True) -> str:
         services = nmapOutput.getServices(filters)
         output = TextOutput()
         output.addHumn(self.lamePrint.getHeader('Service List'))
@@ -578,12 +625,12 @@ class NmapHelpers:
                     output.addMain(hostString)
         return output
 
-    def printServiceList(self, nmapOutput, filters=None, verbose=False):
+    def printServiceList(self, nmapOutput: any, filters=None, verbose=False) -> None:
         textOutput = self.getServiceListOutput(
             nmapOutput, filters=filters, verbose=verbose)
         textOutput.printToConsole()
 
-    def executeCommands(self, cmd, nmapOutput, filters=None):
+    def executeCommands(self, cmd: any, nmapOutput: any, filters=None) -> None:
         if (filters == None):
             filters = NmapFilters()
         self.header('Running Commands')
@@ -591,7 +638,7 @@ class NmapHelpers:
             if len(host.ports) > 0:
                 self.executeCommand(cmd, host.ip)
 
-    def executeCommand(self, cmd, ip):
+    def executeCommand(self, cmd: any, ip: any) -> None:
         curCommand = cmd + " " + ip
         self.lamePrint.hprint("Running command: '%s'" % curCommand)
         process = Popen(curCommand, shell=True, stdout=PIPE)
@@ -604,14 +651,14 @@ class NmapHelpers:
             print(output)
         print('')
 
-    def printAliveIps(self, nmapOutput):
+    def printAliveIps(self, nmapOutput: any) -> None:
         self.header('Alive IP list')
         # Get all hosts that are up and matched filters
         tmpParsedHosts = nmapOutput.getAliveHosts()
         for ip in self.sortIpList(tmpParsedHosts):
             print("%s" % (ip))
 
-    def getFilesInDir(self, directory, filter='', recurse=False):
+    def getFilesInDir(self, directory: any, filter='', recurse=False) -> list:
         allFiles = []
         regex = re.compile(filter)
         if (recurse):
@@ -623,7 +670,7 @@ class NmapHelpers:
                 directory) if regex.match(os.path.join(directory, file))])
         return allFiles
 
-    def stringToHostFilter(self, filterString):
+    def stringToHostFilter(self, filterString: str) -> list:
         hostFilter = []
         rawHostFilterString = filterString
         # Remove any excess white space (start/end/between commas)
@@ -676,16 +723,16 @@ class NmapHelpers:
                             "Invalid host filter option ignored: " + filter)
         return hostFilter
 
-    def getJsonValue(self, jsonData, id):
+    def getJsonValue(self, jsonData: any, id: any) -> any:
         if id in jsonData:
             return jsonData[id]
         else:
             return ''
 
-    def getEpoch():
+    def getEpoch() -> int:
         return int(time.time())
 
-    def getHostDetails(self, host):
+    def getHostDetails(self, host: NmapHost) -> TextOutput:
         output = TextOutput()
         # Get overview
         output.addHumn(self.lamePrint.getHeader("Overview"))
@@ -706,7 +753,7 @@ class NmapHelpers:
                                           for port in host.ports], headers=portTableHeaders, tablefmt="github"))
 
         # Output files found in
-        output.addHumn(LamePrint.getHeader("Files Containing Host"))
+        output.addHumn(self.lamePrint.getHeader("Files Containing Host"))
         if (len(host.filesWithHost) == 0):
             output.addErrr("Host not present within any files")
         else:
@@ -715,10 +762,10 @@ class NmapHelpers:
 
         return output
 
-    def wrap_text(self, text, max_chars=50):
+    def wrap_text(self, text: any, max_chars=50) -> str:
         return os.linesep.join(textwrap.wrap(text, max_chars))
 
-    def getNmapFiles(self, fileOrDir, recurse=False):
+    def getNmapFiles(self, fileOrDir: any, recurse=False) -> list:
         if not os.path.exists(fileOrDir):
             # TODO: style this error with Notify class
             raise FileNotFoundError(
