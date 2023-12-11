@@ -151,46 +151,31 @@ class UpdateHandler:
 
     def checkForUpdate(self) -> None:
         try:
-            cfg_url = "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.cfg"
-            ini_url = "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.ini"
+            # Add support for deprecated config file type
+            file_names = ["netwatch.cfg", "netwatch.ini"]
+            remote_version = None
 
-            # Check for .cfg file
-            r = requests.get(cfg_url)
-            if r.status_code == 200:
-                matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)
-                if matches:
-                    remote_version = str(matches[0])
-                else:
-                    raise ValueError(
-                        "Unable to find version number in netwatch.cfg")
+            for file_name in file_names:
+                url = (
+                    f'https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/{file_name}')
+                r = requests.get(url)
+                if r.status_code == 200:
+                    matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)
+                    if matches:
+                        remote_version = str(matches[0])
+                        break
+                    else:
+                        raise ValueError(
+                            f"Unable to find version number in {file_name}")
 
+            if remote_version is not None:
                 if self.is_newer_version(remote_version, self.local_version):
                     self.notify.update(remote_version, self.local_version)
                     self.promptForUpdate()
                 else:
                     self.notify.upToDate()
-                return
-
-            # Check for .ini file
-            r = requests.get(ini_url)
-            if r.status_code == 200:
-                matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)
-                if matches:
-                    remote_version = str(matches[0])
-                else:
-                    raise ValueError(
-                        "Unable to find version number in netwatch.ini")
-
-                if self.is_newer_version(remote_version, self.local_version):
-                    self.notify.update(remote_version, self.local_version)
-                    self.promptForUpdate()
-                else:
-                    self.notify.upToDate()
-                return
-
-            # Neither .cfg nor .ini file found
-            raise ValueError(
-                "Unable to find netwatch.cfg or netwatch.ini file")
+            else:
+                raise ValueError("Unable to find any update file")
 
         except Exception as error:
             self.notify.updateScriptError(error)
@@ -218,13 +203,20 @@ class UpdateHandler:
 class ConfigManager:
     "A class for managing configuration files"
 
-    def __init__(self):
-        self.config = configparser.ConfigParser()
-        self.notify = Notify()
-        self.configFile = os.path.dirname(
-            os.path.abspath(__file__)) + '/netwatch.ini'
-        self.config.read(self.configFile)
-        self.installDir = os.path.dirname(os.path.abspath(__file__)) + '/'
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.config = configparser.ConfigParser()
+            cls._instance.notify = Notify()
+            cls._instance.configFile = os.path.dirname(
+                os.path.abspath(__file__)) + '/netwatch.ini'
+            cls._instance.config.read(
+                cls._instance.configFile)
+            cls._instance.installDir = os.path.dirname(
+                os.path.abspath(__file__)) + '/'
+        return cls._instance
 
     def get(self, section: any, option: any) -> str:
         return self.config.get(section, option)
