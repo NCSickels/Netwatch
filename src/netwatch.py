@@ -34,6 +34,7 @@ from bs4 import BeautifulSoup
 # Custom Imports
 from modules import constants
 from modules.tablecreator import TableCreator
+from modules.programinstallationmanager import ProgramInstallationManager
 from modules.termutils import Color, Notify, NotifyDataParser, NotifyNmap, NotifySagemode
 from modules.sites import sites, soft404_indicators, user_agents
 
@@ -49,7 +50,7 @@ class Program:
         self.tableCreator = TableCreator()
         self.notify = Notify()
         self.configFile = os.path.dirname(
-            os.path.abspath(__file__)) + '/netwatch.cfg'
+            os.path.abspath(__file__)) + '/netwatch.ini'
 
     def start(self) -> None:
         self.clearScreen()
@@ -150,21 +151,47 @@ class UpdateHandler:
 
     def checkForUpdate(self) -> None:
         try:
-            r = requests.get(
-                "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.cfg")
-            matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)
-            if matches:
-                remote_version = str(matches[0])
-            else:
-                pass
-                raise ValueError(
-                    "Unable to find version number in netwatch.cfg")
+            cfg_url = "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.cfg"
+            ini_url = "https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/netwatch.ini"
 
-            if self.is_newer_version(remote_version, self.local_version):
-                self.notify.update(remote_version, self.local_version)
-                self.promptForUpdate()
-            else:
-                self.notify.upToDate()
+            # Check for .cfg file
+            r = requests.get(cfg_url)
+            if r.status_code == 200:
+                matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)
+                if matches:
+                    remote_version = str(matches[0])
+                else:
+                    raise ValueError(
+                        "Unable to find version number in netwatch.cfg")
+
+                if self.is_newer_version(remote_version, self.local_version):
+                    self.notify.update(remote_version, self.local_version)
+                    self.promptForUpdate()
+                else:
+                    self.notify.upToDate()
+                return
+
+            # Check for .ini file
+            r = requests.get(ini_url)
+            if r.status_code == 200:
+                matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)
+                if matches:
+                    remote_version = str(matches[0])
+                else:
+                    raise ValueError(
+                        "Unable to find version number in netwatch.ini")
+
+                if self.is_newer_version(remote_version, self.local_version):
+                    self.notify.update(remote_version, self.local_version)
+                    self.promptForUpdate()
+                else:
+                    self.notify.upToDate()
+                return
+
+            # Neither .cfg nor .ini file found
+            raise ValueError(
+                "Unable to find netwatch.cfg or netwatch.ini file")
+
         except Exception as error:
             self.notify.updateScriptError(error)
 
@@ -195,7 +222,7 @@ class ConfigManager:
         self.config = configparser.ConfigParser()
         self.notify = Notify()
         self.configFile = os.path.dirname(
-            os.path.abspath(__file__)) + '/netwatch.cfg'
+            os.path.abspath(__file__)) + '/netwatch.ini'
         self.config.read(self.configFile)
         self.installDir = os.path.dirname(os.path.abspath(__file__)) + '/'
 
@@ -217,39 +244,6 @@ class ConfigManager:
 
     def getbool(self, section: str, option: str) -> bool:
         return self.config.getboolean(section, option)
-
-
-class ProgramInstallationManager:
-    "A class for managing program installations for various tools used in Netwatch"
-
-    def __init__(self, program_name):
-        self.program_name = program_name
-        self.notify = Notify()
-
-    def installed(self) -> bool:
-        try:
-            subprocess.check_output(["which", self.program_name])
-            return True
-        except subprocess.CalledProcessError:
-            return False
-
-    def install(self) -> bool:
-        try:
-            subprocess.check_call(
-                ["sudo", "apt", "install", "-y", self.program_name])
-            return True
-        except subprocess.CalledProcessError as e:
-            self.notify.installError(self.program_name)
-            self.notify.exception(e)
-            return False
-
-    def checkAndInstall(self) -> bool:
-        if not self.installed():
-            self.notify.programNotInstalled(self.program_name)
-            return self.install()
-        else:
-            self.notify.programAlreadyInstalled(self.program_name)
-            return True
 
 
 class CommandHandler:
