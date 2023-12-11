@@ -33,6 +33,7 @@ from bs4 import BeautifulSoup
 
 # Custom Imports
 from modules import constants
+from modules.tablecreator import TableCreator
 from modules.termutils import Color, Notify, NotifyDataParser, NotifyNmap, NotifySagemode
 from modules.sites import sites, soft404_indicators, user_agents
 
@@ -45,7 +46,7 @@ class Program:
     def __init__(self):
         self.updateHandler = UpdateHandler()
         self.configManager = ConfigManager()
-        self.tableCreator = TableCreator(self.configManager)
+        self.tableCreator = TableCreator()
         self.notify = Notify()
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.cfg'
@@ -258,7 +259,7 @@ class CommandHandler:
         self.program = Program()
         self.updateHandler = UpdateHandler()
         self.configManager = ConfigManager()
-        self.tableCreator = TableCreator(self.configManager)
+        self.tableCreator = TableCreator()
         self.notify = Notify()
 
     def execute(self, command: str, module=None) -> None:
@@ -317,64 +318,6 @@ class CommandHistory:
                     history_log.write(f"{i}  {command}\n")
 
 
-class TableCreator:
-    "A class for creating help menu tables from JSON data"
-
-    def __init__(self, configManager, jsonFile=None):
-        self.configManager = configManager
-        self.console = Console()
-        self.jsonFile = os.path.dirname(os.path.abspath(
-            __file__)) + '/' + configManager.get('general_config', 'menu_data_path')
-
-    @staticmethod
-    def readJson(file_path: str) -> dict:
-        with open(file_path) as f:
-            data = json.load(f)
-            return data
-
-    def createTable(self, header_data: dict, column_data: list, row_data: list, column_keys: list) -> None:
-        table = Table(
-            show_header=header_data.get("show_header", True),
-            header_style=header_data.get("header_style", "bold white"),
-            title=header_data.get("title", ""),
-            width=int(header_data.get("width", 84)),
-            show_lines=True)
-        for i, column in enumerate(column_data):
-            table.add_column(
-                column.get("title", ""),
-                style=column.get("style", ""),
-                justify=column.get("justify", "right"),
-                width=column.get("width", 30))
-        column_keys += [None] * (len(column_data) - len(column_keys))
-        for row in row_data:
-            row_values = [str(row.get(column_keys[i], ""))
-                          for i in range(len(column_data))]
-            table.add_row(*row_values)
-        return table
-
-    def displayTable(self, jsonData: dict, module: str) -> None:
-        column_keys_dict = {
-            "Main": ["option", "modules", "description"],
-            "Core": ["command", "description"],
-            "Information_Gathering": ["option", "modules", "description"],
-            "Nmap_Scans": ["type", "options", "description"],
-            "Nmap_Commands": ["command", "description"],
-            "DataParser": ["command", "description"],
-        }
-        for table in jsonData[module]:
-            header_data = table.get("header", [{}])[0]
-            column_data = table.get("columns", [])
-            row_data = table.get("rows", [])
-            column_keys = column_keys_dict.get(module, [])
-            table = self.createTable(
-                header_data, column_data, row_data, column_keys)
-            self.console.print(table)
-            print("\n")
-
-    def displayTableFromFile(self, module: str) -> None:
-        jsonData = self.readJson(self.jsonFile)
-        self.displayTable(jsonData, module)
-
 # Start Menu Classes
 
 
@@ -420,7 +363,7 @@ class Netwatch:
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
         self.notify = Notify()
-        self.tableCreator = TableCreator(self.configManager)
+        self.tableCreator = TableCreator()
 
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
@@ -486,7 +429,7 @@ class AutoAttack:
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
         self.notify = Notify()
-        self.tableCreator = TableCreator(self.configManager)
+        self.tableCreator = TableCreator()
         self.run()
 
     def run(self) -> None:
