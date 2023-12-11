@@ -49,9 +49,9 @@ class Notify:
         self.console.print(
             f"\n[black][[red]*[black]] [bright_yellow]Searching for [bright_blue]{file_type} [bright_yellow]files...")
 
-    def foundFiles(self, file: str, file_type: str) -> None:
-        self.console.print((f"\n[red][[yellow]![red]] [bright_yellow]Found [bright_blue]"
-                            f"{file_type} [bright_yellow]file: [bright_red]{file}\n"))
+    def foundFiles(self, file: str) -> None:
+        self.console.print(
+            (f"\n[red][[yellow]![red]] [bright_yellow]Found file: [bright_red]{file}\n"))
 
     def noFilesFound(self, file_type: str, modifier="") -> None:
         self.console.print((f"\n[red][[bright_red]![red]] [yellow]No{modifier}"

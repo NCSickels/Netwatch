@@ -36,12 +36,12 @@ from modules import constants
 from modules.tablecreator import TableCreator
 from modules.packagemanager import ProgramInstallationManager
 from modules.termutils import Color
-from modules.notify import Notify
+from modules.notify import Notify, NotifySagemode
 from modules.sites import sites, soft404_indicators, user_agents
 from config.config import ConfigManager
+
+
 # Utility Classes
-
-
 class Program:
     "A class for main program functions"
 
@@ -234,37 +234,6 @@ class CommandHandler:
 
     def completed(self) -> None:
         input("\nClick [return] to continue...")
-
-
-class CommandHistory:
-    "A class for managing command history"
-
-    def __init__(self):
-        self.configManager = ConfigManager()
-        self.storeHistory = self.configManager.getbool(
-            'general_config', 'storehistory')
-        self.logDir = self.configManager.getPath('general_config', 'logdir')
-        self.history = []  # set()
-
-    def update(self, command: str) -> None:
-        self.history.append(command)
-        if self.storeHistory:
-            with open(self.logDir + "/command_history-" + strftime("%Y-%m-%d_%H:%M", gmtime()), 'a') as history_log:
-                history_log.write(f"{command}\n")
-
-    def print(self) -> None:
-        print("\n" + "\n".join(f"{i}  {command}" for i,
-              command in enumerate(self.history, start=1)) + "\n")
-
-    def clear(self) -> None:
-        self.history.clear()
-        print(f'\n{Color.OKGREEN}[✔] Command history cleared.{Color.END}\n')
-
-    def save(self) -> None:
-        if self.storeHistory:
-            with open(self.logDir + "/command_history-" + strftime("%Y-%m-%d_%H:%M", gmtime()), 'a') as history_log:
-                for i, command in enumerate(self.history, start=1):
-                    history_log.write(f"{i}  {command}\n")
 
 
 # Start Menu Classes

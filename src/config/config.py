@@ -2,7 +2,6 @@ import configparser
 import os.path
 from dataclasses import dataclass
 from modules.notify import Notify
-from config.paths import config_file_path
 from utils.stringutils import convert_to_bool
 
 
@@ -54,7 +53,7 @@ class ConfigResponse:
 # Read:
 def read_section(section_name: str) -> dict:
     config = configparser.ConfigParser()
-    config.read(config_file_path)
+    config.read('./config.ini')
 
     if not config.sections():
         raise FileNotFoundError(
@@ -82,16 +81,16 @@ def read_entry(section_name: str, entry: str) -> ConfigResponse:
 # Update
 def update_entry(section_name: str, entry: str, value: str) -> None:
     config = configparser.ConfigParser()
-    config.read(config_file_path)
+    config.read('./config.ini')
     config.set(section_name, entry, value)
 
-    with open(config_file_path, mode='w') as configfile:
+    with open('./config.ini', mode='w') as configfile:
         config.write(configfile)
 
 
 # Default:
 def create_default_config_file():
-    if os.path.isfile(config_file_path):
+    if os.path.isfile('./config.ini'):
         return
 
     config = configparser.ConfigParser()
@@ -108,5 +107,5 @@ def create_default_config_file():
         'critical': 'red [bold]'
     }
 
-    with open(config_file_path, mode='w') as configfile:
+    with open('./config.ini', mode='w') as configfile:
         config.write(configfile)
