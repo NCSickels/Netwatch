@@ -170,3 +170,5 @@ sagemode.py
 sagemode_old.py
 src/Nmap update utility.py
 src/colorTesting.py
+src/chat_server.py
+src/client.py

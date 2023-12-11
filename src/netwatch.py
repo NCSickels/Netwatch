@@ -34,10 +34,11 @@ from bs4 import BeautifulSoup
 # Custom Imports
 from modules import constants
 from modules.tablecreator import TableCreator
-from modules.programinstallationmanager import ProgramInstallationManager
-from modules.termutils import Color, Notify, NotifyDataParser, NotifyNmap, NotifySagemode
+from modules.packagemanager import ProgramInstallationManager
+from modules.termutils import Color
+from modules.notify import Notify
 from modules.sites import sites, soft404_indicators, user_agents
-
+from config.config import ConfigManager
 # Utility Classes
 
 
@@ -198,44 +199,6 @@ class UpdateHandler:
         # ensure we're performing git command in the local git repo directory
         os.chdir(repo_dir)
         subprocess.run(["git", "pull"])
-
-
-class ConfigManager:
-    "A class for managing configuration files"
-
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.config = configparser.ConfigParser()
-            cls._instance.notify = Notify()
-            cls._instance.configFile = os.path.dirname(
-                os.path.abspath(__file__)) + '/netwatch.ini'
-            cls._instance.config.read(
-                cls._instance.configFile)
-            cls._instance.installDir = os.path.dirname(
-                os.path.abspath(__file__)) + '/'
-        return cls._instance
-
-    def get(self, section: any, option: any) -> str:
-        return self.config.get(section, option)
-
-    def set(self, section: any, key: any, value: any) -> None:
-        try:
-            if not self.config.has_section(section):
-                self.config.add_section(section)
-            self.config.set(section, key, value)
-            with open(self.configFile, 'w') as f:
-                self.config.write(f)
-        except Exception as e:
-            self.notify.exception(e)
-
-    def getPath(self, section: any, option: any) -> str:
-        return self.installDir + self.config.get(section, option)
-
-    def getbool(self, section: str, option: str) -> bool:
-        return self.config.getboolean(section, option)
 
 
 class CommandHandler:

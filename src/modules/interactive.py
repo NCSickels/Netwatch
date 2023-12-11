@@ -8,10 +8,11 @@ import tabulate
 from rich.console import Console
 from typing import List
 
-from modules.nmap import NmapOutput, NmapService, NmapHost, NmapPort, NmapFilters, NmapHostFilter, NmapHelpers
+from modules.nmap import NmapFilters, NmapHostFilter, NmapHelpers
 from modules import constants
 from config import parsersettings as settings
-from modules.termutils import ColorConfig, LamePrint, Color, Notify, NotifyNmap, TextOutput, TextOutputEntry
+from modules.termutils import ColorConfig, LamePrint, Color, TextOutput, TextOutputEntry
+from modules.notify import Notify, NotifyNmap
 
 
 class TerminalBase(cmd2.Cmd):

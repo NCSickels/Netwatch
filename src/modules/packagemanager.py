@@ -1,5 +1,5 @@
 import subprocess
-from modules.termutils import Notify
+from modules.notify import Notify
 
 
 class ProgramInstallationManager:

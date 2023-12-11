@@ -8,11 +8,14 @@ import tabulate
 from IPy import IP
 from rich.console import Console
 from rich import print as rprint
-from colorama import Fore, Style
+import colorama
+from termcolor import colored
 
-from modules.sites import sites, soft404_indicators, user_agents
+from modules.sites import sites
 from config import parsersettings as settings
 from modules import constants
+from dataclasses import dataclass, field
+from config.config import read_section
 
 
 class ColorConfig:
@@ -95,214 +98,6 @@ class Color:
     AC1 = '#8696ef'
 
 
-class Notify:
-    "A helper class for notifications of Netwatch process"
-
-    def __init__(self):
-        self.console = Console()
-
-    # General Use Methods
-    def update(self, remoteVersion: str, localVersion: str) -> None:
-        self.console.print(
-            f"[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
-            + f"[red][[yellow]![red]] [bright_yellow]You are running Version: [bright_green]{localVersion}\n"
-            + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remoteVersion}")
-
-    def upToDate(self) -> None:
-        self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Netwatch is up to date.\n")
-
-    def endProgram(self) -> None:
-        self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Finishing up...\n")
-
-    def previousContextMenu(self, module: str) -> None:
-        self.console.print((f"\n[bright_yellow]Returning to "
-                            f"[bright_blue]{module} [bright_yellow]menu...\n"))
-
-    def unknownInput(self, choice: str) -> None:
-        self.console.print(
-            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]Unknown input: [bright_red]{choice}. [bright_yellow]Type [bright_red]'?' [bright_yellow]for help.")
-
-    def programNotInstalled(self, program: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Program: [bright_blue]{program} [bright_yellow]not found. Attempting to install...\n")
-
-    def programAlreadyInstalled(self, program: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Program: [bright_blue]{program} [bright_yellow]already installed. Skipping installation...\n")
-
-    def completed(self) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Operation completed.\n")
-
-    # File Operations Methods
-    def findFiles(self, file_type: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Searching for [bright_blue]{file_type} [bright_yellow]files...")
-
-    def foundFiles(self, file: str, file_type: str) -> None:
-        self.console.print((f"\n[red][[yellow]![red]] [bright_yellow]Found [bright_blue]"
-                            f"{file_type} [bright_yellow]file: [bright_red]{file}\n"))
-
-    def noFilesFound(self, file_type: str, modifier="") -> None:
-        self.console.print((f"\n[red][[bright_red]![red]] [yellow]No{modifier}"
-                            f"[bright_blue]{file_type} [bright_yellow]files found. Please add the path to the [red].cfg [bright_yellow]file manually.\n"))
-
-    def setFiles(self, file: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Selected file: [bright_red]{file}\n")
-
-    def cleaningDirectory(self, path: str) -> None:
-        self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Cleaning [bright_blue]~/Netwatch/src/{os.path.basename(os.path.normpath(path))}/ [bright_yellow]directory...")
-
-    def deletingFile(self, file: str) -> None:
-        self.console.print(
-            f"\n\t[red][[yellow]-[red]] [bright_yellow]Deleting file: [bright_blue]{os.path.basename(file)}[bright_yellow]")
-
-    def directoryCleaned(self, path: str, files_found=False) -> None:
-        if files_found:
-            self.console.print(
-                f"\n[black][[green]*[black]] [bright_yellow]Directory: [bright_blue]~/Netwatch/src/{os.path.basename(os.path.normpath(path))}/ [bright_yellow]successfully cleaned.\n")
-        else:
-            self.console.print(
-                f"\n[black][[green]*[black]] [bright_yellow]No files found in [bright_blue]~/Netwatch/src/{os.path.basename(os.path.normpath(path))}/ [bright_yellow]directory.\n")
-
-    def currentDirPath(self, module: any, path=None) -> None:
-        split_module = module.split("/")
-        if (len(split_module) <= 1):    # if module is in root directory (Netwatch/)
-            self.console.print(
-                f"\n[black][[red]*[black]] [bright_yellow]Module [bright_black]-> [bright_red]{split_module[0]}\n[black][[red]*[black]] [bright_yellow]Path [bright_black]  -> [bright_red]{module+'/'}\n")
-        else:
-            self.console.print(
-                f"\n[black][[red]*[black]] [bright_yellow]Module [bright_black]-> [bright_red]{split_module[len(split_module)-1]}\n[black][[red]*[black]] [bright_yellow]Path [bright_black]  -> [bright_red]{module+'/'}\n")
-
-    # Error Handling Methods
-    def exception(self, error: str) -> None:
-        self.console.print(
-            f"[black][[red]![black]] [bright_yellow]An error occurred: [bright_red]{error}...")
-
-    def installError(self, program: str) -> None:
-        self.console.print(
-            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]An error installing: [bright_blue]{program}[bright_yellow]!\n")
-
-    def updateScriptError(self, error: str) -> None:
-        self.console.print(
-            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while updating: [bright_red]{error}")
-
-    # Methods for AutoAttack Tool
-    def runOvpn(self, ovpnPath: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Starting OpenVPN profile: [bright_blue]{ovpnPath}\n")
-
-    # Methods for InformationGathering
-    # Methods for Nmap
-    def logFileConflict(self) -> None:
-        self.console.print(
-            f"\n[bright_red][[bright_red]![bright_red]] [bright_yellow]Log file already exists!")
-
-    def overwriteLogFile(self) -> None:
-        self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Would you like to overwrite the log file?")
-
-    def currentTarget(self, target: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Target [bright_black]-> [bright_red]{target}")
-
-    def currentLogPath(self, logPath: str) -> None:
-        self.console.print(
-            f"[black][[red]*[black]] [bright_yellow]Log Path [bright_black]-> [bright_red]{logPath}\n")
-
-    def scanCompleted(self, logPath: str) -> None:
-        self.console.print(
-            # ✔
-            f"\n[black][[red]*[black]] [orange3]Scan completed, log saved to: [bright_blue]{logPath}")
-
-    def promptForAnotherScan(self) -> None:
-        self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Would you like to run another scan?")
-
-
-class NotifyDataParser:
-    "A helper class for notifications of the Data Parser module"
-
-    def __init__(self):
-        self.console = Console()
-
-    def attemptingToOpenFile(self, file: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Attempting to open: [bright_blue]{file}")
-
-    def filePreviouslyImported(self, file: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Skipping previously imported file: [bright_blue]{file}")
-
-    def loadingFileCount(self, count: int, total: int, file: str) -> None:
-        self.console.print(
-            f"\n[black][[red]*[black]] [bright_yellow]Loading [[{count} of {total}]] [bright_blue]{file}")
-
-
-class NotifyNmap:
-    "A helper class for notifications of the Nmap and Data Parser modules"
-
-    def __init__(self):
-        self.console = Console()
-
-    def skippingHostAddress(self, file: str):
-        self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Host found without IPv4 or UPv6 address in: [bright_blue]{file}[bright_yellow]. Skipping host...")
-
-
-class NotifySagemode:
-    "A helper class for notifications of Sagemode process"
-
-    @staticmethod
-    def start(username: str, number_of_sites: any) -> str:
-        if username or sites is not None:
-            return f"[yellow][[bright_red]*[yellow][yellow]] [bright_blue]Searching {number_of_sites} sites for target: [bright_yellow]{username}"
-
-    # notify the user how many sites the username has been found
-    @staticmethod
-    def positive_res(username: str, count) -> str:
-        return f"\n[yellow][[bright_red]+[yellow]][bright_green] Found [bright_red]{username} [bright_green]on [bright_magenta]{count}[bright_green] sites"
-
-    # notify the user where the result is stored
-    @staticmethod
-    def stored_result(result_file: str) -> str:
-        return f"[bright_green][[yellow]@[bright_green]] [orange3]Results stored in: [bright_green]{os.path.basename(result_file)}\t({result_file})\n"
-
-    @staticmethod
-    def not_found(site: str, status_code="") -> str:
-        if status_code:
-            return f"[black][[red]-[black]] [blue]{site}: [yellow]Not Found! {status_code}"
-        return f"[black][[red]-[black]] [blue]{site}: [yellow]Not Found!"
-
-    @staticmethod
-    def found(site: str, url: str) -> str:
-        return f"[red][[green]+[red]] [green]{site}: [blue]{url}"
-
-    @staticmethod
-    def update(local_version: str, remote_version: str) -> str:
-        return (
-            "[red][[bright_red]![red]] [yellow]Update Available!\n[/yellow]"
-            + f"[red][[yellow]![red]] [bright_yellow]You are running Version: [bright_green]{local_version}\n"
-            + f"[red][[/red][yellow]![red]][bright_yellow] New Version Available: [bright_green]{remote_version}"
-        )
-
-    @staticmethod
-    def update_error(error: str) -> str:
-        return f"[bright_red][[bright_red]![bright_red]] [bright_yellow]A problem occured while checking for an update: [bright_red]{error}"
-
-    @staticmethod
-    def version(version: str) -> str:
-        return f"[bright_yellow]Sagemode [bright_red]{version}"
-
-    @staticmethod
-    def exception(site, error: str) -> str:
-        return f"[black][[red]![black]] [blue]{site}: [bright_red]{error}..."
-
-
 class BannerPrinter:
     "A class for printing banners"
 
@@ -330,19 +125,19 @@ class TextOutput():
 
     def addMain(self, text):
         self.entries.append(TextOutputEntry(
-            text, constants.TEXT_NORMAL, Fore.RESET))
+            text, constants.TEXT_NORMAL, colorama.Fore.RESET))
 
     def addHumn(self, text):
         self.entries.append(TextOutputEntry(
-            text, constants.TEXT_FRIENDLY, Style.DIM))
+            text, constants.TEXT_FRIENDLY, colorama.Style.DIM))
 
     def addErrr(self, text):
         self.entries.append(TextOutputEntry(
-            text, constants.TEXT_ERROR, Fore.RED))
+            text, constants.TEXT_ERROR, colorama.Fore.RED))
 
     def addGood(self, text):
         self.entries.append(TextOutputEntry(
-            text, constants.TEXT_SUCCESS, Fore.GREEN))
+            text, constants.TEXT_SUCCESS, colorama.Fore.GREEN))
 
     def printToConsole(self):
         for line in self.entries:
@@ -369,6 +164,189 @@ class TextOutputEntry():
 
     def getText(self):
         if settings.colorSupported:
-            return "%s%s%s" % (self.color, self.text, Style.RESET_ALL)
+            return "%s%s%s" % (self.color, self.text, colorama.Style.RESET_ALL)
         else:
             return self.text
+
+
+__all__ = ['c', 'use_prop']
+
+# Initialization:
+colorama.just_fix_windows_console()
+
+
+def c(text: str) -> str:
+    result = text
+
+    # Colors:
+    theme = get_theme()
+
+    for key, color in theme.colors.items():
+        styled_portion = re.findall(f"<{key}>(.*?)</{key}>", text)
+
+        if not styled_portion:
+            continue
+
+        for portion in styled_portion:
+            result = re.sub(f"<{key}>(.*?)</{key}>",
+                            colored(portion, color=color),
+                            result, 1)
+
+    # Highlights
+    for key, highlight in theme.highlights.items():
+        styled_portion = re.findall(f"<{key}>(.*?)</{key}>", text)
+
+        if not styled_portion:
+            continue
+
+        for portion in styled_portion:
+            result = re.sub(f"<{key}>(.*?)</{key}>",
+                            colored(portion, on_color=highlight),
+                            result, 1)
+
+    # Attributes:
+    for key, attribute in theme.attributes.items():
+        styled_portion = re.findall(f"<{key}>(.*?)</{key}>", text)
+
+        if not styled_portion:
+            continue
+
+        for portion in styled_portion:
+            result = re.sub(f"<{key}>(.*?)</{key}>",
+                            colored(portion, attrs=attribute),
+                            result, 1)
+
+    # Custom Themes:
+    for key, style in theme.content.items():
+        styled_portion = re.findall(f"<{key}>(.*?)</{key}>", text)
+
+        if not styled_portion:
+            continue
+
+        for portion in styled_portion:
+            result = re.sub(f"<{key}>(.*?)</{key}>",
+                            colored(portion, color=style.color,
+                                    on_color=style.highlight, attrs=style.attributes),
+                            result, 1)
+
+    return result
+
+
+def use_prop(text: str, prop: str) -> str:
+    style = get_theme().content.get(prop)
+
+    text = f"<{style.color}>{text}</{style.color}>"
+
+    if style.highlight:
+        text = f"<{style.highlight}>{text}</{style.highlight}>"
+
+    if style.attributes:
+        for attribute in style.attributes:
+            text = f"<{attribute}>{text}</{attribute}>"
+
+    return c(text)
+
+
+def primary(text: str) -> str:
+    return c(f"<primary>{text}</primary>")
+
+
+def warning(text: str) -> str:
+    return c(f"<warning>{text}</warning>")
+
+
+def error(text: str) -> str:
+    return c(f"<error>{text}</error>")
+
+
+def critical(text: str) -> str:
+    return c(f"<critical>{text}</critical>")
+
+# Style:
+
+
+@dataclass
+class Style:
+    color: str = ''
+    highlight: str = ''
+    attributes: list[str] = field(default_factory=list)
+
+
+@dataclass
+class Theme:
+    content: dict = field(default_factory=dict)
+
+    colors: dict = field(default_factory=dict)
+    highlights: dict = field(default_factory=dict)
+    attributes: dict = field(default_factory=dict)
+
+    def __post_init__(self):
+        self.colors = {
+            'grey': 'grey',
+            'red': 'red',
+            'green': 'green',
+            'yellow': 'yellow',
+            'blue': 'blue',
+            'magenta': 'magenta',
+            'cyan': 'cyan',
+            'white': 'white'
+        }
+
+        self.highlights = {
+            'on_grey': 'on_grey',
+            'on_red': 'on_red',
+            'on_green': 'on_green',
+            'on_yellow': 'on_yellow',
+            'on_blue': 'on_blue',
+            'on_magenta': 'on_magenta',
+            'on_cyan': 'on_cyan',
+            'on_white': 'on_white'
+        }
+
+        self.attributes = {
+            'bold': 'bold',
+            'dark': 'dark',
+            'underline': 'underline',
+            'blink': 'blink',
+            'reverse': 'reverse',
+            'concealed': 'concealed'
+        }
+
+
+theme = Theme()
+
+
+def get_theme() -> Theme():
+    return theme
+
+
+def set_theme(theme_name: str):
+    global theme
+    theme = load_theme(theme_name)
+
+
+def load_theme(theme_name: str) -> Theme:
+    theme_section = read_section(theme_name)
+    theme_content = dict(theme_section)
+
+    content = {}
+    for key, item in theme_content.items():
+        style = Style()
+
+        color = re.sub("[\{\[].*?[\}\]]", "", item).strip()
+
+        highlight = re.findall('{(.*?)}', item)
+        if highlight:
+            highlight = highlight[0]
+
+        attributes = ''.join(re.findall('\[(.*?)\]', item)).split(' ')
+        if all(x.isspace() or not x for x in attributes):
+            attributes = None
+
+        style.color = color if color else 'white'
+        style.highlight = highlight if highlight else None
+        style.attributes = attributes if attributes else None
+
+        content[key] = style
+
+    return Theme(content)
