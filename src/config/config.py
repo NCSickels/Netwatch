@@ -14,8 +14,11 @@ class ConfigManager:
             cls._instance = super().__new__(cls)
             cls._instance.config = configparser.ConfigParser()
             cls._instance.notify = Notify()
-            cls._instance.configFile = os.path.dirname(
-                os.path.abspath(__file__)) + '/netwatch.ini'
+            cls._instance.configFile = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), 'netwatch.ini')
+            # print(cls._instance.configFile)
+            # cls._instance.configFile = os.path.dirname(
+            #     os.path.abspath(__file__)) + '/netwatch.ini'
             cls._instance.config.read(
                 cls._instance.configFile)
             cls._instance.installDir = os.path.dirname(
@@ -24,6 +27,9 @@ class ConfigManager:
 
     def get(self, section: any, option: any) -> str:
         return self.config.get(section, option)
+
+    def read(self, section: any) -> dict:
+        return dict(self.config[section])
 
     def set(self, section: any, key: any, value: any) -> None:
         try:
@@ -53,7 +59,8 @@ class ConfigResponse:
 # Read:
 def read_section(section_name: str) -> dict:
     config = configparser.ConfigParser()
-    config.read('./config.ini')
+    config.read(os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), 'netwatch.ini'))
 
     if not config.sections():
         raise FileNotFoundError(

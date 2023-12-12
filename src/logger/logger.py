@@ -1,8 +1,40 @@
 import logging
 import logging.config
-import yaml
-
 from config.paths import logger_config_file_path
+
+LOGGING_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            'datefmt': "[%Y-%m-%d %H:%M:%S]",
+        },
+        'colored': {
+            '()': 'logger.color_formatter.ColorFormatter',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'default',
+            'stream': 'ext://sys.stdout',
+        },
+        'colored_console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'colored',
+            'stream': 'ext://sys.stdout',
+        },
+    },
+    'loggers': {
+        'root': {
+            'level': 'INFO',
+            'handlers': ['colored_console'],
+        },
+    },
+}
 
 
 class Singleton(type):
@@ -33,11 +65,11 @@ class Logger(metaclass=Singleton):
     _logger: logging.Logger = None
 
     def __init__(self):
-        with open(logger_config_file_path, mode='r', encoding='utf-8') as file:
-            config = yaml.safe_load(file.read())
-            logging.config.dictConfig(config)
-
+        logging.config.dictConfig(LOGGING_CONFIG)
         Logger._logger = logging.getLogger()
+        # with open(logger_config_file_path, mode='r', encoding='utf-8') as file:
+        #     config = yaml.safe_load(file.read())
+        #     logging.config.dictConfig(config)
 
     @classmethod
     def debug(cls, message: str):

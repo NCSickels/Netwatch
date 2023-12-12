@@ -9,7 +9,7 @@
 # ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 #
 #
-#   Netwatch v3.1.4
+#   Netwatch v3.2.0
 #   by: @NCSickels
 
 # Imports
@@ -32,14 +32,9 @@ from rich.table import Table
 from bs4 import BeautifulSoup
 
 # Custom Imports
-from modules import constants
-from modules.tablecreator import TableCreator
-from modules.packagemanager import ProgramInstallationManager
-from modules.termutils import Color
-from modules.notify import Notify, NotifySagemode
-from modules.sites import sites, soft404_indicators, user_agents
-from config.config import ConfigManager
-from modules.updatehandler import UpdateHandler
+from modules import *
+from logger import *
+from themes import *
 
 # Utility Classes
 
@@ -60,7 +55,7 @@ class Program:
         print(Netwatch.netwatchLogo)
         self.updateHandler.checkForUpdate()
         self.createFolders([("general_config", "tooldir"),
-                            ("general_config", "logdir"),
+                            ("general_config", "scandir"),
                             ("sagemode", "datadir")])
 
     def createFolders(self, paths: any) -> None:
@@ -161,9 +156,9 @@ class CommandHandler:
                 self.program.clearScreen()
             case "clean":
                 self.program.clean(self.configManager.getPath(
-                    "general_config", "toolDir"))
+                    "general_config", "tooldir"))
                 self.program.clean(self.configManager.getPath(
-                    "general_config", "logDir"))
+                    "general_config", "scandir"))
                 self.program.clean(
                     self.configManager.getPath("sagemode", "datadir"))
                 # self.completed()
@@ -222,17 +217,21 @@ class Netwatch:
         self.commandHandler = CommandHandler()
         self.notify = Notify()
         self.tableCreator = TableCreator()
+        self.logger = Logger()
 
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
         self.toolDir = self.configManager.getPath('general_config', 'tooldir')
-        self.logDir = self.configManager.getPath('general_config', 'logdir')
+        self.scanDir = self.configManager.getPath('general_config', 'scandir')
         self.storeHistory = self.configManager.getbool(
             'general_config', 'storehistory')
 
         self.run()
 
     def run(self) -> None:
+        self.logger.info("Netwatch started")
+        self.logger.warning("Netwatch started")
+        self.logger.error("Netwatch started")
         choice = input(self.netwatchPrompt)
         match choice:  # .strip()
             case "0":
@@ -350,8 +349,9 @@ class InformationGathering:
                 # Currently not working
                 # PortScanner()
             case "4":
-                print(Host2IP.host2ipLogo)
-                Host2IP()
+                pass
+                # print(Host2IP.host2ipLogo)
+                # Host2IP()
             case "?" | "help":
                 [self.commandHandler.execute(choiceInfo, choice) for choice in [
                     "Information_Gathering", "Core"]]
@@ -398,7 +398,7 @@ class Nmap:
             'general_config', 'prompt') + ' '
         self.gitRepo = self.configManager.get('nmap', 'gitrepository')
         self.targetPrompt = "\nEnter target IP: "
-        self.logFileNamePrompt = "\nEnter log file name: "
+        self.scanFileNamePrompt = "\nEnter scan file name: "
 
         self.checkInstall()
 
@@ -414,55 +414,55 @@ class Nmap:
     def run(self) -> None:
         try:
             target = input(self.targetPrompt)
-            logPath = "nmap-" + "-" + \
+            scanPath = "nmap-" + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-            if os.path.isfile(logPath):
-                self.notify.logFileConflict()
-                self.notify.overwriteLogFile()
+            if os.path.isfile(scanPath):
+                self.notify.scanFileConflict()
+                self.notify.overwriteScanFile()
                 response = input("[y/n]: ")
                 if response.lower() == "y" or response.lower() == "yes":
-                    self.menu(target, logPath)
+                    self.menu(target, scanPath)
                 else:
                     self.run()
-            self.menu(target, logPath)
+            self.menu(target, scanPath)
         except KeyboardInterrupt:
             print("\n")
             self.notify.previousContextMenu("Information Gathering")
             InformationGathering()
 
-    def menu(self, target: int, logPath: str) -> None:
+    def menu(self, target: int, scanPath: str) -> None:
         print(self.nmapLogo)
         self.notify.currentTarget(target)
-        self.notify.currentLogPath(logPath)
+        self.notify.currentScanPath(scanPath)
         try:
             choiceNmap = input(self.netwatchPrompt)
             match choiceNmap:  # .strip()
                 case "quick scan" | "quick" "quickscan":
-                    self.runScan("quick", target, logPath)
-                    self.notify.scanCompleted(logPath)
-                    self.promptForAnotherScan(target, logPath)
+                    self.runScan("quick", target, scanPath)
+                    self.notify.scanCompleted(scanPath)
+                    self.promptForAnotherScan(target, scanPath)
                 case "intense scan" | "intense" | "intensescan":
-                    self.runScan("intense", target, logPath)
-                    self.notify.scanCompleted(logPath)
-                    self.promptForAnotherScan(target, logPath)
+                    self.runScan("intense", target, scanPath)
+                    self.notify.scanCompleted(scanPath)
+                    self.promptForAnotherScan(target, scanPath)
                 case "default" | "default scan" | "defaultscan":
-                    self.runScan("default", target, logPath)
-                    self.notify.scanCompleted(logPath)
-                    self.promptForAnotherScan(target, logPath)
+                    self.runScan("default", target, scanPath)
+                    self.notify.scanCompleted(scanPath)
+                    self.promptForAnotherScan(target, scanPath)
                 case "vuln" | "vuln scan" | "vulnscan" | "vulnerability" | "vulnerability scan":
-                    self.runScan("vuln", target, logPath)
-                    self.notify.scanCompleted(logPath)
-                    self.promptForAnotherScan(target, logPath)
+                    self.runScan("vuln", target, scanPath)
+                    self.notify.scanCompleted(scanPath)
+                    self.promptForAnotherScan(target, scanPath)
                 case _ if choiceNmap.startswith("set "):
                     _, param, value = choiceNmap.split(" ", 2)
                     if param == "target":
                         target = value
-                    elif param == "log":
-                        logName, _, logPath = value.partition(" ")
-                        if not logPath:
-                            logPath = "nmap-" + logName + "-" + \
+                    elif param == "log" | "scan":
+                        scanName, _, scanPath = value.partition(" ")
+                        if not scanPath:
+                            scanPath = "nmap-" + scanName + "-" + \
                                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-                        logPath = "nmap-" + logName + "-" + \
+                        scanPath = "nmap-" + scanName + "-" + \
                             strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
                 case "?" | "help":
                     [self.commandHandler.execute(choiceNmap, choice) for choice in [
@@ -474,7 +474,7 @@ class Nmap:
                 case "path" | "pwd":
                     self.commandHandler.execute(
                         choiceNmap, "Netwatch/Information_Gathering/Nmap")
-                    self.menu(target, logPath)
+                    self.menu(target, scanPath)
                 case "exit" | "quit" | "end":
                     self.program.end()
                 case "back":
@@ -482,14 +482,14 @@ class Nmap:
                     InformationGathering()
                 case _:
                     self.notify.unknownInput(choiceNmap)
-                    self.menu(target, logPath)
-            self.menu(target, logPath)
+                    self.menu(target, scanPath)
+            self.menu(target, scanPath)
         except KeyboardInterrupt:
             print("\n")
             self.notify.previousContextMenu("Information Gathering")
             InformationGathering()
 
-    def runScan(self, choice: str, target: int, logPath: str) -> None:
+    def runScan(self, choice: str, target: int, scanPath: str) -> None:
         scan_types = {
             'default': 'nmap -T4 -v -A -oN',
             'quick': 'nmap -T4 -F -v -oN',
@@ -499,16 +499,16 @@ class Nmap:
         for choice, scan_type in scan_types.items():
             if choice.startswith(choice):
                 try:
-                    os.system(f'\n{scan_type} {logPath} {target}')
+                    os.system(f'\n{scan_type} {scanPath} {target}')
                 except Exception as e:
                     self.notify.exception(e)
                 break
 
-    def promptForAnotherScan(self, target: int, logPath: str) -> None:
+    def promptForAnotherScan(self, target: int, scanPath: str) -> None:
         self.notify.promptForAnotherScan()
         response = input("[y/n]: ")
         if response.lower() in ["y", "yes"]:
-            self.menu(target, logPath)
+            self.menu(target, scanPath)
         else:
             self.notify.previousContextMenu("Netwatch")
             Netwatch()
@@ -683,113 +683,9 @@ class Sagemode:
             self.console.print_exception()
 
 
-class PortScanner:
-    "A custom port scanner"
-
-    portScannerLogo = '''\n
-===================================================================================
-      ██████╗  ██████╗ ██████╗ ████████╗    ███████╗ ██████╗ █████╗ ███╗   ██╗
-      ██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝    ██╔════╝██╔════╝██╔══██╗████╗  ██║
-      ██████╔╝██║   ██║██████╔╝   ██║       ███████╗██║     ███████║██╔██╗ ██║
-      ██╔═══╝ ██║   ██║██╔══██╗   ██║       ╚════██║██║     ██╔══██║██║╚██╗██║
-      ██║     ╚██████╔╝██║  ██║   ██║       ███████║╚██████╗██║  ██║██║ ╚████║
-      ╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
-===================================================================================
-    '''
-
-    def __init__(self) -> None:
-        self.targetPrompt = "Enter target IP(s): "
-        self.portPrompt = "Enter port(s) to scan: "
-        self.logNamePrompt = "Enter log file name: "
-        self.run()
-
-    def run(self) -> None:
-        try:
-            target = input(self.targetPrompt)
-            port = input(self.portPrompt)
-            logName = input(self.logNamePrompt)
-            logPath = "portScan-" + logName + "-" + \
-                strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-
-            ipList = [self.ip2Int(ipAddr.strip())
-                      for ipAddr in target.split(',')]
-            portList = [port.strip() for port in port.split(',')]
-
-            print(f'\n{Color.OKBLUE}[*]{Color.END} Target(s) -> ', end='')
-            for ip in ipList:
-                print(f'{ip}, ', end='')
-            print('\n')
-            print(f'{Color.OKBLUE}[*]{Color.END} Port(s)   -> ', end='')
-            for port in portList:
-                print(f'{port}, ', end='')
-            print('\n')
-            print(
-                f'{Color.OKBLUE}[*]{Color.END} Log Path  -> {logPath}\n')
-            self.scan(ipList, portList)
-        except KeyboardInterrupt:
-            print("\n")
-            self.notify.previousContextMenu("Information Gathering")
-            InformationGathering()
-
-    def scan(self, ipList: list, portList: list) -> None:
-        try:
-            for ipAddr in ipList:
-                for port in portList:
-                    try:
-                        sock = socket.socket(
-                            socket.AF_INET, socket.SOCK_STREAM)
-                        socket.setdefaulttimeout(1)
-                        result = sock.connect_ex((ipAddr, int(port)))
-                        if result == 0:
-                            print(
-                                f'{Color.OKGREEN}[✔]{Color.END} Discovered open port {port} on {ipAddr}')
-                        else:
-                            pass
-                        sock.close()
-                    except KeyboardInterrupt:
-                        print(f'{Color.RED}[-]{Color.END} Exiting program.')
-                        sys.exit()
-                    except socket.gaierror:
-                        print(
-                            f'{Color.RED}[-]{Color.END} Hostname could not be resolved.')
-                        sys.exit()
-                    except socket.error:
-                        print(
-                            f'{Color.RED}[-]{Color.END} Could not connect to server.')
-                        sys.exit()
-        except KeyboardInterrupt:
-            print("\n")
-            self.notify.previousContextMenu("Information Gathering")
-            InformationGathering()
-
-    def ip2Int(self, ip: str) -> int:
-        octets = ip.split('.')
-        return ((int(octets[0]) << 24) + (int(octets[1]) << 16) +
-                (int(octets[2]) << 8) + int(octets[3]))
-
-
-class Host2IP:
-    "A class for converting a hostname to an IP address"
-
-    host2ipLogo = '''\n
-===================================================================================
-              ██╗  ██╗ ██████╗ ███████╗████████╗██████╗ ██╗██████╗ 
-              ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝╚════██╗██║██╔══██╗
-              ███████║██║   ██║███████╗   ██║    █████╔╝██║██████╔╝
-              ██╔══██║██║   ██║╚════██║   ██║   ██╔═══╝ ██║██╔═══╝ 
-              ██║  ██║╚██████╔╝███████║   ██║   ███████╗██║██║     
-              ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚══════╝╚═╝╚═╝     
-===================================================================================    
-    '''
-
-    def __init__(self):
-        host = input("Enter a Host: ")
-        ip = socket.gethostbyname(host)
-        input(f'{host} has the IP of {ip}')
-
-
 def main():
     try:
+        themes.set_theme("DefaultTheme")
         program = Program()
         program.start()
         Netwatch()

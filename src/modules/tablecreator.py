@@ -10,7 +10,7 @@ class TableCreator:
     def __init__(self, jsonFile=None):
         self.console = Console()
         self.jsonFile = os.path.dirname(os.path.abspath(
-            __file__)) + '/../config/menuData.json'  # if jsonFile is None else jsonFile
+            __file__)) + '/../json/menuData.json'  # if jsonFile is None else jsonFile
 
     @staticmethod
     def readJson(file_path: str) -> dict:

@@ -106,26 +106,26 @@ class Notify:
 
     # Methods for InformationGathering
     # Methods for Nmap
-    def logFileConflict(self) -> None:
+    def scanFileConflict(self) -> None:
         self.console.print(
-            f"\n[bright_red][[bright_red]![bright_red]] [bright_yellow]Log file already exists!")
+            f"\n[bright_red][[bright_red]![bright_red]] [bright_yellow]Scan file already exists!")
 
-    def overwriteLogFile(self) -> None:
+    def overwriteScanFile(self) -> None:
         self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Would you like to overwrite the log file?")
+            f"\n[red][[yellow]![red]] [bright_yellow]Would you like to overwrite the scan file?")
 
     def currentTarget(self, target: str) -> None:
         self.console.print(
             f"\n[black][[red]*[black]] [bright_yellow]Target [bright_black]-> [bright_red]{target}")
 
-    def currentLogPath(self, logPath: str) -> None:
+    def currentScanPath(self, scanPath: str) -> None:
         self.console.print(
-            f"[black][[red]*[black]] [bright_yellow]Log Path [bright_black]-> [bright_red]{logPath}\n")
+            f"[black][[red]*[black]] [bright_yellow]Scan Path [bright_black]-> [bright_red]{scanPath}\n")
 
-    def scanCompleted(self, logPath: str) -> None:
+    def scanCompleted(self, scanPath: str) -> None:
         self.console.print(
             # ✔
-            f"\n[black][[red]*[black]] [orange3]Scan completed, log saved to: [bright_blue]{logPath}")
+            f"\n[black][[red]*[black]] [orange3]Scan completed, scan saved to: [bright_blue]{scanPath}")
 
     def promptForAnotherScan(self) -> None:
         self.console.print(
