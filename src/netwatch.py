@@ -217,7 +217,7 @@ class Netwatch:
 '''
 
     def __init__(self):
-        self.program = Program()  # Program(config, configFile)
+        self.program = Program()
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
         self.notify = Notify()
