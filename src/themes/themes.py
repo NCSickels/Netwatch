@@ -13,6 +13,10 @@ class Style:
 
 @dataclass
 class Theme:
+    """
+    Represents a theme configuration with color, highlight, and attribute settings.
+    """
+
     content: dict = field(default_factory=dict)
 
     colors: dict = field(default_factory=dict)
@@ -20,6 +24,9 @@ class Theme:
     attributes: dict = field(default_factory=dict)
 
     def __post_init__(self):
+        """
+        Initializes the default color, highlight, and attribute settings.
+        """
         self.colors = {
             'grey': 'grey',
             'red': 'red',
@@ -77,9 +84,11 @@ def load_theme(theme_name: str) -> Theme:
         highlight = re.findall('{(.*?)}', item)
         if highlight:
             highlight = highlight[0]
-
-        attributes = ''.join(re.findall('\[(.*?)\]', item)).split(' ')
-        if all(x.isspace() or not x for x in attributes):
+        attributes = re.findall('\[(.*?)\]', item)
+        if attributes:
+            attributes = attributes[0].split(',')
+            print(attributes)
+        else:
             attributes = None
 
         style.color = color if color else 'white'

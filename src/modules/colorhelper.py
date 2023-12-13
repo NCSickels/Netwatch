@@ -14,6 +14,15 @@ colorama.just_fix_windows_console()
 
 
 def c(text: str) -> str:
+    """
+    Applies color styling to the given text based on the current theme.
+
+    Args:
+        text (str): The text to be styled.
+
+    Returns:
+        str: The styled text.
+    """
     result = text
 
     # Colors:
@@ -51,7 +60,7 @@ def c(text: str) -> str:
 
         for portion in styled_portion:
             result = re.sub(f"<{key}>(.*?)</{key}>",
-                            colored(portion, attrs=attribute),
+                            colored(portion, attrs=[attribute]),
                             result, 1)
 
     # Custom Themes:

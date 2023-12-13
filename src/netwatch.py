@@ -46,6 +46,7 @@ class Program:
         self.updateHandler = UpdateHandler()
         self.configManager = ConfigManager()
         self.tableCreator = TableCreator()
+        self.logger = Logger()
         self.notify = Notify()
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.ini'
@@ -69,6 +70,7 @@ class Program:
         sleep(0.25)
         sys.exit()
 
+    # TODO: Adjust color styling for the Notify class within this method
     def clean(self, path: str) -> None:
         if os.path.exists(path):
             deleted_files = False
@@ -77,6 +79,8 @@ class Program:
                     for file in files:
                         file_path = os.path.join(root, file)
                         try:
+                            # self.logger.info(
+                            #     f'Cleaning ~/Netwatch/src/{os.path.basename(os.path.normpath(path))}/ directory...')
                             self.notify.cleaningDirectory(path)
                             os.remove(file_path)
                             self.notify.deletingFile(file_path)
@@ -110,25 +114,33 @@ class Program:
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def findFiles(self, file_type: any, directory='/') -> str:
-        self.notify.findFiles(file_type)  # (".ovpn")
+        self.logger.info(f'Searching for {file_type} files...')
+        # self.notify.findFiles(file_type)  # (".ovpn")
         try:
             search_path = os.path.join(directory, '**/*'+file_type)
             files = glob.glob(search_path, recursive=True)
             if not files:
-                self.notify.noFilesFound(file_type)  # (".ovpn")
+                self.logger.warning(f'No {file_type} files found!')
+                # self.notify.noFilesFound(file_type)  # (".ovpn")
                 return
             for filename in files:
-                self.notify.foundFiles(filename)
+                self.logger.info(f'Found file {filename}')
+                # self.notify.foundFiles(filename)
                 response = input("Use this file? [y/n]: ").lower()
                 if response in ["y", "yes"]:
                     self.configManager.set(
                         "general_config", "ovpn_path", filename)
-                    self.notify.setFiles(filename)
+                    self.logging.info(f'Selected file {filename}')
+                    # self.notify.setFiles(filename)
                     return filename
-            self.notify.noFilesFound(file_type, " other")
+            # self.notify.noFilesFound(file_type, " other")
+            self.logger.warning(
+                (f'No other {file_type} files found! Manually add path to .ini file.'))
         except Exception as e:
-            self.notify.exception(e)
-            self.notify.noFilesFound(file_type)
+            # self.notify.exception(e)
+            # self.notify.noFilesFound(file_type)
+            self.logger.error(f'An error occurred: {e}')
+            self.logger.warning(f'No {file_type} files found!')
 
     def __del__(self):
         # sys.stdout = self.original_stdout
@@ -144,7 +156,7 @@ class CommandHandler:
         self.updateHandler = UpdateHandler()
         self.configManager = ConfigManager()
         self.tableCreator = TableCreator()
-        self.notify = Notify()
+        self.logger = Logger()
 
     def execute(self, command: str, module=None) -> None:
         match command:
@@ -229,9 +241,6 @@ class Netwatch:
         self.run()
 
     def run(self) -> None:
-        self.logger.info("Netwatch started")
-        self.logger.warning("Netwatch started")
-        self.logger.error("Netwatch started")
         choice = input(self.netwatchPrompt)
         match choice:  # .strip()
             case "0":
@@ -286,6 +295,7 @@ class AutoAttack:
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
         self.notify = Notify()
+        self.logger = Logger()
         self.tableCreator = TableCreator()
         self.run()
 
@@ -300,14 +310,15 @@ class AutoAttack:
 
     def startOvpn(self, updatedConfigPath: str) -> None:
         try:
-            self.notify.runOvpn(os.path.basename(updatedConfigPath))
+            self.logger.info('Starting OpenVPN profile...')
+            # self.notify.runOvpn(os.path.basename(updatedConfigPath))
             # print(os.getenv("TERM"))
             # subprocess.Popen(["gnome-terminal", "--", "sudo", "openvpn", updatedConfigPath])
             # subprocess.run(["sudo", "openvpn", updatedConfigPath])
         except subprocess.CalledProcessError as e:
-            self.notify.exception(e)
+            self.logger.error(f'An error occurred: {e}')
             print("\n")
-            self.notify.previousContextMenu("Netwatch")
+            self.logger.info("Returning to previous context menu...")
             Netwatch()
 
 
@@ -330,6 +341,7 @@ class InformationGathering:
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
         self.notify = Notify()
+        self.logger = Logger()
 
         self.netwatchPrompt = self.configManager.get(
             'general_config', 'prompt') + ' '
@@ -365,7 +377,7 @@ class InformationGathering:
             case "exit" | "quit" | "end":
                 self.commandHandler.execute(choiceInfo)
             case "back":
-                self.notify.previousContextMenu("Netwatch")
+                self.logger.info("Returning to previous context menu...")
                 Netwatch()
             case _:
                 self.notify.unknownInput(choiceInfo)
@@ -685,6 +697,7 @@ class Sagemode:
 
 def main():
     try:
+        # TODO: Fix alternate themes not working
         themes.set_theme("DefaultTheme")
         program = Program()
         program.start()

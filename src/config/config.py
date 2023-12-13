@@ -16,11 +16,13 @@ class ConfigManager:
             cls._instance.notify = Notify()
             cls._instance.configFile = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)), 'netwatch.ini')
-            # print(cls._instance.configFile)
-            # cls._instance.configFile = os.path.dirname(
-            #     os.path.abspath(__file__)) + '/netwatch.ini'
+            cls._instance.themesFile = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), '..', 'themes', 'themes.ini')
+            print(cls._instance.themesFile)
             cls._instance.config.read(
                 cls._instance.configFile)
+            cls._instance.config.read(
+                cls._instance.themesFile)
             cls._instance.installDir = os.path.dirname(
                 os.path.abspath(__file__)) + '/'
         return cls._instance

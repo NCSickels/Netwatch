@@ -22,7 +22,7 @@ class Notify:
 
     def endProgram(self) -> None:
         self.console.print(
-            f"\n[red][[yellow]![red]] [bright_yellow]Finishing up...\n")
+            f"\n[bright_red][[white]![bright_red]] [bright_yellow]Finishing up...\n")
 
     def previousContextMenu(self, module: str) -> None:
         self.console.print((f"\n[bright_yellow]Returning to "
@@ -30,7 +30,7 @@ class Notify:
 
     def unknownInput(self, choice: str) -> None:
         self.console.print(
-            f"[bright_red][[bright_red]![bright_red]] [bright_yellow]Unknown input: [bright_red]{choice}. [bright_yellow]Type [bright_red]'?' [bright_yellow]for help.")
+            f"[cyan][[white]![cyan]] [bright_yellow]Unknown input: [cyan]{choice}. [bright_yellow]Type [cyan]'?' [bright_yellow]for help.")
 
     def programNotInstalled(self, program: str) -> None:
         self.console.print(
@@ -55,7 +55,7 @@ class Notify:
 
     def noFilesFound(self, file_type: str, modifier="") -> None:
         self.console.print((f"\n[red][[bright_red]![red]] [yellow]No{modifier}"
-                            f"[bright_blue]{file_type} [bright_yellow]files found. Please add the path to the [red].cfg [bright_yellow]file manually.\n"))
+                            f"[bright_blue]{file_type} [bright_yellow]files found. Please add the path to the [red].ini [bright_yellow]file manually.\n"))
 
     def setFiles(self, file: str) -> None:
         self.console.print(
