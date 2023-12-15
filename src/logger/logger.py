@@ -1,6 +1,5 @@
 import logging
 import logging.config
-from config.paths import logger_config_file_path
 
 LOGGING_CONFIG = {
     'version': 1,
@@ -70,22 +69,26 @@ class Logger(metaclass=Singleton):
         logging.config.dictConfig(LOGGING_CONFIG)
         Logger._logger = logging.getLogger()
 
+    # @classmethod
+    # def notice(cls, message: str):
+    #     cls._logger.log(NOTICE, message)
+
     @classmethod
-    def debug(cls, message: str):
+    def debug(cls, message: str):  # Severity: 10
         cls._logger.debug(message)
 
     @classmethod
-    def info(cls, message: str):
+    def info(cls, message: str):  # Severity: 20
         cls._logger.info(message)
 
     @classmethod
-    def warning(cls, message: str):
+    def warning(cls, message: str):  # Severity: 30
         cls._logger.warning(message)
 
     @classmethod
-    def error(cls, message: str):
+    def error(cls, message: str):  # Severity: 40
         cls._logger.error(message)
 
     @classmethod
-    def critical(cls, message: str):
+    def critical(cls, message: str):  # Severity: 50
         cls._logger.critical(message)

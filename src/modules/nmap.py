@@ -39,7 +39,7 @@ class Nmap:
 
     def __init__(self):
         self.logger = Logger()
-        self.packageManager = PackageManager("Nmap")
+        self.packageManager = PackageManager("nmap")
 
     # TODO: Look at simplifying this method
     def checkForNmap(self) -> bool:

@@ -9,7 +9,7 @@
 # ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 #
 #
-#   Netwatch v3.2.5
+#   Netwatch v3.2.6
 #   by: @NCSickels
 
 # Imports
@@ -22,9 +22,6 @@ import random
 import datetime
 import glob
 from time import gmtime, strftime, sleep
-from rich import print as rprint
-from rich.console import Console
-from rich.table import Table
 from bs4 import BeautifulSoup
 
 # Custom Imports
@@ -32,11 +29,10 @@ from modules import *
 from logger import *
 from themes import *
 
+
 # Utility Classes
-
-
 class Program:
-    "A class for main program functions"
+    """A class for main program functions"""
 
     def __init__(self):
         self.updateHandler = UpdateHandler()
@@ -111,30 +107,23 @@ class Program:
 
     def findFiles(self, file_type: any, directory='/') -> str:
         self.logger.info(f'Searching for {file_type} files...')
-        # self.notify.findFiles(file_type)  # (".ovpn")
         try:
             search_path = os.path.join(directory, '**/*'+file_type)
             files = glob.glob(search_path, recursive=True)
             if not files:
                 self.logger.warning(f'No {file_type} files found.')
-                # self.notify.noFilesFound(file_type)  # (".ovpn")
                 return
             for filename in files:
                 self.logger.info(f'Found file {filename}')
-                # self.notify.foundFiles(filename)
                 response = input("Use this file? [y/n]: ").lower()
                 if response in ["y", "yes"]:
                     self.configManager.set(
                         "general_config", "ovpn_path", filename)
                     self.logging.info(f'Selected file {filename}')
-                    # self.notify.setFiles(filename)
                     return filename
-            # self.notify.noFilesFound(file_type, " other")
             self.logger.warning(
                 (f'No other {file_type} files found. Please manually add path to .ini file.'))
         except Exception as e:
-            # self.notify.exception(e)
-            # self.notify.noFilesFound(file_type)
             self.logger.error(f'An error occurred: {e}')
             self.logger.warning(f'No {file_type} files found!')
 
@@ -145,7 +134,7 @@ class Program:
 
 
 class CommandHandler:
-    "A class for handling commands from the user"
+    """A class for handling commands from the user"""
 
     def __init__(self):
         self.program = Program()
@@ -183,7 +172,7 @@ class CommandHandler:
 
 
 class Netwatch:
-    "A menu class for Netwatch tools"
+    """A menu class for Netwatch tools"""
 
     version = ConfigManager().get("general_config", "__version__")
     netwatchLogo = f'''
@@ -267,7 +256,7 @@ class Netwatch:
 
 
 class AutoAttack:
-    "A menu class for the Automated Attack Tool for HTB, TryHackMe, etc."
+    """A menu class for the Automated Attack Tool for HTB, TryHackMe, etc."""
 
     menuLogo = '''
 ===================================================================================
@@ -307,7 +296,6 @@ class AutoAttack:
     def startOvpn(self, updatedConfigPath: str) -> None:
         try:
             self.logger.info('Starting OpenVPN profile...')
-            # self.notify.runOvpn(os.path.basename(updatedConfigPath))
             # print(os.getenv("TERM"))
             # subprocess.Popen(["gnome-terminal", "--", "sudo", "openvpn", updatedConfigPath])
             # subprocess.run(["sudo", "openvpn", updatedConfigPath])
@@ -319,7 +307,7 @@ class AutoAttack:
 
 
 class InformationGathering:
-    "A menu class for Information Gathering tools"
+    """A menu class for Information Gathering tools"""
 
     menuLogo = '''
 ===================================================================================
@@ -383,7 +371,7 @@ class InformationGathering:
 
 # Bring user to main prompt first or ask for target IP first as currently implemented?
 class NmapMenu:
-    "A menu class for Nmap"
+    """A Netwatch interface for using Nmap."""
 
     nmapLogo = '''
 ===================================================================================
@@ -509,7 +497,7 @@ class NmapMenu:
 
 
 class SagemodeMenu:
-    "An interface for using Sagemode - an OSINT tool for finding usernames"
+    """A Netwatch interface for using Sagemode - an OSINT tool for finding usernames"""
 
     sagemodeLogoText = '''
 

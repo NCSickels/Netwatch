@@ -1,15 +1,9 @@
 import os
-import re
 import sys
-import ipaddress
-import time
-import tabulate
 
-from IPy import IP
 from rich.console import Console
 from rich import print as rprint
 import colorama
-from termcolor import colored
 
 from modules.sites import sites
 from config import parsersettings as settings

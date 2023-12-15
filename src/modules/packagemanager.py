@@ -4,7 +4,7 @@ from modules.notify import Notify
 
 
 class PackageManager:
-    "A class for managing installations for various tools used in Netwatch"
+    """A class for managing installations for various tools used in Netwatch"""
 
     def __init__(self, program_name):
         self.program_name = program_name
@@ -22,7 +22,7 @@ class PackageManager:
         try:
             subprocess.check_call(
                 ["sudo", "apt", "install", "-y", self.program_name])
-            return True
+            return True if self.installed() else False
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Error installing {self.program_name}")
             self.logger.error(f"Exception occurred: {e}")
@@ -32,7 +32,7 @@ class PackageManager:
         if not self.installed():
             self.logger.warning(
                 f"{self.program_name} not found. Attempting to install...")
-            return self.install()
+            return self.installPackage()
         else:
             self.logger.info(
                 f"{self.program_name} found. Skipping installation.")

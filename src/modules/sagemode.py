@@ -8,6 +8,8 @@ from modules import sites, soft404_indicators, user_agents
 
 
 class Sagemode:
+    """Sagemode Jutsu: Simple and Effective OSINT Username Search Tool"""
+
     sagemodeLogoText = '''
 
 ███████╗ █████╗  ██████╗ ███████╗███╗   ███╗ ██████╗ ██████╗ ███████╗

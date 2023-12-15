@@ -1,11 +1,14 @@
 import logging
 from modules.colorhelper import c, use_prop
-
+# from logger import NOTICE
 # BUG: Critical logging message showing tags in the console instead of color
 
 
 class ColorFormatter(logging.Formatter):
     """A custom logging formatter that adds color to log messages."""
+
+    # NOTICE = 25
+    # logging.addLevelName(NOTICE, "NOTICE")
 
     def format(self, record):
         format_prop = {
@@ -14,6 +17,7 @@ class ColorFormatter(logging.Formatter):
             logging.WARNING: 'warning',
             logging.ERROR: 'error',
             logging.CRITICAL: 'critical',
+            # self.NOTICE: 'notice',
         }
         date_text = c('<cyan>%(asctime)s</cyan>')
         message = c('<primary>%(message)s</primary>')

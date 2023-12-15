@@ -5,16 +5,17 @@ import subprocess
 
 from rich.console import Console
 from config.config import ConfigManager
-from modules.notify import Notify
+from modules.termutils import Color
+from logger import *
 
 
 class UpdateHandler:
-    "A class for handling updates for the Netwatch tool"
+    """A class for handling updates for the Netwatch tool"""
 
     def __init__(self):
         self.configManager = ConfigManager()
-        self.notify = Notify()
         self.console = Console()
+        self.logger = Logger()
 
         self.local_version = self.configManager.get(
             "general_config", "__version__")
@@ -22,7 +23,7 @@ class UpdateHandler:
     def checkForUpdate(self) -> None:
         try:
             # Add support for deprecated config file type
-            file_names = ["netwatch.cfg", "netwatch.ini"]
+            file_names = ["netwatch.ini", "netwatch.cfg"]
             remote_version = None
 
             for file_name in file_names:
@@ -40,15 +41,19 @@ class UpdateHandler:
 
             if remote_version is not None:
                 if self.is_newer_version(remote_version, self.local_version):
-                    self.notify.update(remote_version, self.local_version)
+                    self.logger.info(f"{Color.NOTICE}Update available!")
+                    self.logger.info((f"{Color.NOTICE}You are running Version: " +
+                                     f"{Color.OKGREEN + self.local_version}"))
+                    self.logger.info((f"{Color.NOTICE}New version available: " +
+                                     f"{Color.OKGREEN}{remote_version}{Color.END}"))
                     self.promptForUpdate()
                 else:
-                    self.notify.upToDate()
+                    self.logger.info("Netwatch is up to date.")
             else:
                 raise ValueError("Unable to find any update file")
 
         except Exception as error:
-            self.notify.updateScriptError(error)
+            self.logger.error(f"Error checking for update: {error}")
 
     def promptForUpdate(self) -> None:
         response = input(
