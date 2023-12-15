@@ -1,6 +1,6 @@
 import subprocess
-from modules.notify import Notify
 from logger import *
+from modules.notify import Notify
 
 
 class PackageManager:
@@ -8,8 +8,8 @@ class PackageManager:
 
     def __init__(self, program_name):
         self.program_name = program_name
-        self.notify = Notify()
         self.logger = Logger()
+        self.notify = Notify()
 
     def installed(self) -> bool:
         try:
