@@ -9,7 +9,7 @@
 # ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
 #
 #
-#   Netwatch v3.2.0
+#   Netwatch v3.2.5
 #   by: @NCSickels
 
 # Imports
@@ -419,7 +419,7 @@ class NmapMenu:
             self.scanPath = "nmap-" + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
             if os.path.isfile(self.scanPath):
-                self.logger.info("Scan file name already exists!")
+                self.logger.info("File name already exists!")
                 self.logger.info("Would you like to overwrite this file?")
                 response = input("[y/n]: ")
                 if response.lower() in ["y", "yes"]:

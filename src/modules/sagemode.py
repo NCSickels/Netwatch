@@ -3,7 +3,6 @@ from modules import *
 from bs4 import BeautifulSoup
 from rich.console import Console
 import datetime
-# from time import datetime
 import random
 from modules import sites, soft404_indicators, user_agents
 
