@@ -22,7 +22,8 @@ import argparse
 from modules import interactive
 from config import parsersettings as settings
 from modules.nmap import NmapOutput, NmapFilters, NmapHelpers
-from modules.termutils import ColorConfig, LamePrint, Color, Notify, NotifyNmap
+from modules.termutils import ColorConfig, LamePrint, Color
+from modules.notify import *
 VERSION = "3.0.0"
 RELEASE_DATE = "2023-11-28"
 

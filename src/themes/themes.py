@@ -87,7 +87,6 @@ def load_theme(theme_name: str) -> Theme:
         attributes = re.findall('\[(.*?)\]', item)
         if attributes:
             attributes = attributes[0].split(',')
-            print(attributes)
         else:
             attributes = None
 

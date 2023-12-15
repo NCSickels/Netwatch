@@ -15,10 +15,6 @@
 # Imports
 import sys
 import os
-import configparser
-import json
-import socket
-import re
 import subprocess
 import threading
 import requests
@@ -120,7 +116,7 @@ class Program:
             search_path = os.path.join(directory, '**/*'+file_type)
             files = glob.glob(search_path, recursive=True)
             if not files:
-                self.logger.warning(f'No {file_type} files found!')
+                self.logger.warning(f'No {file_type} files found.')
                 # self.notify.noFilesFound(file_type)  # (".ovpn")
                 return
             for filename in files:
@@ -135,7 +131,7 @@ class Program:
                     return filename
             # self.notify.noFilesFound(file_type, " other")
             self.logger.warning(
-                (f'No other {file_type} files found! Manually add path to .ini file.'))
+                (f'No other {file_type} files found. Please manually add path to .ini file.'))
         except Exception as e:
             # self.notify.exception(e)
             # self.notify.noFilesFound(file_type)
@@ -352,8 +348,8 @@ class InformationGathering:
         choiceInfo = input(self.netwatchPrompt)
         match choiceInfo:  # .strip()
             case "1":
-                print(Nmap.nmapLogo)
-                Nmap()
+                print(NmapMenu.nmapLogo)
+                NmapMenu()
             case "2":
                 Sagemode()
             case "3":
@@ -386,7 +382,7 @@ class InformationGathering:
 
 
 # Bring user to main prompt first or ask for target IP first as currently implemented?
-class Nmap:
+class NmapMenu:
     "A menu class for Nmap"
 
     nmapLogo = '''
@@ -404,78 +400,59 @@ class Nmap:
         self.program = Program()
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
+        self.logger = Logger()
         self.notify = Notify()
-
-        self.netwatchPrompt = self.configManager.get(
-            'general_config', 'prompt') + ' '
-        self.gitRepo = self.configManager.get('nmap', 'gitrepository')
+        self.nmap = Nmap()
+        self.netwatchPrompt = "netwatch ~# "
+        self.gitRepo = "https://github.com/nmap/nmap.git"
         self.targetPrompt = "\nEnter target IP: "
         self.scanFileNamePrompt = "\nEnter scan file name: "
+        self.target = None
+        self.scanPath = None
 
-        self.checkInstall()
+        self.run()
 
-    def checkInstall(self) -> None:
-        checkNmap = ProgramInstallationManager("nmap")
-        programIsInstalled = checkNmap.checkAndInstall()
-        if programIsInstalled:
-            self.run()
-        else:
-            self.notify.previousContextMenu("Information Gathering")
-            InformationGathering()
-
-    def run(self) -> None:
-        try:
-            target = input(self.targetPrompt)
-            scanPath = "nmap-" + "-" + \
+    def run(self):
+        if self.nmap.checkForNmap():
+            # try:
+            self.target = input(self.targetPrompt)
+            self.scanPath = "nmap-" + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-            if os.path.isfile(scanPath):
-                self.notify.scanFileConflict()
-                self.notify.overwriteScanFile()
+            if os.path.isfile(self.scanPath):
+                self.logger.info("Scan file name already exists!")
+                self.logger.info("Would you like to overwrite this file?")
                 response = input("[y/n]: ")
-                if response.lower() == "y" or response.lower() == "yes":
-                    self.menu(target, scanPath)
-                else:
-                    self.run()
-            self.menu(target, scanPath)
-        except KeyboardInterrupt:
-            print("\n")
-            self.notify.previousContextMenu("Information Gathering")
-            InformationGathering()
+                if response.lower() in ["y", "yes"]:
+                    self.menu()
+            else:
+                self.program.clearScreen()
+                self.menu()
+        else:
+            self.logger.error(
+                "Nmap could not be installed. Returning to previous main menu...")
+            Netwatch()
 
-    def menu(self, target: int, scanPath: str) -> None:
+    def menu(self) -> None:
         print(self.nmapLogo)
-        self.notify.currentTarget(target)
-        self.notify.currentScanPath(scanPath)
+        self.notify.currentTarget(self.target)
+        self.notify.currentScanPath(self.scanPath)
         try:
             choiceNmap = input(self.netwatchPrompt)
-            match choiceNmap:  # .strip()
-                case "quick scan" | "quick" "quickscan":
-                    self.runScan("quick", target, scanPath)
-                    self.notify.scanCompleted(scanPath)
-                    self.promptForAnotherScan(target, scanPath)
-                case "intense scan" | "intense" | "intensescan":
-                    self.runScan("intense", target, scanPath)
-                    self.notify.scanCompleted(scanPath)
-                    self.promptForAnotherScan(target, scanPath)
+            match choiceNmap:
                 case "default" | "default scan" | "defaultscan":
-                    self.runScan("default", target, scanPath)
-                    self.notify.scanCompleted(scanPath)
-                    self.promptForAnotherScan(target, scanPath)
+                    self.nmap.scan(self.target, self.scanPath, "default_scan")
+                    self.getInput()
+                case "quick scan" | "quick" "quickscan":
+                    self.nmap.scan(self.target, self.scanPath, "quick_scan")
+                    self.getInput()
+                case "intense scan" | "intense" | "intensescan":
+                    self.nmap.scan(self.target, self.scanPath, "intense_scan")
+                    self.getInput()
                 case "vuln" | "vuln scan" | "vulnscan" | "vulnerability" | "vulnerability scan":
-                    self.runScan("vuln", target, scanPath)
-                    self.notify.scanCompleted(scanPath)
-                    self.promptForAnotherScan(target, scanPath)
+                    self.nmap.scan(self.target, self.scanPath, "vuln_scan")
+                    self.getInput()
                 case _ if choiceNmap.startswith("set "):
-                    _, param, value = choiceNmap.split(" ", 2)
-                    if param == "target":
-                        target = value
-                    elif param == "log" | "scan":
-                        scanName, _, scanPath = value.partition(" ")
-                        if not scanPath:
-                            scanPath = "nmap-" + scanName + "-" + \
-                                strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-                        scanPath = "nmap-" + scanName + "-" + \
-                            strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
+                    self.setParameters(choiceNmap)
                 case "?" | "help":
                     [self.commandHandler.execute(choiceNmap, choice) for choice in [
                         "Nmap_Scans", "Nmap_Commands", "Core"]]
@@ -486,44 +463,49 @@ class Nmap:
                 case "path" | "pwd":
                     self.commandHandler.execute(
                         choiceNmap, "Netwatch/Information_Gathering/Nmap")
-                    self.menu(target, scanPath)
-                case "exit" | "quit" | "end":
-                    self.program.end()
+                    self.menu()
+                # case "exit" | "quit" | "end":
+                #     self.program.end()
                 case "back":
-                    self.notify.previousContextMenu("Information Gathering")
+                    self.logger.info("Returning to previous context menu...")
                     InformationGathering()
                 case _:
                     self.notify.unknownInput(choiceNmap)
-                    self.menu(target, scanPath)
-            self.menu(target, scanPath)
-        except KeyboardInterrupt:
+                    self.menu()
+            self.menu()
+        except Exception as e:
             print("\n")
-            self.notify.previousContextMenu("Information Gathering")
-            InformationGathering()
-
-    def runScan(self, choice: str, target: int, scanPath: str) -> None:
-        scan_types = {
-            'default': 'nmap -T4 -v -A -oN',
-            'quick': 'nmap -T4 -F -v -oN',
-            'intense': 'nmap -T4 -A -v -oN',
-            'vuln': 'nmap -T4 -v -sV --script=vuln -oN'
-        }
-        for choice, scan_type in scan_types.items():
-            if choice.startswith(choice):
-                try:
-                    os.system(f'\n{scan_type} {scanPath} {target}')
-                except Exception as e:
-                    self.notify.exception(e)
-                break
-
-    def promptForAnotherScan(self, target: int, scanPath: str) -> None:
-        self.notify.promptForAnotherScan()
-        response = input("[y/n]: ")
-        if response.lower() in ["y", "yes"]:
-            self.menu(target, scanPath)
-        else:
-            self.notify.previousContextMenu("Netwatch")
+            self.logger.info("Returning to main menu...")
             Netwatch()
+
+    def getInput(self):
+        response = self.nmap.promptForInput(
+            "Would you like to run another scan? [y/n]: ")
+        if response.lower() in ["y", "yes"]:
+            self.run()
+        else:
+            self.logger.info("Returning to main menu...")
+            Netwatch()
+
+    # update scan file after using set target?
+    def setParameters(self, input: str) -> None:
+        # _, param, value = input.split(" ", 2)
+        parts = input.split(" ")
+        if len(parts) < 3:
+            self.logger.error("Invalid syntax! Usage: 'set <param> <value>'")
+            return
+            # self.menu(target, scanPath)
+        _, param, value = parts
+        if param == "target":
+            self.target = value
+        elif param == "log" | "scan":
+            scanName, _, self.scanPath = value.partition(" ")
+            if not self.scanPath:
+                self.scanPath = "nmap-" + scanName + "-" + \
+                    strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
+            self.scanPath = "nmap-" + scanName + "-" + \
+                strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
+        self.menu()
 
 
 class Sagemode:

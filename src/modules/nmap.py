@@ -23,14 +23,67 @@ from IPy import IP
 from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
-from modules import constants
-from modules.termutils import ColorConfig, LamePrint, Notify, NotifyNmap, TextOutput, TextOutputEntry
-from config import parsersettings as settings
+from modules.termutils import *
+from modules.notify import *
+from modules.packagemanager import *
+from logger import *
 
 
 class Nmap:
+    """ Nmap class for scanning hosts and generating reports. """
+
+    SCAN_TYPES = {'default_scan': 'nmap -T4 -v -A -oN',
+                  'quick_scan': 'nmap -T4 -F -v -oN',
+                  'intense_scan': 'nmap -T4 -A -v -oN',
+                  'vuln_scan': 'nmap -T4 -v -sV --script=vuln -oN'}
+
     def __init__(self):
-        pass
+        self.logger = Logger()
+        self.packageManager = PackageManager("Nmap")
+
+    # TODO: Look at simplifying this method
+    def checkForNmap(self) -> bool:
+        if not self.packageManager.checkForPackage():
+            self.logger.warning("Nmap not found.")
+            response = self.promptForInput(
+                "Would you like to install it now? [y/n]: ")
+            if response in ["y", "yes"]:
+                if (self.packageManager.installPackage()):
+                    self.logger.info("Nmap successfully installed.")
+                    return True
+                else:
+                    self.logger.error("Failed to install Nmap.")
+                    return False
+            else:
+                return False
+        return True
+
+    def promptForInput(self, prompt: str) -> str:
+        while True:
+            self.logger.info(prompt)
+            user_input = input().lower()
+            if user_input in ["y", "n"]:
+                break
+            else:
+                self.logger.error("Unrecognized input. Please try again.")
+        return user_input
+
+    def scan(self, ip: any, fileName=None, scanType='default_scan') -> None:
+        if scanType not in Nmap.SCAN_TYPES:
+            self.logger.error("Invalid scan type.")
+            return
+        fileName = fileName if fileName else f'{ip}.xml'
+        try:
+            os.system(f'{Nmap.SCAN_TYPES[scanType]} {fileName}.xml {ip}')
+            self.logger.info(f"Scan completed.")
+        except Exception as e:
+            self.logger.error(f"An error occurred while scanning: {e}")
+            return
+
+        # try:
+        #     print(scanType)
+        #     fileName = fileName if fileName else f'{ip}.xml'
+        #     print(f"filename: {fileName}")
 
 
 class NmapOutput:
