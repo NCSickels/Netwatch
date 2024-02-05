@@ -6,5 +6,5 @@ from .packagemanager import *
 from .updatehandler import *
 from .tablecreator import *
 from .sites import *
-from .nmap import Nmap
+from .nmap import *
 from .sagemode import Sagemode

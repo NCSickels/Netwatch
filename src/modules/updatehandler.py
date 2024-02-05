@@ -48,7 +48,7 @@ class UpdateHandler:
                                      f"{Color.OKGREEN}{remote_version}{Color.END}"))
                     self.promptForUpdate()
                 else:
-                    self.logger.info("Netwatch is up to date.")
+                    self.logger.info("Netwatch is up to date.\n")
             else:
                 raise ValueError("Unable to find any update file")
 
@@ -58,10 +58,7 @@ class UpdateHandler:
     def promptForUpdate(self) -> None:
         response = input(
             "\nWould you like to update Netwatch? [y/n]: ").lower()
-        if response in ["y", "yes"]:
-            self.update()
-        else:
-            pass
+        self.update() if response == "y" else None
 
     def is_newer_version(self, remote_version: str, local_version: str) -> bool:
         remote_version_revisions = list(map(int, remote_version.split('.')))

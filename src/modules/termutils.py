@@ -8,13 +8,25 @@ import colorama
 from modules.sites import sites
 from config import parsersettings as settings
 from modules import constants
-from dataclasses import dataclass, field
-from config.config import read_section
 
 
-class ColorConfig:
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(
+                Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class ColorConfig(metaclass=Singleton):
     def __init__(self):
-        self.console = Console()
+        self.color_supported = self.checkColorSupport()
+        # self.color_supported = settings.PARSER_SETTINGS.colorSupported
+
+    def checkColorSupport(self):
+        return True if (self.supportsColor() and settings.PARSER_SETTINGS.colorSupported) else False
 
     # Source: https://github.com/django/django/blob/master/django/core/management/color.py
     def supportsColor(self):
@@ -43,9 +55,13 @@ class LamePrint:
 
     # Print text with specified color code
     def coloredPrint(self, color, args, kwargs) -> None:
-        if (not settings.colorSupported):
+        color_config = ColorConfig()
+        if not color_config.color_supported:
             print(args, kwargs)
             return
+        # if (not settings.PARSER_SETTINGS.colorSupported):
+        #     print(args, kwargs)
+        #     return
 
         coloredArgs = []
         for arg in args:
@@ -57,8 +73,8 @@ class LamePrint:
 
     # Print only if raw option hasnt been set
     def hprint(self, *args, **kwargs) -> None:
-        settings.printHumanFriendlyText
-        if (settings.printHumanFriendlyText):
+        settings.PARSER_SETTINGS.printHumanFriendlyText
+        if (settings.PARSER_SETTINGS.printHumanFriendlyText):
             print(*args, **kwargs)
 
     def getHeader(self, text: str) -> None:
@@ -138,7 +154,7 @@ class TextOutput():
             shouldPrint = False
             if (line.output == constants.TEXT_NORMAL or line.output == constants.TEXT_ERROR):
                 shouldPrint = True
-            elif (settings.printHumanFriendlyText):
+            elif (settings.PARSER_SETTINGS.printHumanFriendlyText):
                 shouldPrint = True
 
             if shouldPrint:
@@ -157,7 +173,7 @@ class TextOutputEntry():
         self.color = color
 
     def getText(self):
-        if settings.colorSupported:
+        if settings.PARSER_SETTINGS.colorSupported:
             return "%s%s%s" % (self.color, self.text, colorama.Style.RESET_ALL)
         else:
             return self.text

@@ -28,6 +28,6 @@ class ColorFormatter(logging.Formatter):
         level = use_prop(f'{record.levelname}', level_prop)
 
         log_format = f"{date_text} | [{level}] {logger_name}: {message}"
-        formatter = logging.Formatter(log_format)
+        formatter = logging.Formatter(log_format, datefmt='[%H:%M:%S]')
 
         return formatter.format(record)

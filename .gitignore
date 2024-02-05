@@ -172,3 +172,4 @@ src/colorTesting.py
 src/chat_server.py
 src/client.py
 TODO.md
+scripts/remove_dev_comments.py

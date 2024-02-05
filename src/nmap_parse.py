@@ -21,9 +21,8 @@ import sys
 import argparse
 from modules import interactive
 from config import parsersettings as settings
-from modules.nmap import NmapOutput, NmapFilters, NmapHelpers
-from modules.termutils import ColorConfig, LamePrint, Color
-from modules.notify import *
+from modules import *
+
 VERSION = "3.0.0"
 RELEASE_DATE = "2023-11-28"
 
@@ -80,8 +79,8 @@ class ParserProgram:
             return
 
         # Determine whether to output headings
-        settings.printHumanFriendlyText = not args.raw
-        settings.colorSupported = self.colorConfig.supportsColor()
+        settings.PARSER_SETTINGS.printHumanFriendlyText = not args.raw
+        settings.PARSER_SETTINGS.colorSupported = self.colorConfig.supportsColor()
 
         # Find all XML files
         nmapXmlFilenames = []
@@ -155,7 +154,7 @@ class ParserProgram:
                 self.helpers.executeCommands(
                     args.cmd, nmapOutput, filters=filters)
 
-            if settings.printHumanFriendlyText and (defaultFlags or args.hostSummary):
+            if settings.PARSER_SETTINGS.printHumanFriendlyText and (defaultFlags or args.hostSummary):
                 self.lamePrint.hprint("\nSummary\n-------")
                 self.lamePrint.hprint("Total hosts: %s" %
                                       str(len(nmapOutput.Hosts)))
