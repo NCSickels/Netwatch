@@ -27,6 +27,7 @@ from modules.termutils import *
 from modules.notify import *
 from modules.packagemanager import *
 from logger import *
+from config import *
 
 
 class Nmap:
@@ -612,7 +613,7 @@ class NmapHelpers:
                 fullPortsString = ''
                 for port in [port for port in host.ports if port.protocol == protocol]:
                     tmpPortString = str(port.portId)
-                    if (settings.colorSupported and port.matched):
+                    if (settings.PARSER_SETTINGS.colorSupported and port.matched):
                         tmpPortString = "\033[1;32m" + \
                             tmpPortString + "\033[1;m"
                     if len(fullPortsString) > 0:

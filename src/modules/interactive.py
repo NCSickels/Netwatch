@@ -23,7 +23,7 @@ class TerminalBase(cmd2.Cmd):
             elif (line.output == constants.TEXT_ERROR):
                 self.perror(line.getText())
             # elif (not self.quiet) and (not self.redirecting) and settings.printHumanFriendlyText:
-            elif (not self.quiet) and settings.printHumanFriendlyText:
+            elif (not self.quiet) and settings.PARSER_SETTINGS.printHumanFriendlyText:
                 if (line.output == constants.TEXT_FRIENDLY):
                     self.pfeedback(line.getText())
                 elif (line.output == constants.TEXT_SUCCESS):
@@ -209,7 +209,8 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_CORE)
     def do_exit(self, inp: str) -> bool:
         '''Exit the interactive prompt'''
-        self.notify.endProgram()
+        print("\nBye.\n")
+        # self.notify.endProgram()
         return True
 
     @cmd2.with_category(constants.CMD_CAT_CORE)

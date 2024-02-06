@@ -58,7 +58,8 @@ class Program:
                 os.makedirs(path)
 
     def end(self) -> None:
-        self.notify.endProgram()
+        print("\n Bye.\n")
+        # self.notify.endProgram()
         sleep(0.25)
         sys.exit()
 
