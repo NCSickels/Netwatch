@@ -45,15 +45,15 @@ class Nmap:
     # TODO: Look at simplifying this method
     def checkForNmap(self) -> bool:
         if not self.packageManager.checkForPackage():
-            self.logger.warning("Nmap not found.")
+            self.logger.warning('Nmap not found.')
             response = self.promptForInput(
-                "Would you like to install it now? [y/n]: ")
-            if response in ["y", "yes"]:
+                'Would you like to install it now? [y/n]: ')
+            if response in ['y', 'yes']:
                 if (self.packageManager.installPackage()):
-                    self.logger.info("Nmap successfully installed.")
+                    self.logger.info('Nmap successfully installed.')
                     return True
                 else:
-                    self.logger.error("Failed to install Nmap.")
+                    self.logger.error('Failed to install Nmap.')
                     return False
             else:
                 return False
@@ -63,22 +63,22 @@ class Nmap:
         while True:
             self.logger.info(prompt)
             user_input = input().lower()
-            if user_input in ["y", "n"]:
+            if user_input in ['y', 'n']:
                 break
             else:
-                self.logger.error("Unrecognized input. Please try again.")
+                self.logger.error('Unrecognized input. Please try again.')
         return user_input
 
     def scan(self, ip: any, fileName=None, scanType='default_scan') -> None:
         if scanType not in Nmap.SCAN_TYPES:
-            self.logger.error("Invalid scan type.")
+            self.logger.error('Invalid scan type.')
             return
         fileName = fileName if fileName else f'{ip}.xml'
         try:
             os.system(f'{Nmap.SCAN_TYPES[scanType]} {fileName}.xml {ip}')
-            self.logger.info(f"Scan completed.")
+            self.logger.info(f'Scan completed.')
         except Exception as e:
-            self.logger.error(f"An error occurred while scanning: {e}")
+            self.logger.error(f'An error occurred while scanning: {e}')
             return
 
         # try:
@@ -108,22 +108,22 @@ class NmapOutput:
         for nmapXmlFilename in nmapXmlFilenames:
             nmapXmlFilename = os.path.abspath(
                 os.path.expanduser(nmapXmlFilename))
-            print(f"Trying to open file at: {nmapXmlFilename}")
+            # print(f"Trying to open file at: {nmapXmlFilename}")
             try:
                 with open(nmapXmlFilename, 'r') as f:
                     pass
             except Exception as e:
-                print(f"Failed to open file: {e}")
+                print(f'Failed to open file: {e}')
             count += 1
             # Output stats
             if (nmapXmlFilename in self.FilesImported):
                 self.lamePrint.hprint(
-                    "Skipping previously imported file: " + nmapXmlFilename)
+                    'Skipping previously imported file: ' + nmapXmlFilename)
                 continue
-            sStatus = "Loading [%s of %s] %s" % (
+            sStatus = '\nLoading [%s of %s] %s' % (
                 str(count), str(len(nmapXmlFilenames)), nmapXmlFilename)
             if (colorSupport):
-                sStatus = "\033[1;30m" + sStatus + "\033[1;m"
+                sStatus = '\033[1;30m' + sStatus + '\033[1;m'
             # Pad short lines to overwrite previous text
             if (len(sStatus) < iMaxStatusLen):
                 sStatus += " " * (iMaxStatusLen - len(sStatus))
@@ -146,16 +146,16 @@ class NmapOutput:
             # Find all hosts within xml file
             for xHost in nmap_xml.findall('.//host'):
                 # Get IP address
-                ipv4Element = xHost.find("address[@addrtype='ipv4']")
-                ipv6Element = xHost.find("address[@addrtype='ipv6']")
+                ipv4Element = xHost.find('address[@addrtype="ipv4"]')
+                ipv6Element = xHost.find('address[@addrtype="ipv6"]')
                 ip = None
                 if (ipv4Element is not None):
                     ip = ipv4Element.get('addr')
                 if (ipv6Element is not None):
                     ip = ipv6Element.get('addr')
                 if (ip is None):
-                    print("Host found without IPv4 or IPv6 address in " +
-                          nmapXmlFilename + ", skipping host", file=sys.stderr)
+                    print('Host found without IPv4 or IPv6 address in ' +
+                          nmapXmlFilename + ', skipping host', file=sys.stderr)
                     continue
                 # Add host to dictionary
                 if ip not in self.Hosts:
@@ -175,7 +175,7 @@ class NmapOutput:
                     curHost.hostname = ip
 
                 # Store host up status
-                curHost.alive = (xHost.find("status").get('state') == 'up')
+                curHost.alive = (xHost.find('status').get('state') == 'up')
 
                 # Parse ports
                 for xPort in xHost.findall('.//port'):
@@ -291,29 +291,29 @@ class NmapOutput:
         for ip in self.Hosts:
             curHost = self.Hosts[ip]
             # Create host element
-            xHost = ET.SubElement(xNmapParse, "host")
+            xHost = ET.SubElement(xNmapParse, 'host')
             # Create status element
-            xStatus = ET.SubElement(xHost, "status")
-            xStatus.set("state", "up" if curHost.alive else "down")
+            xStatus = ET.SubElement(xHost, 'status')
+            xStatus.set('state', 'up' if curHost.alive else 'down')
             # Create address element
-            xAddress = ET.SubElement(xHost, "address")
-            xAddress.set("addr", curHost.ip)
-            xAddress.set("addrtype", "ipv4")
+            xAddress = ET.SubElement(xHost, 'address')
+            xAddress.set('addr', curHost.ip)
+            xAddress.set('addrtype', 'ipv4')
             # Create hostname element
-            xHostnames = ET.SubElement(xHost, "hostnames")
+            xHostnames = ET.SubElement(xHost, 'hostnames')
             if (curHost.hostname != ip):
-                xHostname = ET.SubElement(xHostnames, "hostname")
-                xHostname.set("name", curHost.hostname)
+                xHostname = ET.SubElement(xHostnames, 'hostname')
+                xHostname.set('name', curHost.hostname)
             # Create ports element
-            xPorts = ET.SubElement(xHost, "ports")
+            xPorts = ET.SubElement(xHost, 'ports')
             for port in curHost.ports:
-                xPort = ET.SubElement(xPorts, "port")
-                xPort.set("portid", str(port.portId))
-                xPort.set("protocol", port.protocol)
-                xState = ET.SubElement(xPort, "state")
-                xState.set("state", "open")
-                xService = ET.SubElement(xPort, "service")
-                xService.set("name", port.service)
+                xPort = ET.SubElement(xPorts, 'port')
+                xPort.set('portid', str(port.portId))
+                xPort.set('protocol', port.protocol)
+                xState = ET.SubElement(xPort, 'state')
+                xState.set('state', 'open')
+                xService = ET.SubElement(xPort, 'service')
+                xService.set('name', port.service)
 
         # create a new XML file with the results
         try:
@@ -323,12 +323,12 @@ class NmapOutput:
             bs = BeautifulSoup(xmlData, 'lxml-xml')
             xmlData = bs.prettify()
             # Write to file
-            fhXml = open(filename, "w")
+            fhXml = open(filename, 'w')
             fhXml.write(str(xmlData))
             fhXml.close()
-            self.lamePrint.sprint("Combined file saved to: " + filename)
+            self.lamePrint.sprint('Combined file saved to: ' + filename)
         except Exception as ex:
-            self.lamePrint.eprint("Failed to combine files")
+            self.lamePrint.eprint('Failed to combine files')
             self.lamePrint.eprint(str(ex))
 
     def getHostsByFile(self, filters=None) -> dict:
@@ -385,9 +385,9 @@ class NmapHost:
         self.filesWithHost = []  # List of nmap files host was found in
 
     def getState(self) -> str:
-        state = "up"
+        state = 'up'
         if not self.alive:
-            state = "down"
+            state = 'down'
         return state
 
     def addPort(self, protocol: any, portId: any, service: any) -> None:
@@ -515,6 +515,7 @@ class NmapHelpers:
         self.lamePrint = LamePrint()
         self.notify = Notify()
         self.notifyNmap = NotifyNmap()
+        self.logger = Logger()
         # self.textOutput = TextOutput()
 
     def printUniquePorts(self, hosts: any, option=constants.PORT_OPT_DEFAULT, filters=None) -> str:
@@ -540,11 +541,11 @@ class NmapHelpers:
         output.addHumn(self.lamePrint.getHeader(
             'Unique open port list (%s)' % (option)))
         if option == constants.PORT_OPT_DEFAULT:
-            output.addHumn(self.lamePrint.getHeader("TCP:"))
+            output.addHumn(self.lamePrint.getHeader('TCP:'))
             output.addMain(re.sub(r'[\[\] ]', '', str(sorted(tcpPorts))))
-            output.addHumn(self.lamePrint.getHeader("UDP:"))
+            output.addHumn(self.lamePrint.getHeader('UDP:'))
             output.addMain(re.sub(r'[\[\] ]', '', str(sorted(udpPorts))))
-            output.addHumn(self.lamePrint.getHeader("Combined:"))
+            output.addHumn(self.lamePrint.getHeader('Combined:'))
             output.addMain(re.sub(r'[\[\] ]', '', str(sorted(allPorts))))
         elif option == constants.PORT_OPT_TCP:
             output.addMain(re.sub(r'[\[\] ]', '', str(sorted(tcpPorts))))
@@ -557,21 +558,21 @@ class NmapHelpers:
     def getNmapFiltersString(self, filters: NmapFilters) -> str:
         filterString = ""
         if filters.areFiltersSet():
-            filterString += self.lamePrint.getHeader("Output filtered by:")
+            filterString += self.lamePrint.getHeader('Output filtered by:')
             if filters.hostFilterSet():
-                filterString += ("Host filter [host_filter]: %s" % (
+                filterString += ('Host filter [host_filter]: %s' % (
                     [filter.filter for filter in filters.hosts])) + os.linesep
             if filters.serviceFilterSet():
-                filterString += ("Service filter [service_filter]: %s" %
+                filterString += ('Service filter [service_filter]: %s' %
                                  (filters.services)) + os.linesep
             if filters.portFilterSet():
-                filterString += ("Port filter [port_filter]: %s" %
+                filterString += ('Port filter [port_filter]: %s' %
                                  (filters.ports)) + os.linesep
             if filters.mustHavePorts:
-                filterString += ("Must have ports filter [have_ports]: %s" % str(
+                filterString += ('Must have ports filter [have_ports]: %s' % str(
                     filters.mustHavePorts)) + os.linesep
             if filters.onlyAlive:
-                filterString += ("Up filter [only_up]: %s" %
+                filterString += ('Up filter [only_up]: %s' %
                                  str(filters.onlyAlive)) + os.linesep
         return filterString
 
@@ -587,11 +588,11 @@ class NmapHelpers:
 
         output = TextOutput()
         output.addHumn(self.getNmapFiltersString(filters))
-        output.addHumn(self.lamePrint.getHeader('Matched IP list'))
+        output.addHumn(self.lamePrint.getHeader('Matched IP List'))
 
-        headers = ["IP"]
+        headers = ['IP']
         if (includeHostname):
-            headers.append("Hostname")
+            headers.append('Hostname')
         for protocol in constants.PROTOCOLS:
             headers.append(protocol)
 
@@ -614,19 +615,19 @@ class NmapHelpers:
                 for port in [port for port in host.ports if port.protocol == protocol]:
                     tmpPortString = str(port.portId)
                     if (settings.PARSER_SETTINGS.colorSupported and port.matched):
-                        tmpPortString = "\033[1;32m" + \
-                            tmpPortString + "\033[1;m"
+                        tmpPortString = '\033[1;32m' + \
+                            tmpPortString + '\033[1;m'
                     if len(fullPortsString) > 0:
                         fullPortsString += ","
                     fullPortsString += tmpPortString
-                curHostOutput[1] += "%s:[%s]  " % (protocol, fullPortsString)
+                curHostOutput[1] += '%s:[%s]  ' % (protocol, fullPortsString)
                 tableRow.append(fullPortsString)
             hostsOutput.append(curHostOutput)
             tableRows.append(tableRow)
 
         if (isTable):
             output.addMain(tabulate.tabulate(
-                tableRows, headers=headers, tablefmt="github"))
+                tableRows, headers=headers, tablefmt='github'))
         else:
             for hostOutput in hostsOutput:
                 if includePorts:
@@ -648,13 +649,13 @@ class NmapHelpers:
     def printImportSummary(self, nmapOutput: any, detailed=True) -> None:
         if (detailed):
             for file in nmapOutput.FilesImported:
-                self.lamePrint.sprint("Successfully loaded " + file)
-        self.lamePrint.sprint(os.linesep + "Successfully loaded " +
-                              str(len(nmapOutput.FilesImported)) + " files")
+                self.lamePrint.sprint('Successfully loaded ' + file)
+        self.lamePrint.sprint(os.linesep + 'Successfully loaded ' +
+                              str(len(nmapOutput.FilesImported)) + ' files')
         if len(nmapOutput.FilesFailedToImport) > 0:
-            self.lamePrint.eprint("The following files failed to parse:")
+            self.lamePrint.eprint('The following files failed to parse:')
             for file in nmapOutput.FilesFailedToImport:
-                self.lamePrint.eprint("\t" + file)
+                self.lamePrint.eprint('\t' + file)
 
     def getServiceListOutput(self, nmapOutput: any, filters=None, verbose=False, includePorts=True) -> str:
         services = nmapOutput.getServices(filters)
@@ -669,13 +670,13 @@ class NmapHelpers:
                     output.addMain("")
             svcString = service.name
             if (includePorts):
-                svcString += " " + str(sorted(service.ports))
+                svcString += ' ' + str(sorted(service.ports))
             output.addMain(svcString)
             if verbose:
                 for host in service.hosts:
                     hostString = '  ' + host.ip
                     if (includePorts):
-                        hostString += " " + str(sorted(host.ports))
+                        hostString += ' ' + str(sorted(host.ports))
                     output.addMain(hostString)
         return output
 
@@ -693,11 +694,11 @@ class NmapHelpers:
                 self.executeCommand(cmd, host.ip)
 
     def executeCommand(self, cmd: any, ip: any) -> None:
-        curCommand = cmd + " " + ip
+        curCommand = cmd + ' ' + ip
         self.lamePrint.hprint("Running command: '%s'" % curCommand)
         process = Popen(curCommand, shell=True, stdout=PIPE)
         output = process.stdout.read()
-        self.lamePrint.hprint("Finished running command: %s" % curCommand)
+        self.lamePrint.hprint('Finished running command: %s' % curCommand)
         self.header("OUTPUT for '%s':" % curCommand)
         if output == '':
             print('<none>')
@@ -747,7 +748,7 @@ class NmapHelpers:
                     fhFile.close()
                 except:
                     self.lamePrint.eprint(
-                        "Failed to load contents of: " + curHostFilter)
+                        'Failed to load contents of: ' + curHostFilter)
             else:
                 curFilters.append(curHostFilter)
 
@@ -770,11 +771,11 @@ class NmapHelpers:
                     hostFilter.append(self.NmapHostFilter(filter, isIp))
                 else:
                     if (isFilename):
-                        self.lamePrint.eprint("Invalid host filter (within %s) option ignored: %s" % (
+                        self.lamePrint.eprint('Invalid host filter (within %s) option ignored: %s' % (
                             curHostFilter, filter))
                     else:
                         self.lamePrint.eprint(
-                            "Invalid host filter option ignored: " + filter)
+                            'Invalid host filter option ignored: ' + filter)
         return hostFilter
 
     def getJsonValue(self, jsonData: any, id: any) -> any:
@@ -790,26 +791,26 @@ class NmapHelpers:
         output = TextOutput()
         # Get overview
         output.addHumn(self.lamePrint.getHeader("Overview"))
-        output.addMain("IP: %s" % host.ip)
+        output.addMain('IP: %s' % host.ip)
         if (host.ip != host.hostname):
-            output.addMain("Hostname: %s" % host.hostname)
+            output.addMain('Hostname: %s' % host.hostname)
         output.addMain("State: %s" % host.getState())
         openTcp = len(host.getUniquePortIds(constants.PORT_OPT_TCP))
         openUdp = len(host.getUniquePortIds(constants.PORT_OPT_UDP))
-        output.addMain("TCP ports open: %s" % openTcp)
-        output.addMain("UDP ports open: %s" % openUdp)
-        output.addMain("Total ports open: %s" % (openTcp + openUdp))
+        output.addMain('TCP ports open: %s' % openTcp)
+        output.addMain('UDP ports open: %s' % openUdp)
+        output.addMain('Total ports open: %s' % (openTcp + openUdp))
 
         # Output port details
-        output.addHumn(self.lamePrint.getHeader("Ports / Services"))
+        output.addHumn(self.lamePrint.getHeader('Ports / Services'))
         portTableHeaders = ['Port', 'Protocol', 'Service']
         output.addMain(tabulate.tabulate([[port.portId, port.protocol, port.service]
-                                          for port in host.ports], headers=portTableHeaders, tablefmt="github"))
+                                          for port in host.ports], headers=portTableHeaders, tablefmt='github'))
 
         # Output files found in
-        output.addHumn(self.lamePrint.getHeader("Files Containing Host"))
+        output.addHumn(self.lamePrint.getHeader('Files Containing Host'))
         if (len(host.filesWithHost) == 0):
-            output.addErrr("Host not present within any files")
+            output.addErrr('Host not present within any files')
         else:
             for file in host.filesWithHost:
                 output.addMain(file)
