@@ -65,6 +65,8 @@ class Program:
 
     # TODO: Adjust color styling for the Notify class within this method
     def clean(self, path: str) -> None:
+        _full_path = os.path.basename(os.path.normpath(path))
+        self.logger.info('Cleaning directories...')
         if os.path.exists(path):
             deleted_files = False
             if os.path.exists(path):
@@ -72,27 +74,27 @@ class Program:
                     for file in files:
                         file_path = os.path.join(root, file)
                         try:
-                            # self.logger.info(
-                            #     f'Cleaning ~/Netwatch/src/{os.path.basename(os.path.normpath(path))}/ directory...')
-                            self.notify.cleaningDirectory(path)
                             os.remove(file_path)
-                            self.notify.deletingFile(file_path)
+                            self.logger.info(f'Deleted file: {file_path}')
                             deleted_files = True
                         except Exception as e:
                             print(e)
                     for dir in dirs:
                         dir_path = os.path.join(root, dir)
                         try:
-                            self.notify.cleaningDirectory(path)
+                            # self.notify.cleaningDirectory(path)
                             os.rmdir(dir_path)
                             deleted_files = True
                         except Exception as e:
                             print(e)
                 # os.rmdir(path)
                 if deleted_files:
-                    self.notify.directoryCleaned(path, deleted_files)  # ✔
+                    self.logger.info(
+                        f'Directory:{_full_path} successfully cleaned.')
+                    # self.notify.directoryCleaned(path, deleted_files)  # ✔
                 else:
-                    self.notify.directoryCleaned(path, deleted_files)
+                    self.logger.info(f'No files found in {_full_path}.')
+                    # self.notify.directoryCleaned(path, deleted_files)
             else:
                 raise FileNotFoundError(
                     f'{Color.RED}{path} directory not found!{Color.END}\n')
@@ -101,7 +103,20 @@ class Program:
                 f'{Color.RED}Path {path} does not exist!{Color.END}\n')
 
     def printPath(self, module: str) -> None:
-        self.notify.currentDirPath(module)
+        _split_module = module.split("/")
+        if (len(_split_module) <= 1):  # if module is in root directory (Netwatch/)
+            print(f'\n[*] Module -> {_split_module[0]}')
+            print(f'[*] Path   -> {module+"/"}\n')
+            # self.logger.info(
+            #     f'Module -> {_split_module[0]}\n')
+            # self.logger.info(f'Path   -> {module+"/"}')
+        else:
+            print(f'\n[*] Module -> {_split_module[len(_split_module)-1]}')
+            print(f'[*] Path   -> {module+"/"}\n')
+            # self.logger.info(
+            #     f'\nModule -> {_split_module[len(_split_module)-1]}')
+            # self.logger.info(f'Path   -> {module+"/"}')
+        # self.notify.currentDirPath(module)
 
     def clearScreen(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -251,7 +266,8 @@ class Netwatch:
             case "exit" | "quit" | "end":
                 self.commandHandler.execute(choice)
             case _:
-                self.notify.unknownInput(choice)
+                self.logger.warning("Unknown input. Type '?' for help.")
+                # self.notify.unknownInput(choice)
                 self.__init__()
         self.__init__()
 
@@ -365,7 +381,8 @@ class InformationGathering:
                 self.logger.info("Returning to previous context menu...")
                 Netwatch()
             case _:
-                self.notify.unknownInput(choiceInfo)
+                self.logger.warning("Unknown input. Type '?' for help.")
+                # self.notify.unknownInput(choiceInfo)
                 self.__init__()
         self.__init__()
 
@@ -423,7 +440,8 @@ class NmapMenu:
 
     def menu(self) -> None:
         print(self.nmapLogo)
-        self.notify.currentTarget(self.target)
+        # TODO - Update with logger class
+        # self.notify.currentTarget(self.target)
         self.notify.currentScanPath(self.scanPath)
         try:
             choiceNmap = input(self.netwatchPrompt)
@@ -459,7 +477,8 @@ class NmapMenu:
                     self.logger.info("Returning to previous context menu...")
                     InformationGathering()
                 case _:
-                    self.notify.unknownInput(choiceNmap)
+                    self.logger.warning("Unknown input. Type '?' for help.")
+                    # self.notify.unknownInput(choiceNmap)
                     self.menu()
             self.menu()
         except Exception as e:
