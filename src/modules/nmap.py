@@ -706,7 +706,7 @@ class NmapHelpers:
         print('')
 
     def printAliveIps(self, nmapOutput: any) -> None:
-        self.header('Alive IP list')
+        self.header('Alive IP List')
         # Get all hosts that are up and matched filters
         tmpParsedHosts = nmapOutput.getAliveHosts()
         for ip in self.sortIpList(tmpParsedHosts):

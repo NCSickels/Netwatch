@@ -13,6 +13,7 @@ from modules import constants
 from config import parsersettings as settings
 from modules.termutils import ColorConfig, LamePrint, Color, TextOutput, TextOutputEntry
 from modules.notify import Notify, NotifyNmap
+from logger import *
 
 
 class TerminalBase(cmd2.Cmd):
@@ -379,7 +380,7 @@ class NmapTerminal(TerminalBase):
                 for file in self.nmapOutput.FilesImported:
                     self.poutput(file)
         else:
-            self.perror("No files were imported successfully")
+            self.perror("No files were imported successfully.")
         print()
 
         if (len(self.nmapOutput.FilesFailedToImport) > 0):
@@ -390,7 +391,7 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_scanned_hosts(self, inp: str) -> None:
         '''List all hosts scanned'''
-        self.pfeedback(self.lamePrint.getHeader('Scanned hosts'))
+        self.pfeedback(self.lamePrint.getHeader('Scanned Hosts'))
 
         filters = self.getFilters()
         filters.onlyAlive = False
@@ -406,7 +407,7 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_alive_hosts(self, inp: str) -> None:
         '''List alive hosts'''
-        self.pfeedback(self.lamePrint.getHeader('Alive hosts'))
+        self.pfeedback(self.lamePrint.getHeader('Alive Hosts'))
         for ip in self.nmapOutput.getAliveHosts(self.getFilters()):
             self.poutput(ip)
 

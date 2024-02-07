@@ -5,7 +5,7 @@ from rich.table import Table
 
 
 class TableCreator:
-    "A class for creating help menu tables from JSON data"
+    """A class for creating help menu tables from JSON data"""
 
     def __init__(self, jsonFile=None):
         self.console = Console()
