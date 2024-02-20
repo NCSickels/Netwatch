@@ -20,7 +20,7 @@
 import sys
 import argparse
 from modules import interactive
-from config import parsersettings as settings
+from config import settings as settings
 from modules import *
 
 VERSION = "3.0.0"

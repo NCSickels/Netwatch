@@ -1,3 +1,3 @@
 from .config import *
-from .parsersettings import *
+from .settings import *
 from .paths import *

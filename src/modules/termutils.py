@@ -6,7 +6,7 @@ from rich import print as rprint
 import colorama
 
 from modules.sites import sites
-from config import parsersettings as settings
+from config import settings as settings
 from modules import constants
 
 

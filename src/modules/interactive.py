@@ -10,7 +10,7 @@ from typing import List
 
 from modules.nmap import NmapFilters, NmapHostFilter, NmapHelpers
 from modules import constants
-from config import parsersettings as settings
+from config import settings as settings
 from modules.termutils import ColorConfig, LamePrint, Color, TextOutput, TextOutputEntry
 from modules.notify import Notify, NotifyNmap
 from logger import *

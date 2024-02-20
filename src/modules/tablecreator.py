@@ -1,7 +1,9 @@
 import os
 import json
+import tabulate
 from rich.console import Console
 from rich.table import Table
+from config import *
 
 
 class TableCreator:
@@ -57,6 +59,12 @@ class TableCreator:
             self.console.print(table)
             print("\n")
 
+    # TODO - Implement tabulation for non-rich tables
     def displayTableFromFile(self, module: str) -> None:
-        jsonData = self.readJson(self.jsonFile)
-        self.displayTable(jsonData, module)
+        if settings.GENERAL_SETTINGS.useRichTables:
+            jsonData = self.readJson(self.jsonFile)
+            self.displayTable(jsonData, module)
+        else:
+            pass
+        # jsonData = self.readJson(self.jsonFile)
+        # self.displayTable(jsonData, module)
