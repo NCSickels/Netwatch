@@ -4,7 +4,7 @@ import os
 import subprocess
 
 from rich.console import Console
-from config.config import ConfigManager
+from config import *
 from modules.termutils import Color
 from logger import *
 
