@@ -618,7 +618,7 @@ class NmapHelpers:
                         tmpPortString = '\033[1;32m' + \
                             tmpPortString + '\033[1;m'
                     if len(fullPortsString) > 0:
-                        fullPortsString += ","
+                        fullPortsString += ", "
                     fullPortsString += tmpPortString
                 curHostOutput[1] += '%s:[%s]  ' % (protocol, fullPortsString)
                 tableRow.append(fullPortsString)
@@ -627,13 +627,14 @@ class NmapHelpers:
 
         if (isTable):
             output.addMain(tabulate.tabulate(
-                tableRows, headers=headers, tablefmt='github'))
+                tableRows, headers=headers, tablefmt='grid', maxheadercolwidths=[None, None, None, None], maxcolwidths=[None, None, 20, 20]))
         else:
-            for hostOutput in hostsOutput:
+            for hostData in hostsOutput:
                 if includePorts:
-                    output.addMain("%s\t%s" % (hostOutput[0], hostOutput[1]))
+                    output.addMain(f'{hostData[0]}\t{hostData[1]}')
+                    # output.addMain("%s\t%s" % (hostData[0], hostData[1]))
                 else:
-                    output.addMain(hostOutput[0])
+                    output.addMain(hostData[0])
         return output
 
     def printHosts(self, nmapOutput: any, includePorts=True, filters=None) -> None:
@@ -822,7 +823,6 @@ class NmapHelpers:
 
     def getNmapFiles(self, fileOrDir: any, recurse=False) -> list:
         if not os.path.exists(fileOrDir):
-            # TODO: style this error with Notify class
             raise FileNotFoundError(
                 f"No such file or directory: '{fileOrDir}'")
         if os.path.isdir(fileOrDir):

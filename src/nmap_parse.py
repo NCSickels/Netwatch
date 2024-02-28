@@ -37,7 +37,7 @@ class ParserProgram:
         parser = argparse.ArgumentParser(
             usage="{prog} [options]... <nmap-xml-files> <command> [command-parameters]...")
         parser.add_argument(
-            "xml_files", nargs="+", help="Nmap XML files or directories containing XML files")
+            "xml_files", nargs="*", help="Nmap XML files or directories containing XML files")
         # TODO: Fix this -> Port filter not correctly parsed
         parser.add_argument("-p", "--port", dest="ports",
                             help="Optional port filter argument e.g. 80 or 80,443", metavar="PORTS")
@@ -74,8 +74,8 @@ class ParserProgram:
         # Now you can access the arguments using args.ports, args.svcFilter, etc.
 
         if (args.version):
-            print("Netwatch Nmap Data Parser Version %s\nReleased: %s" %
-                  (VERSION, RELEASE_DATE))
+            print(f'Netwatch Nmap Data Parser Version ' +
+                  f'{VERSION}\nReleased: {RELEASE_DATE}')
             return
 
         # Determine whether to output headings
@@ -102,14 +102,13 @@ class ParserProgram:
             if args.ports:
                 portFilter = list(map(int, args.ports.split(',')))
                 filters.ports = portFilter
-                self.lamePrint.hprint('Set port filter to %s' % portFilter)
+                self.lamePrint.hprint(f'Set port filter to {portFilter}')
 
             # Check if only specific ports should be parsed
             if args.svcFilter:
                 serviceFilter = args.svcFilter.split(',')
                 filters.services = serviceFilter
-                self.lamePrint.hprint(
-                    'Set service filter to %s' % serviceFilter)
+                self.lamePrint.hprint(f'Set service filter to {serviceFilter}')
 
         # Parse nmap files
         nmapOutput = NmapOutput(nmapXmlFilenames)
@@ -118,7 +117,7 @@ class ParserProgram:
 
         # Print import summary if requested
         if args.importedFiles:
-            self.lamePrint.header("Import Summary")
+            self.lamePrint.header('Import Summary')
             self.helpers.printImportSummary(nmapOutput, True)
 
         # Check if default flags were used
@@ -155,11 +154,11 @@ class ParserProgram:
                     args.cmd, nmapOutput, filters=filters)
 
             if settings.PARSER_SETTINGS.printHumanFriendlyText and (defaultFlags or args.hostSummary):
-                self.lamePrint.hprint("\nSummary\n-------")
-                self.lamePrint.hprint("Total hosts: %s" %
-                                      str(len(nmapOutput.Hosts)))
-                self.lamePrint.hprint("Alive hosts: %s" %
-                                      str(len(nmapOutput.getAliveHosts(filters))))
+                self.lamePrint.hprint('\nSummary\n-------')
+                self.lamePrint.hprint(
+                    f'Total hosts: {str(len(nmapOutput.Hosts))}')
+                self.lamePrint.hprint(
+                    f'Alive hosts: {str(len(nmapOutput.getAliveHosts(filters)))}')
         else:
             enterInteractiveShell(nmapOutput)
 
