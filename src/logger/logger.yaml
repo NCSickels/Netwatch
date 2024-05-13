@@ -7,7 +7,7 @@ formatters:
     datefmt: "[%Y-%m-%d %H:%M:%S]"
 
   colored:
-    (): dat_terminal.logger.color_formatter.ColorFormatter
+    (): dat_terminal.logger.ColorFormatter
 
 handlers:
   console:

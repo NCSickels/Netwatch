@@ -12,7 +12,6 @@ from modules.nmap import NmapFilters, NmapHostFilter, NmapHelpers
 from modules import constants
 from config import settings as settings
 from modules.termutils import ColorConfig, LamePrint, Color, TextOutput, TextOutputEntry
-from modules.notify import Notify, NotifyNmap
 from logger import *
 
 
@@ -104,7 +103,6 @@ class NmapTerminal(TerminalBase):
         self.colorConfig = ColorConfig()
         self.lamePrint = LamePrint()
         self.color = Color()
-        self.notify = Notify()
         self.prompt = '\n\033[4m\033[1;30mnmap-parse\033[1;30m\033[0m\033[1;30m ~#\033[0;m '
 
         cmd2.utils.categorize(self.do_set, constants.CMD_CAT_FILTER)
@@ -211,7 +209,6 @@ class NmapTerminal(TerminalBase):
     def do_exit(self, inp: str) -> bool:
         '''Exit the interactive prompt'''
         print("\nBye.\n")
-        # self.notify.endProgram()
         return True
 
     @cmd2.with_category(constants.CMD_CAT_CORE)

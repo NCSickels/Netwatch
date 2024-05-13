@@ -2,8 +2,7 @@ import colorama
 import re
 from dataclasses import dataclass, field
 from termcolor import colored
-from config.config import read_section
-from themes.themes import *
+from themes.themes import get_theme
 
 __all__ = ['c', 'use_prop']
 

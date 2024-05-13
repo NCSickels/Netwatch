@@ -176,3 +176,5 @@ scripts/remove_dev_comments.py
 *.un~
 examples/*.txt
 .lh
+.history
+requirements-dev.txt

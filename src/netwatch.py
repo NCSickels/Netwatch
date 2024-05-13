@@ -39,7 +39,6 @@ class Program:
         self.configManager = ConfigManager()
         self.tableCreator = TableCreator()
         self.logger = Logger()
-        self.notify = Notify()
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.ini'
 
@@ -59,11 +58,9 @@ class Program:
 
     def end(self) -> None:
         print("\n Bye.\n")
-        # self.notify.endProgram()
         sleep(0.25)
         sys.exit()
 
-    # TODO: Adjust color styling for the Notify class within this method
     def clean(self, path: str) -> None:
         _full_path = os.path.basename(os.path.normpath(path))
         self.logger.info('Cleaning directories...')
@@ -82,7 +79,6 @@ class Program:
                     for dir in dirs:
                         dir_path = os.path.join(root, dir)
                         try:
-                            # self.notify.cleaningDirectory(path)
                             os.rmdir(dir_path)
                             deleted_files = True
                         except Exception as e:
@@ -91,10 +87,8 @@ class Program:
                 if deleted_files:
                     self.logger.info(
                         f'Directory:{_full_path} successfully cleaned.')
-                    # self.notify.directoryCleaned(path, deleted_files)  # ✔
                 else:
                     self.logger.info(f'No files found in {_full_path}.')
-                    # self.notify.directoryCleaned(path, deleted_files)
             else:
                 raise FileNotFoundError(
                     f'{Color.RED}{path} directory not found!{Color.END}\n')
@@ -116,7 +110,6 @@ class Program:
             # self.logger.info(
             #     f'\nModule -> {_split_module[len(_split_module)-1]}')
             # self.logger.info(f'Path   -> {module+"/"}')
-        # self.notify.currentDirPath(module)
 
     def clearScreen(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -228,7 +221,6 @@ class Netwatch:
         self.program = Program()
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
-        self.notify = Notify()
         self.tableCreator = TableCreator()
         self.logger = Logger()
 
@@ -267,7 +259,6 @@ class Netwatch:
                 self.commandHandler.execute(choice)
             case _:
                 self.logger.warning("Unknown input. Type '?' for help.")
-                # self.notify.unknownInput(choice)
                 self.__init__()
         self.__init__()
 
@@ -296,7 +287,6 @@ class AutoAttack:
         self.program = Program()
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
-        self.notify = Notify()
         self.logger = Logger()
         self.tableCreator = TableCreator()
         self.run()
@@ -341,7 +331,6 @@ class InformationGathering:
         self.program = Program()
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
-        self.notify = Notify()
         self.logger = Logger()
 
         self.netwatchPrompt = self.configManager.get(
@@ -382,7 +371,6 @@ class InformationGathering:
                 Netwatch()
             case _:
                 self.logger.warning("Unknown input. Type '?' for help.")
-                # self.notify.unknownInput(choiceInfo)
                 self.__init__()
         self.__init__()
 
@@ -407,7 +395,6 @@ class NmapMenu:
         self.configManager = ConfigManager()
         self.commandHandler = CommandHandler()
         self.logger = Logger()
-        self.notify = Notify()
         self.nmap = Nmap()
         self.netwatchPrompt = "netwatch ~# "
         self.gitRepo = "https://github.com/nmap/nmap.git"
@@ -440,9 +427,7 @@ class NmapMenu:
 
     def menu(self) -> None:
         print(self.nmapLogo)
-        # TODO - Update with logger class
-        # self.notify.currentTarget(self.target)
-        self.notify.currentScanPath(self.scanPath)
+        self.logger.info("Scan Path -> " + self.scanPath)
         try:
             choiceNmap = input(self.netwatchPrompt)
             match choiceNmap:
@@ -478,7 +463,6 @@ class NmapMenu:
                     InformationGathering()
                 case _:
                     self.logger.warning("Unknown input. Type '?' for help.")
-                    # self.notify.unknownInput(choiceNmap)
                     self.menu()
             self.menu()
         except Exception as e:

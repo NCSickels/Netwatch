@@ -24,7 +24,6 @@ from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 from modules.termutils import *
-from modules.notify import *
 from modules.packagemanager import *
 from logger import *
 from config import *
@@ -502,8 +501,6 @@ class NmapHelpers:
 
     def __init__(self):
         self.lamePrint = LamePrint()
-        self.notify = Notify()
-        self.notifyNmap = NotifyNmap()
         # self.textOutput = TextOutput()
 
     def printUniquePorts(self, hosts: any, option=constants.PORT_OPT_DEFAULT, filters=None) -> str:
@@ -513,8 +510,6 @@ class NmapHelpers:
 class NmapHelpers:
     def __init__(self):
         self.lamePrint = LamePrint()
-        self.notify = Notify()
-        self.notifyNmap = NotifyNmap()
         self.logger = Logger()
         # self.textOutput = TextOutput()
 

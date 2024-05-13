@@ -1,7 +1,6 @@
 import configparser
 import os.path
 from dataclasses import dataclass
-from modules.notify import Notify
 from utils.stringutils import convert_to_bool
 
 
@@ -13,7 +12,8 @@ class ConfigManager:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance.config = configparser.ConfigParser()
-            cls._instance.notify = Notify()
+            # cls._instance.logger = Logger()
+            # cls._instance.logger = get_central_logger()
             cls._instance.configFile = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)), 'netwatch.ini')
             cls._instance.themesFile = os.path.join(
@@ -40,7 +40,8 @@ class ConfigManager:
             with open(self.configFile, 'w') as f:
                 self.config.write(f)
         except Exception as e:
-            self.notify.exception(e)
+            # self.logger.error(e)
+            print(e)
 
     def getPath(self, section: any, option: any) -> str:
         return self.installDir + self.config.get(section, option)

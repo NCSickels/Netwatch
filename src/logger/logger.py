@@ -1,5 +1,6 @@
 import logging
 import logging.config
+from modules.colorhelper import c, use_prop
 
 LOGGING_CONFIG = {
     'version': 1,
@@ -10,7 +11,7 @@ LOGGING_CONFIG = {
             'datefmt': "[%H:%M:%S]",  # Previous: [%Y-%m-%d %H:%M:%S]
         },
         'colored': {
-            '()': 'logger.color_formatter.ColorFormatter',
+            '()': 'logger.ColorFormatter',
             'format': "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             'datefmt': '[%H:%M:%S]',
         },
@@ -36,6 +37,35 @@ LOGGING_CONFIG = {
         },
     },
 }
+
+
+class ColorFormatter(logging.Formatter):
+    """A custom logging formatter that adds color to log messages."""
+
+    # NOTICE = 25
+    # logging.addLevelName(NOTICE, "NOTICE")
+
+    def format(self, record):
+        format_prop = {
+            logging.DEBUG: 'primary',
+            logging.INFO: 'primary',
+            logging.WARNING: 'warning',
+            logging.ERROR: 'error',
+            logging.CRITICAL: 'critical',
+            # self.NOTICE: 'notice',
+        }
+        date_text = c('<cyan>%(asctime)s</cyan>')
+        message = c('<primary>%(message)s</primary>')
+        # Fixed width of 10 for logger_name
+        logger_name = c(f'<magenta>{record.name}</magenta>')
+
+        level_prop = format_prop[record.levelno]
+        level = use_prop(f'{record.levelname}', level_prop)
+
+        log_format = f"{date_text} | [{level}] {logger_name}: {message}"
+        formatter = logging.Formatter(log_format, datefmt='[%H:%M:%S]')
+
+        return formatter.format(record)
 
 
 class Singleton(type):
@@ -69,6 +99,13 @@ class Logger(metaclass=Singleton):
         logging.config.dictConfig(LOGGING_CONFIG)
         Logger._logger = logging.getLogger()
 
+    @classmethod
+    def get_logger(cls) -> logging.Logger:
+        """
+        Returns the logger instance.
+        """
+        return cls._logger
+
     # @classmethod
     # def notice(cls, message: str):
     #     cls._logger.log(NOTICE, message)
@@ -92,3 +129,7 @@ class Logger(metaclass=Singleton):
     @classmethod
     def critical(cls, message: str):  # Severity: 50
         cls._logger.critical(message)
+
+
+def get_central_logger():
+    return Logger.get_logger()

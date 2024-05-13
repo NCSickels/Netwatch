@@ -41,7 +41,7 @@ class Sagemode:
         self.console = Console()
         self.configManager = ConfigManager()
         self.lamePrint = LamePrint()
-        self.logger = Logger()
+        # self.logger = Logger()
         self.notifySagemode = NotifySagemode()
         self.positive_count = 0
         self.usernamePrompt = "\nEnter target username: "

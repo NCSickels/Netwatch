@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass, field
-from config.config import *
+from config.config import ConfigManager
 
 
 # Style:
@@ -63,7 +63,7 @@ theme = Theme()
 config = ConfigManager()
 
 
-def get_theme() -> Theme():
+def get_theme() -> Theme:
     return theme
 
 
