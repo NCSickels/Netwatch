@@ -174,20 +174,25 @@
                 {
                     "option": "1",
                     "modules": "Nmap",
-                    "description": "Network Mapper - Port Scanner"
+                    "description": "Network Mapper - Port Scanner."
                 },
                 {
                     "option": "2",
+                    "modules": "PyDiscover",
+                    "description": "Discover IP addresses on a network."
+                },
+                {
+                    "option": "3",
                     "modules": "Sagemode",
                     "description": "Track and Unveil Online identities across social media platforms through OSINT."
                 },
                 {
-                    "option": "3",
+                    "option": "4",
                     "modules": "Custom Port Scanner",
                     "description": "Alternative to Nmap if installation is unavailable."
                 },
                 {
-                    "option": "4",
+                    "option": "5",
                     "modules": "Host2IP",
                     "description": "Converts a hostname to an IP address."
                 }

@@ -345,12 +345,15 @@ class InformationGathering:
                 print(NmapMenu.nmapLogo)
                 NmapMenu()
             case "2":
-                SagemodeMenu()
+                print(PyDiscover.pydiscoverLogoText)
+                PyDiscover()
             case "3":
+                SagemodeMenu()
+            case "4":
                 pass
                 # Currently not working
                 # PortScanner()
-            case "4":
+            case "5":
                 pass
                 # print(Host2IP.host2ipLogo)
                 # Host2IP()
@@ -498,6 +501,23 @@ class NmapMenu:
             self.scanPath = "nmap-" + scanName + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
         self.menu()
+
+
+class PyDiscover:
+    """A Python network discovery tool based on Netdiscover."""
+
+    pydiscoverLogoText = '''
+
+██████╗ ██╗   ██╗██████╗ ██╗███████╗ ██████╗ ██████╗ ██╗   ██╗███████╗██████╗
+██╔══██╗╚██╗ ██╔╝██╔══██╗██║██╔════╝██╔════╝██╔═══██╗██║   ██║██╔════╝██╔══██╗
+██████╔╝ ╚████╔╝ ██║  ██║██║███████╗██║     ██║   ██║██║   ██║█████╗  ██████╔╝
+██╔═══╝   ╚██╔╝  ██║  ██║██║╚════██║██║     ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗
+██║        ██║   ██████╔╝██║███████║╚██████╗╚██████╔╝ ╚████╔╝ ███████╗██║  ██║
+╚═╝        ╚═╝   ╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝
+'''
+
+    def __init__(self) -> None:
+        pass
 
 
 class SagemodeMenu:
