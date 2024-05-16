@@ -6,12 +6,13 @@ import signal
 import subprocess
 import re
 import argparse
-from scapy.all import *
-# from ifaces import inject_init
-# from data_reply import _data_reply
-# from data_request import _data_request
-# from data_unique import _data_unique
-# from screen import init_screen, print_screen, read_key
+from scapy.all import IFACES, conf
+import scapy.interfaces
+import winreg
+from data_al import data_access
+from ifaces import get_mac, inject_init, forge_arp
+from screen import init_screen, print_screen, read_key
+
 
 RPATH = "{}/.pydiscover/ranges"
 FPATH = "{}/.pydiscover/fastips"
@@ -53,12 +54,13 @@ keys = None
 
 # Command line flags
 flag_fast_mode = False
-flag_repeat_scan = False
-flag_network_octect = False
+
 flag_supress_sleep = False
 flag_ignore_files = False
-flag_auto_scan = False
 flag_sleep_time = 99
+flag_network_octet = 67
+flag_repeat_scan = 1
+flag_auto_scan = False
 
 
 class PyDiscover:
@@ -66,17 +68,16 @@ class PyDiscover:
         self.flag_passive_mode = False
         self.parsable_output = False
         self.continue_listening = False
-        self.dataos = {}
-        self.interfaces = show_interfaces(resolve_mac=True)
+        self.dataos = {"interface": None,
+                       "source_ip": None, "pcap_filter": "arp"}
+        # self.interfaces = show_interfaces(resolve_mac=True)
         self.ifaces_data = IFACES.data
 
     def run(self):
         parser = argparse.ArgumentParser(
             usage='{prog} [-i device] [-r range | -l file | -p] [-m file] [-F filter] [-s time] [-c count] [-n node] [-dfPLNS]\n')
 
-        parser.add_argument('-i', type=str, dest='device',
-                            help='Set the interface')
-
+        parser.add_argument('-i', dest='device', help='Set the interface')
         parser.add_argument('-p', dest='passive', action='store_true',
                             help='Enable passive mode')
         parser.add_argument('-s', dest='sleeptime',
@@ -108,137 +109,158 @@ class PyDiscover:
 
         args = parser.parse_args()
 
-        match args:
-            case args.device:  # Network device to use
-                self.print_interface_details(self.ifaces_data)
-                # self.dataos['interface'] = args.device
-            case args.passive:  # Passive scan mode; do not scan anything, only sniff
-                self.flag_passive_mode = True
-            case args.sleeptime:  # Sleep time between scans
-                flag_sleep_time = args.sleeptime
-            case args.suppress:  # Suppress sleep time
-                flag_supress_sleep = True
-            case args.count:  # Number of times to repeat the scan
-                flag_repeat_scan = args.count
-            case args.lastoctet:  # Last octet of ips scaned in fast mode
-                flag_network_octect = args.lastoctet
-            case args.range:  # Range to scan
-                self.dataos['source_ip'] = args.range
-                flag_scan_range = True
-            case args.listfile:  # File with ranges to scan
-                plist = args.listfile
-                flag_scan_list = True
-            case args.macfile:  # File with MACs to scan
-                mlist = args.macfile
-            case args.fastmode:  # Fast mode
-                flag_fast_mode = True
-            case args.filter:  # Custom pcap filter
-                self.dataos['pcap_filter'] = args.filter
-            case args.ignorehome:  # Ignore home config files
-                flag_ignore_files = True
-            case args.parsable:  # Produce parsable output
-                self.parsable_output = True
-            case args.noheader:  # Do not print header under parsable mode
-                no_parsable_header = True
-            case args.listening:
-                self.parsable_output = True
-                self.continue_listening = True
-            case _:
-                parser.print_help()
+        if args.device:  # Network device to use
+            self.dataos['interface'] = args.device
+            # print(f'\n\nInterface: {args.device}')
+        elif args.passive:  # Passive scan mode; do not scan anything, only sniff
+            self.flag_passive_mode = True
+        elif args.sleeptime:  # Sleep time between scans
+            flag_sleep_time = args.sleeptime
+        elif args.suppress:  # Suppress sleep time
+            flag_supress_sleep = True
+        elif args.count:  # Number of times to repeat the scan
+            flag_repeat_scan = args.count
+        elif args.lastoctet:  # Last octet of ips scaned in fast mode
+            flag_network_octect = args.lastoctet
+        elif args.range:  # Range to scan
+            self.dataos['source_ip'] = args.range
+            flag_scan_range = True
+        elif args.listfile:  # File with ranges to scan
+            plist = args.listfile
+            flag_scan_list = True
+        elif args.macfile:  # File with MACs to scan
+            mlist = args.macfile
+        elif args.fastmode:  # Fast mode
+            flag_fast_mode = True
+        elif args.filter:  # Custom pcap filter
+            self.dataos['pcap_filter'] = args.filter
+        elif args.ignorehome:  # Ignore home config files
+            flag_ignore_files = True
+        elif args.parsable:  # Produce parsable output
+            self.parsable_output = True
+        elif args.noheader:  # Do not print header under parsable mode
+            no_parsable_header = True
+        elif args.listening:
+            self.parsable_output = True
+            self.continue_listening = True
+        else:
+            parser.print_help()
 
-        # # Check for uid 0 (root)
-        # if os.getuid() != 0 and os.geteuid() != 0:
-        #     print("You must be root to run this.")
-        #     sys.exit(1)
+        self.dataos['interface'] = conf.iface
+        inject_init(self.dataos['interface'])
+        print(f'Successfully initialized interface: ' +
+              f'{self.dataos["interface"]}')
 
-        # # If no iface was specified, autoselect one. If none is found, exit
-        # if self.dataos['interface'] is None:
-        #     devices = None
-        #     devices = scapy.findalldevs()
-        #     if not devices:
-        #         print("Couldn't find capture devices.")
-        #         sys.exit(1)
-        #     self.dataos['interface'] = devices[0]
+        init_screen()
 
-        # # Check whether user config files are either disabled or can be found
-        # if flag_ignore_files is False and 'HOME' not in os.environ:
-        #     print("Couldn't figure out users home path (~). Please set the $HOME "
-        #           "environment variable or specify -d to disable user configuration files.\n")
-        #     sys.exit(1)
+    def inject_arp(self):
+        if flag_auto_scan is False:
+            # print('Injecting ARP packets...')
+            self.scan_range(self.dataos['interface'], self.dataos['source_ip'])
+        else:
+            x = 0
+            while common_net[x] is not None:
+                # print(f'Scanning network: {common_net[x]}')
+                self.scan_range(self.dataos['interface'], common_net[x])
+                x += 1
+        # Wait for last arp replies and mark as scan finished
+        os.sleep(2)
+        current_network = 'Finished!'
 
-        # # Load user config files or set defaults
-        # if flag_ignore_files is False:
-        #     #     path = os.path.expanduser("~") + RPATH
-        #     pass
-        # else:
-        #     common_net = dcommon_net
-        #     fast_ips = dfast_ips
+    def scan_net(disp, sip):
+        fromip = f'{sip}.{flag_network_octet}'
+        print(fromip)
+        for x in range(flag_repeat_scan):
+            if flag_fast_mode is False:
+                for y in range(1, 255):
+                    testip = f'{sip}.{y}'
+                    forge_arp(fromip, testip, disp)
 
-        # # Read range list given by user if specified
-        # if flag_scan_list:
-        #     with open(plist) as f:
-        #         ranges = f.readlines()
-        #         for r in ranges:
-        #             common_net.append(r.strip())
+                    # Check sleep time suppression
+                    if flag_supress_sleep is False:
+                        time.sleep(flag_sleep_time / 1000)
+                        # Sleep time
+                    else:
+                        time.sleep(0.1)
+            else:
+                j = 0
+                while fast_ips[j] is not None:
+                    testip = f'{sip}.{fast_ips[j]}'
+                    forge_arp(fromip, testip, disp)
+                    j += 1
 
-        # # Read MAC list given by user if specified
-        # if mlist:
-        #     with open(mlist) as f:
-        #         macs = f.readlines()
-        #         for m in macs:
-        #             common_net.append(m.strip())
+                    # Check sleep time suppression
+                    if flag_supress_sleep is False:
+                        time.sleep(flag_sleep_time / 1000)
+                        # Sleep time
+                    else:
+                        time.sleep(0.1)
 
-        # # Initialize data layers and screen
-        # inject_init(self.dataos['interface'])
-        # _data_reply.init()
-        # _data_request.init()
-        # _data_unique.init()
-        # init_screen()
+            if flag_supress_sleep is True:
+                if flag_sleep_time != 99:
+                    time.sleep(flag_sleep_time / 1000)
+                    # Sleep time
+                else:
+                    time.sleep(0.1)
 
-        # # Initialize mutex
-        # data_access = threading.Lock()
+    def scan_range(self, interface, sip):
+        delimiters = ".,/"
+        tnet = sip
+        a, b, c, d, *aux = tnet.split(delimiters)
 
-        # # If no mode was selected, enable auto scan
-        # if not (flag_scan_range and self.flag_passive_mode):
-        #     flag_auto_scan = True
+        if aux:
+            e = int(aux[0])
+        else:
+            e = 24
 
-        # # Start the execution
-        # if self.parsable_output:
-        #     if not no_parsable_header:
-        #         pass
-        #         # _data_unique.print_simple_header()
-        # else:
-        #     retsys = os.system("clear")
-        #     if retsys != 0:
-        #         print("clear system call failed")
-        #     screen = threading.Thread(target=screen_refresh)
-        #     keys = threading.Thread(target=keys_thread)
-        #     screen.start()
-        #     keys.start()
+        if a or b or c or d is None:
+            e = -1
+        else:
+            for val in [a, b, c, d]:
+                try:
+                    k = int(val)
+                    if k < 0 or k > 255:
+                        e = -1
+                        break
+                except ValueError:
+                    e = -1
+                    break
 
-    def print_interface_details(ifaces):
-        for iface_name, iface_info in ifaces.items():
-            print(f'\nInterface: {iface_name}')
-            print(f'Description: {iface_info.description}')
-            print(f'IP Address: {iface_info.ip}')
-            print(f'MAC Address: {iface_info.mac}')
-            print(f'Broadcast: {iface_info.broadcast}')
+        # Scan class C network
+        if e == 24:
+            net = f'{a}.{b}.{c}'
+            current_network = f'{net}.0/{e}'
+            self.scan_net(interface, net)
+        elif e == 16:
+            for x in range(0, 256):
+                net = f'{a}.{b}.{x}'
+                current_network = f'{a}.{b}.{x}.0/{e}'
+                self.scan_net(interface, net)
+                x += 1
+        elif e == 8:
+            for x in range(0, 256):
+                for y in range(0, 256):
+                    net = f'{a}.{x}.{y}'
+                    current_network = f'{a}.{x}.{y}.0/{e}'
+                    self.scan_net(interface, net)
+                    y += 1
+                x += 1
+        else:
+            print('ERROR: Network range must be 0.0.0.0/8, /16, or /24\n\n')
+            # signalhandler(0)
+            exit(0)
 
 
 def keys_thread():
     while 1 == 1:
-        # read_key()
+        read_key()
         pass
 
 
 def screen_refresh():
     while 1 == 1:
-        # print_screen()
+        print_screen()
         time.sleep(1)
-
-
-def parsable_screen_refresh():
-    pass
 
 
 def main():
