@@ -46,7 +46,8 @@ class Netwatch:
         self.run()
 
     def run(self) -> None:
-        choice = input(self.netwatchPrompt)
+        choice = input(self.netwatchPrompt).strip()
+        choice = self.commandHandler.autocomplete(choice)
         match choice:  # .strip()
             case "0":
                 print(AUTOATTACK_LOGO)
@@ -123,7 +124,9 @@ class InformationGathering:
         self.run()
 
     def run(self) -> None:
-        choiceInfo = input(self.netwatchPrompt)
+        choiceInfo = input(self.netwatchPrompt).strip()
+        choiceInfo = self.commandHandler.autocomplete(choiceInfo)
+
         match choiceInfo:  # .strip()
             case "1":
                 print(NMAP_LOGO)

@@ -1,15 +1,32 @@
+import readline
 from config import ConfigManager
-
+from logger import Logger
 from .progutils import Program
 from .updatehandler import UpdateHandler
 from .tablecreator import TableCreator
-from logger import Logger
+from .trie import Trie
 
 
-class CommandHandler:
+class BaseCommandHandler:
+    def __init__(self):
+        self.commands = {}
+        readline.parse_and_bind("tab: complete")
+        readline.set_completer(self.complete)
+
+    # This method is used for tab completion with the readline library
+    def complete(self, text, state) -> str:
+        completions = self.command_trie.starts_with(text)
+        if state < len(completions):
+            return completions[state]
+        else:
+            return None
+
+
+class CommandHandler(BaseCommandHandler):
     """A class for handling commands from the user"""
 
     def __init__(self):
+        super().__init__()
         self.commands = {
             "help": self.help,
             "?": self.help,
@@ -28,12 +45,27 @@ class CommandHandler:
         self.tableCreator = TableCreator()
         self.logger = Logger()
 
+        self.command_trie = Trie()
+        for command in self.commands.keys():
+            self.command_trie.insert(command)
+
     def execute(self, command: str, module=None) -> None:
         args = command.split()
         if args[0] in self.commands:
             self.commands[args[0]](*args[1:], module=module)
         else:
             self.logger.warning("Unknown input. Type '?' for help.")
+
+    def autocomplete(self, command: str) -> str:
+        completions = self.command_trie.starts_with(command)
+        if len(completions) == 1:
+            return completions[0]
+        elif len(completions) > 1:
+            # If there are multiple completions, you could return the first one,
+            # or you could implement some logic to let the user choose from the completions.
+            return completions[0]
+        else:
+            return command
 
     def help(self, *args, module=None) -> None:
         self.tableCreator.displayTableFromFile(module)

@@ -94,11 +94,14 @@ class Color:
     IMPORTANT = '\33[35m'
     NOTICE = '\033[33m'
     BLUE = '\033[34m'  # [1;34m]
+    DARK_BLUE = '\x1b[38;5;20m'
     OKBLUE = '\033[94m'
     GREEN = '\033[32m'  # [1;32m]
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
     RED = '\033[91m'
+    DARK_RED = '\x1b[38;5;1m'
+    DARK_PURPLE = '\x1b[38;5;92m'
     END = '\033[0m'
     UNDERLINE = '\033[4m'
     BOLD = '\033[1m'
