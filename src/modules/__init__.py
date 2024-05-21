@@ -6,4 +6,5 @@ from .updatehandler import *
 from .tablecreator import *
 from .sites import *
 from .nmap import *
+from .commandhandler import *
 from .sagemode import Sagemode
