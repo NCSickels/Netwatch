@@ -16,11 +16,6 @@
 import sys
 import os
 import subprocess
-import threading
-import requests
-import random
-import datetime
-import glob
 from time import gmtime, strftime, sleep
 from bs4 import BeautifulSoup
 

@@ -1,6 +1,9 @@
-from .progutils import *
-from .updatehandler import *
-from .tablecreator import *
+from config import ConfigManager
+
+from .progutils import Program
+from .updatehandler import UpdateHandler
+from .tablecreator import TableCreator
+from logger import Logger
 
 
 class CommandHandler:
@@ -48,7 +51,6 @@ class CommandHandler:
             "general_config", "scandir"))
         self.program.clean(
             self.configManager.getPath("sagemode", "datadir"))
-        # self.completed()
 
     def print_path(self, *args, module=None) -> None:
         self.program.printPath(module)

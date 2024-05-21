@@ -4,9 +4,9 @@ import os
 import subprocess
 
 from rich.console import Console
-from config import *
+from config import ConfigManager
 from modules.termutils import Color
-from logger import *
+from logger import Logger
 
 
 class UpdateHandler:

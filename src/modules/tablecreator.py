@@ -3,7 +3,7 @@ import json
 import tabulate
 from rich.console import Console
 from rich.table import Table
-from config import *
+from config import settings
 
 
 class TableCreator:

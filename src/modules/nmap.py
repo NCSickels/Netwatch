@@ -23,10 +23,12 @@ from IPy import IP
 from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
-from modules.termutils import *
-from modules.packagemanager import *
-from logger import *
-from config import *
+from modules.termutils import ColorConfig, LamePrint, TextOutput, constants
+from modules.packagemanager import PackageManager
+from logger import Logger
+from config import settings
+
+# TODO: Add support for nmap passthrough rather than hard coded commands
 
 
 class Nmap:

@@ -1,5 +1,5 @@
 import subprocess
-from logger import *
+from logger import Logger
 
 
 class PackageManager:

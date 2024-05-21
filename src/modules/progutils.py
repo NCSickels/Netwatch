@@ -1,7 +1,9 @@
-from config import *
-from .updatehandler import *
-from .tablecreator import *
+from config import ConfigManager
+from logger import Logger
+from .updatehandler import UpdateHandler
 from .logos import NETWATCH_LOGO
+from .termutils import Color
+
 
 import sys
 import os
@@ -16,7 +18,6 @@ class Program:
     def __init__(self):
         self.configManager = ConfigManager()
         self.updateHandler = UpdateHandler()
-        self.tableCreator = TableCreator()
         self.logger = Logger()
         self.configFile = os.path.dirname(
             os.path.abspath(__file__)) + '/netwatch.ini'
