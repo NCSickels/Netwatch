@@ -7,4 +7,6 @@ from .tablecreator import *
 from .sites import *
 from .nmap import *
 from .commandhandler import *
+from .progutils import *
+from .logos import *
 from .sagemode import Sagemode

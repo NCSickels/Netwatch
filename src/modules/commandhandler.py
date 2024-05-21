@@ -1,4 +1,4 @@
-from netwatch import Program
+from .progutils import *
 from .updatehandler import *
 from .tablecreator import *
 

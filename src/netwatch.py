@@ -30,156 +30,9 @@ from logger import *
 from themes import *
 
 
-# Utility Classes
-class Program:
-    """A class for main program functions"""
-
-    def __init__(self):
-        self.updateHandler = UpdateHandler()
-        self.configManager = ConfigManager()
-        self.tableCreator = TableCreator()
-        self.logger = Logger()
-        self.configFile = os.path.dirname(
-            os.path.abspath(__file__)) + '/netwatch.ini'
-
-    def start(self) -> None:
-        self.clearScreen()
-        print(Netwatch.netwatchLogo)
-        self.updateHandler.checkForUpdate()
-        self.createFolders([("general_config", "tooldir"),
-                            ("general_config", "scandir"),
-                            ("sagemode", "datadir")])
-
-    def createFolders(self, paths: any) -> None:
-        for section, option in paths:
-            path = self.configManager.getPath(section, option)
-            if not os.path.isdir(path):
-                os.makedirs(path)
-
-    def end(self) -> None:
-        print("\n Bye.\n")
-        sleep(0.25)
-        sys.exit()
-
-    def clean(self, path: str) -> None:
-        _full_path = os.path.basename(os.path.normpath(path))
-        self.logger.info('Cleaning directories...')
-        if os.path.exists(path):
-            deleted_files = False
-            if os.path.exists(path):
-                for root, dirs, files in os.walk(path, topdown=False):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        try:
-                            os.remove(file_path)
-                            self.logger.info(f'Deleted file: {file_path}')
-                            deleted_files = True
-                        except Exception as e:
-                            print(e)
-                    for dir in dirs:
-                        dir_path = os.path.join(root, dir)
-                        try:
-                            os.rmdir(dir_path)
-                            deleted_files = True
-                        except Exception as e:
-                            print(e)
-                # os.rmdir(path)
-                if deleted_files:
-                    self.logger.info(
-                        f'Directory:{_full_path} successfully cleaned.')
-                else:
-                    self.logger.info(f'No files found in {_full_path}.')
-            else:
-                raise FileNotFoundError(
-                    f'{Color.RED}{path} directory not found!{Color.END}\n')
-        else:
-            raise FileNotFoundError(
-                f'{Color.RED}Path {path} does not exist!{Color.END}\n')
-
-    def printPath(self, module: str) -> None:
-        _split_module = module.split("/")
-        if (len(_split_module) <= 1):  # if module is in root directory (Netwatch/)
-            print(f'\n[*] Module -> {_split_module[0]}')
-            print(f'[*] Path   -> {module+"/"}\n')
-            # self.logger.info(
-            #     f'Module -> {_split_module[0]}\n')
-            # self.logger.info(f'Path   -> {module+"/"}')
-        else:
-            print(f'\n[*] Module -> {_split_module[len(_split_module)-1]}')
-            print(f'[*] Path   -> {module+"/"}\n')
-            # self.logger.info(
-            #     f'\nModule -> {_split_module[len(_split_module)-1]}')
-            # self.logger.info(f'Path   -> {module+"/"}')
-
-    def clearScreen(self) -> None:
-        print("\033[H\033[J", end="")
-        # os.system('cls' if os.name == 'nt' else 'clear')
-
-    def findFiles(self, file_type: any, directory='/') -> str:
-        self.logger.info(f'Searching for {file_type} files...')
-        try:
-            search_path = os.path.join(directory, '**/*'+file_type)
-            files = glob.glob(search_path, recursive=True)
-            if not files:
-                self.logger.warning(f'No {file_type} files found.')
-                return
-            for filename in files:
-                self.logger.info(f'Found file {filename}')
-                response = input("Use this file? [y/n]: ").lower()
-                if response in ["y", "yes"]:
-                    self.configManager.set(
-                        "general_config", "ovpn_path", filename)
-                    self.logging.info(f'Selected file {filename}')
-                    return filename
-            self.logger.warning(
-                (f'No other {file_type} files found. Please manually add path to .ini file.'))
-        except Exception as e:
-            self.logger.error(f'An error occurred: {e}')
-            self.logger.warning(f'No {file_type} files found!')
-
-    def __del__(self):
-        # sys.stdout = self.original_stdout
-        # self.log_file.close()
-        pass
-
-
 # Start Menu Classes
 class Netwatch:
     """A menu class for Netwatch tools"""
-
-    version = ConfigManager().get("general_config", "__version__")
-    netwatchLogo = f'''
-                    :!?Y5PGGPP5!:             .!JPGBGPY7^.
-                  ..J#@#Y!75#@@@&P7:     .~7?5#@@&BY77YG#BY:
-                  .^7~^.    .!P&@@@&BJ: .7B&@@@@G7.     :!Y!
-                               :?G&@&Y: :5@&#BJ^       ..
-                   !J!.   .:~!~^  :~^.   .^^:..:~!!~:  ..YJ.
-                   7B~ .~5#&@@@&BJ:  .:  .. .JB&@@@@&G~  ~#!
-                  .77. !#@@@@@@@@&7  ?Y  J? ^B@@@@&&&@B: :!:
-                     .^JY?!~~!?PB!   5J  ?P. !BP?!^::^!!^
-                    ::.         .^.~YJ:  .?Y!~:         .:.
-                 .^JG~           :5?:  ..  .75^          ?G?:
-               .:J&@Y            !Y   ....   ?~          :B@B~.
-               ^5@@@G^       .:!J5G57.   .~YGG5?!:.     .^G@@@?
-              .J&@@@@#57~~!YBB&@@@@@@BJ7JG@@@@@@@&BPJ775B#@@@&P.
-               :#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B7
-               .J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@GJ:
-                .!P#&&&@@@@@@@@@&&&&@@@@@@@@&#&&@@@@@@@@@&P?^.
-                   .:^^~!!!!YB@&&G5J?7!!?JYJ?JPPPPJ777!~~^.
-                             :Y#@@@@&#BBBB#&@@&#J^
-                               :75B&&&&@@&&&BY!:.
-                                  .:::^^^^:::.
-===================================================================================
-       ███╗   ██╗███████╗████████╗██╗    ██╗ █████╗ ████████╗ ██████╗██╗  ██╗
-       ████╗  ██║██╔════╝╚══██╔══╝██║    ██║██╔══██╗╚══██╔══╝██╔════╝██║  ██║
-       ██╔██╗ ██║█████╗     ██║   ██║ █╗ ██║███████║   ██║   ██║     ███████║
-       ██║╚██╗██║██╔══╝     ██║   ██║███╗██║██╔══██║   ██║   ██║     ██╔══██║
-       ██║ ╚████║███████╗   ██║   ╚███╔███╔╝██║  ██║   ██║   ╚██████╗██║  ██║
-       ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝╚═╝  ╚═╝
-===================================================================================
-    v{version}                                      Noah Sickels (@NCSickels)
-===================================================================================
-'''
 
     def __init__(self):
         self.program = Program()
@@ -201,10 +54,10 @@ class Netwatch:
         choice = input(self.netwatchPrompt)
         match choice:  # .strip()
             case "0":
-                print(AutoAttack.menuLogo)
+                print(AUTOATTACK_LOGO)
                 AutoAttack()
             case "1":
-                print(InformationGathering.menuLogo)
+                print(INFO_LOGO)
                 InformationGathering()
             case "?" | "help":
                 [self.commandHandler.execute(choice, module)
@@ -229,23 +82,6 @@ class Netwatch:
 
 class AutoAttack:
     """A menu class for the Automated Attack Tool for HTB, TryHackMe, etc."""
-
-    menuLogo = '''
-===================================================================================
-                    █████╗ ██╗   ██╗████████╗ ██████╗
-                   ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗
-                   ███████║██║   ██║   ██║   ██║   ██║
-                   ██╔══██║██║   ██║   ██║   ██║   ██║
-                   ██║  ██║╚██████╔╝   ██║   ╚██████╔╝
-                   ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝
-             █████╗ ████████╗████████╗ █████╗  ██████╗██╗  ██╗
-            ██╔══██╗╚══██╔══╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-            ███████║   ██║      ██║   ███████║██║     █████╔╝
-            ██╔══██║   ██║      ██║   ██╔══██║██║     ██╔═██╗
-            ██║  ██║   ██║      ██║   ██║  ██║╚██████╗██║  ██╗
-            ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
-===================================================================================
-'''
 
     def __init__(self):
         self.program = Program()
@@ -280,17 +116,6 @@ class AutoAttack:
 class InformationGathering:
     """A menu class for Information Gathering tools"""
 
-    menuLogo = '''
-===================================================================================
-                        ██╗███╗   ██╗███████╗ ██████╗
-                        ██║████╗  ██║██╔════╝██╔═══██╗
-                        ██║██╔██╗ ██║█████╗  ██║   ██║
-                        ██║██║╚██╗██║██╔══╝  ██║   ██║
-                        ██║██║ ╚████║██║     ╚██████╔╝
-                        ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝
-===================================================================================
-    '''
-
     def __init__(self):
         self.program = Program()
         self.configManager = ConfigManager()
@@ -306,10 +131,10 @@ class InformationGathering:
         choiceInfo = input(self.netwatchPrompt)
         match choiceInfo:  # .strip()
             case "1":
-                print(NmapMenu.nmapLogo)
+                print(NMAP_LOGO)
                 NmapMenu()
             case "2":
-                print(PyDiscover.pydiscoverLogoText)
+                print(PYDISCOVER_LOGO)
                 PyDiscover()
             case "3":
                 SagemodeMenu()
@@ -345,17 +170,6 @@ class InformationGathering:
 # Bring user to main prompt first or ask for target IP first as currently implemented?
 class NmapMenu:
     """A Netwatch interface for using Nmap."""
-
-    nmapLogo = '''
-===================================================================================
-                        ███╗   ██╗███╗   ███╗ █████╗ ██████╗
-                        ████╗  ██║████╗ ████║██╔══██╗██╔══██╗
-                        ██╔██╗ ██║██╔████╔██║███████║██████╔╝
-                        ██║╚██╗██║██║╚██╔╝██║██╔══██║██╔═══╝
-                        ██║ ╚████║██║ ╚═╝ ██║██║  ██║██║
-                        ╚═╝  ╚═══╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝
-===================================================================================
-'''
 
     def __init__(self):
         self.program = Program()
@@ -470,16 +284,6 @@ class NmapMenu:
 class PyDiscover:
     """A Python network discovery tool based on Netdiscover."""
 
-    pydiscoverLogoText = '''
-
-██████╗ ██╗   ██╗██████╗ ██╗███████╗ ██████╗ ██████╗ ██╗   ██╗███████╗██████╗
-██╔══██╗╚██╗ ██╔╝██╔══██╗██║██╔════╝██╔════╝██╔═══██╗██║   ██║██╔════╝██╔══██╗
-██████╔╝ ╚████╔╝ ██║  ██║██║███████╗██║     ██║   ██║██║   ██║█████╗  ██████╔╝
-██╔═══╝   ╚██╔╝  ██║  ██║██║╚════██║██║     ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗
-██║        ██║   ██████╔╝██║███████║╚██████╗╚██████╔╝ ╚████╔╝ ███████╗██║  ██║
-╚═╝        ╚═╝   ╚═════╝ ╚═╝╚══════╝ ╚═════╝ ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝
-'''
-
     def __init__(self) -> None:
         pass
 
@@ -487,39 +291,13 @@ class PyDiscover:
 class SagemodeMenu:
     """A Netwatch interface for using Sagemode - an OSINT tool for finding usernames"""
 
-    sagemodeLogoText = '''
-
-███████╗ █████╗  ██████╗ ███████╗███╗   ███╗ ██████╗ ██████╗ ███████╗
-██╔════╝██╔══██╗██╔════╝ ██╔════╝████╗ ████║██╔═══██╗██╔══██╗██╔════╝
-███████╗███████║██║  ███╗█████╗  ██╔████╔██║██║   ██║██║  ██║█████╗
-╚════██║██╔══██║██║   ██║██╔══╝  ██║╚██╔╝██║██║   ██║██║  ██║██╔══╝
-███████║██║  ██║╚██████╔╝███████╗██║ ╚═╝ ██║╚██████╔╝██████╔╝███████╗
-╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝     ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
-'''
-    sagemodeLogo = '''
-                         @@@%%%%%@@@
-                     @%##`````@`````##&@
-                   @##````````@````````##@
-                 @%#`````````@@@`````````#%@
-                 &#``````````@@@``````````#&
-                @#````@@@@@@@@@@@@@@@@@````#@
-                @%@``@@@@@@@@@@@@@@@@@@@``@%@
-                @%@```@@@@@@@@@@@@@@@@@```#%@
-                @@# `````````@@@``````````#@@
-                 &#``````````@@@``````````#&
-                  @##`````````@`````````##@
-                    @##```````@``````###@
-                       @@#````@````#@@
-                         @@@%%%%%@@@
-    '''
-
     def __init__(self):
         self.sagemode = Sagemode()
         self.run()
 
     def run(self):
-        self.sagemode.start(self.sagemodeLogo,
-                            self.sagemodeLogoText, delay=0.001)
+        self.sagemode.start(SAGEMODE_LOGO,
+                            SAGEMODE_LOGO_TEXT, delay=0.001)
 
 
 def main():
