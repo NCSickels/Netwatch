@@ -8,10 +8,11 @@ import tabulate
 from rich.console import Console
 from typing import List
 
-from modules.nmap import NmapOutput, NmapService, NmapHost, NmapPort, NmapFilters, NmapHostFilter, NmapHelpers
+from modules.nmap import NmapFilters, NmapHostFilter, NmapHelpers
 from modules import constants
-from config import parsersettings as settings
-from modules.termutils import ColorConfig, LamePrint, Color, Notify, NotifyNmap, TextOutput, TextOutputEntry
+from config import settings as settings
+from modules.termutils import ColorConfig, LamePrint, Color, TextOutput, TextOutputEntry
+from logger import *
 
 
 class TerminalBase(cmd2.Cmd):
@@ -22,7 +23,7 @@ class TerminalBase(cmd2.Cmd):
             elif (line.output == constants.TEXT_ERROR):
                 self.perror(line.getText())
             # elif (not self.quiet) and (not self.redirecting) and settings.printHumanFriendlyText:
-            elif (not self.quiet) and settings.printHumanFriendlyText:
+            elif (not self.quiet) and settings.PARSER_SETTINGS.printHumanFriendlyText:
                 if (line.output == constants.TEXT_FRIENDLY):
                     self.pfeedback(line.getText())
                 elif (line.output == constants.TEXT_SUCCESS):
@@ -102,7 +103,6 @@ class NmapTerminal(TerminalBase):
         self.colorConfig = ColorConfig()
         self.lamePrint = LamePrint()
         self.color = Color()
-        self.notify = Notify()
         self.prompt = '\n\033[4m\033[1;30mnmap-parse\033[1;30m\033[0m\033[1;30m ~#\033[0;m '
 
         cmd2.utils.categorize(self.do_set, constants.CMD_CAT_FILTER)
@@ -208,7 +208,7 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_CORE)
     def do_exit(self, inp: str) -> bool:
         '''Exit the interactive prompt'''
-        self.notify.endProgram()
+        print("\nBye.\n")
         return True
 
     @cmd2.with_category(constants.CMD_CAT_CORE)
@@ -377,7 +377,7 @@ class NmapTerminal(TerminalBase):
                 for file in self.nmapOutput.FilesImported:
                     self.poutput(file)
         else:
-            self.perror("No files were imported successfully")
+            self.perror("No files were imported successfully.")
         print()
 
         if (len(self.nmapOutput.FilesFailedToImport) > 0):
@@ -388,7 +388,7 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_scanned_hosts(self, inp: str) -> None:
         '''List all hosts scanned'''
-        self.pfeedback(self.lamePrint.getHeader('Scanned hosts'))
+        self.pfeedback(self.lamePrint.getHeader('Scanned Hosts'))
 
         filters = self.getFilters()
         filters.onlyAlive = False
@@ -404,7 +404,7 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_alive_hosts(self, inp: str) -> None:
         '''List alive hosts'''
-        self.pfeedback(self.lamePrint.getHeader('Alive hosts'))
+        self.pfeedback(self.lamePrint.getHeader('Alive Hosts'))
         for ip in self.nmapOutput.getAliveHosts(self.getFilters()):
             self.poutput(ip)
 
@@ -468,33 +468,33 @@ class NmapTerminal(TerminalBase):
 
     def printRandomBanner(self) -> None:
         banners = ["""
-          ███╗   ██╗███╗   ███╗ █████╗ ██████╗    
-          ████╗  ██║████╗ ████║██╔══██╗██╔══██╗   
-          ██╔██╗ ██║██╔████╔██║███████║██████╔╝   
-          ██║╚██╗██║██║╚██╔╝██║██╔══██║██╔═══╝    
-          ██║ ╚████║██║ ╚═╝ ██║██║  ██║██║        
-          ╚═╝  ╚═══╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝        
+          ███╗   ██╗███╗   ███╗ █████╗ ██████╗
+          ████╗  ██║████╗ ████║██╔══██╗██╔══██╗
+          ██╔██╗ ██║██╔████╔██║███████║██████╔╝
+          ██║╚██╗██║██║╚██╔╝██║██╔══██║██╔═══╝
+          ██║ ╚████║██║ ╚═╝ ██║██║  ██║██║
+          ╚═╝  ╚═══╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝
         ██████╗  █████╗ ██████╗ ███████╗███████╗
         ██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝
-        ██████╔╝███████║██████╔╝███████╗█████╗  
-        ██╔═══╝ ██╔══██║██╔══██╗╚════██║██╔══╝  
+        ██████╔╝███████║██████╔╝███████╗█████╗
+        ██╔═══╝ ██╔══██║██╔══██╗╚════██║██╔══╝
         ██║     ██║  ██║██║  ██║███████║███████╗
         ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝
                         """, """
-             /$$   /$$ /$$      /$$  /$$$$$$  /$$$$$$$        
-            | $$$ | $$| $$$    /$$$ /$$__  $$| $$__  $$       
-            | $$$$| $$| $$$$  /$$$$| $$  \ $$| $$  \ $$       
-            | $$ $$ $$| $$ $$/$$ $$| $$$$$$$$| $$$$$$$/       
-            | $$  $$$$| $$  $$$| $$| $$__  $$| $$____/        
-            | $$\  $$$| $$\  $ | $$| $$  | $$| $$             
-            | $$ \  $$| $$ \/  | $$| $$  | $$| $$             
-            |__/  \__/|__/     |__/|__/  |__/|__/             
+             /$$   /$$ /$$      /$$  /$$$$$$  /$$$$$$$
+            | $$$ | $$| $$$    /$$$ /$$__  $$| $$__  $$
+            | $$$$| $$| $$$$  /$$$$| $$  \ $$| $$  \ $$
+            | $$ $$ $$| $$ $$/$$ $$| $$$$$$$$| $$$$$$$/
+            | $$  $$$$| $$  $$$| $$| $$__  $$| $$____/
+            | $$\  $$$| $$\  $ | $$| $$  | $$| $$
+            | $$ \  $$| $$ \/  | $$| $$  | $$| $$
+            |__/  \__/|__/     |__/|__/  |__/|__/
          /$$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$  /$$$$$$$$
         | $$__  $$ /$$__  $$| $$__  $$ /$$__  $$| $$_____/
-        | $$  \ $$| $$  \ $$| $$  \ $$| $$  \__/| $$      
-        | $$$$$$$/| $$$$$$$$| $$$$$$$/|  $$$$$$ | $$$$$   
-        | $$____/ | $$__  $$| $$__  $$ \____  $$| $$__/   
-        | $$      | $$  | $$| $$  \ $$ /$$  \ $$| $$      
+        | $$  \ $$| $$  \ $$| $$  \ $$| $$  \__/| $$
+        | $$$$$$$/| $$$$$$$$| $$$$$$$/|  $$$$$$ | $$$$$
+        | $$____/ | $$__  $$| $$__  $$ \____  $$| $$__/
+        | $$      | $$  | $$| $$  \ $$ /$$  \ $$| $$
         | $$      | $$  | $$| $$  | $$|  $$$$$$/| $$$$$$$$
         |__/      |__/  |__/|__/  |__/ \______/ |________/
                         """]

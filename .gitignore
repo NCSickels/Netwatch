@@ -166,7 +166,16 @@ src/accessories.py
 testRequirements.txt
 netwatchLogos.yml
 nmapHelpMenuData.json
-sagemode.py
 sagemode_old.py
 src/Nmap update utility.py
 src/colorTesting.py
+src/chat_server.py
+src/client.py
+TODO.md
+scripts/remove_dev_comments.py
+*.un~
+examples/*.txt
+.lh
+.history
+requirements-dev.txt
+src/modules/notify-DEPRECATED.py
