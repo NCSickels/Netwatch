@@ -28,7 +28,7 @@ class UpdateHandler:
 
             for file_name in file_names:
                 url = (
-                    f'https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/{file_name}')
+                    f'https://raw.githubusercontent.com/NCSickels/Netwatch/main/src/config/{file_name}')
                 r = requests.get(url)
                 if r.status_code == 200:
                     matches = re.findall('__version__\s*=\s*([\d.]+)', r.text)

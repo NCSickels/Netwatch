@@ -19,8 +19,6 @@ class Program:
         self.configManager = ConfigManager()
         self.updateHandler = UpdateHandler()
         self.logger = Logger()
-        self.configFile = os.path.dirname(
-            os.path.abspath(__file__)) + '/netwatch.ini'
         self.version = ConfigManager().get("general_config", "__version__")
 
     def start(self) -> None:

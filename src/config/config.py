@@ -26,6 +26,9 @@ class ConfigManager:
                 os.path.abspath(__file__)) + '/'
         return cls._instance
 
+    def getConfigFile(self) -> str:
+        return self.configFile
+
     def get(self, section: any, option: any) -> str:
         return self.config.get(section, option)
 
@@ -90,10 +93,10 @@ def read_entry(section_name: str, entry: str) -> ConfigResponse:
 # Update
 def update_entry(section_name: str, entry: str, value: str) -> None:
     config = configparser.ConfigParser()
-    config.read('./config.ini')
+    config.read('./netwatch.ini')
     config.set(section_name, entry, value)
 
-    with open('./config.ini', mode='w') as configfile:
+    with open('./netwatch.ini', mode='w') as configfile:
         config.write(configfile)
 
 
@@ -116,5 +119,5 @@ def create_default_config_file():
         'critical': 'red [bold]'
     }
 
-    with open('./config.ini', mode='w') as configfile:
+    with open('./netwatch.ini', mode='w') as configfile:
         config.write(configfile)
