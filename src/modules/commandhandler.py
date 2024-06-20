@@ -54,7 +54,8 @@ class CommandHandler(BaseCommandHandler):
         if args[0] in self.commands:
             self.commands[args[0]](*args[1:], module=module)
         else:
-            self.logger.warning("Unknown input. Type '?' for help.")
+            return args[0]
+            # self.logger.warning("Unknown input. Type '?' for help.")
 
     def autocomplete(self, command: str) -> str:
         completions = self.command_trie.starts_with(command)
@@ -68,7 +69,11 @@ class CommandHandler(BaseCommandHandler):
             return command
 
     def help(self, *args, module=None) -> None:
-        self.tableCreator.displayTableFromFile(module)
+        if module:
+            self.tableCreator.displayTableFromFile(module)
+        else:
+            [self.tableCreator.displayTableFromFile(
+                section) for section in ["Main", "Core"]]
 
     def update(self, *args, module=None) -> None:
         self.updateHandler.checkForUpdate()

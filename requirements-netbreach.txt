@@ -1,0 +1,6 @@
+urllib3
+argparse
+tabulate
+rich
+logging
+requests

@@ -92,3 +92,4 @@ webargs==8.4.0
 webencodings==0.5.1
 websockets==11.0.3
 yarl==1.9.2
+argparse

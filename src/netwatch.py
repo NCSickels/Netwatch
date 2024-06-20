@@ -17,7 +17,6 @@ import sys
 import os
 import subprocess
 from time import gmtime, strftime, sleep
-from bs4 import BeautifulSoup
 
 # Custom Imports
 from modules import *
@@ -48,32 +47,19 @@ class Netwatch:
     def run(self) -> None:
         choice = input(self.netwatchPrompt).strip()
         choice = self.commandHandler.autocomplete(choice)
-        match choice:  # .strip()
+
+        if choice:
+            self.commandHandler.execute(choice)
+
+        match choice:
             case "0":
                 print(AUTOATTACK_LOGO)
                 AutoAttack()
             case "1":
                 print(INFO_LOGO)
                 InformationGathering()
-            case "?" | "help":
-                [self.commandHandler.execute(choice, module)
-                    for module in ["Main", "Core"]]
-            case "update":
-                self.commandHandler.execute(choice)
-            case "\r" | "\n" | "" | " " | "back":
-                pass
-            case "clear" | "cls":
-                self.commandHandler.execute(choice)
-            case "clean":
-                self.commandHandler.execute(choice)
-            case "path" | "pwd":
-                self.commandHandler.execute(choice, "Netwatch")
-            case "exit" | "quit" | "end":
-                self.commandHandler.execute(choice)
             case _:
-                self.logger.warning("Unknown input. Type '?' for help.")
                 self.__init__()
-        self.__init__()
 
 
 class AutoAttack:

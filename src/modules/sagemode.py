@@ -9,6 +9,7 @@ from modules import sites, soft404_indicators, user_agents
 
 class Sagemode:
     """Sagemode Jutsu: Simple and Effective OSINT Username Search Tool"""
+    # Author: @senran101604, https://github.com/senran101604/sagemode
 
     def __init__(self):
         self.colorConfig = ColorConfig()
