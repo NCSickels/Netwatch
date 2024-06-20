@@ -71,7 +71,7 @@ class ParserProgram:
                             action="store_true", help="Print version info")
         # (options, args) = parser.parse_args()
         args = parser.parse_args()
-        # Now you can access the arguments using args.ports, args.svcFilter, etc.
+        # Access arguments using args.port, args.service, etc.
 
         if (args.version):
             print(f'Netwatch Nmap Data Parser Version ' +

@@ -62,8 +62,6 @@ class CommandHandler(BaseCommandHandler):
         if len(completions) == 1:
             return completions[0]
         elif len(completions) > 1:
-            # If there are multiple completions, you could return the first one,
-            # or you could implement some logic to let the user choose from the completions.
             return completions[0]
         else:
             return command
