@@ -1,7 +1,7 @@
 from config import ConfigManager
 from logger import Logger
 from .updatehandler import UpdateHandler
-from .logos import NETWATCH_LOGO
+from .banners import print_banner
 from .termutils import Color
 
 
@@ -23,7 +23,8 @@ class Program:
 
     def start(self) -> None:
         self.clear_screen()
-        print(NETWATCH_LOGO.format(version=self.version))
+        print_banner()
+        # print(NETWATCH_BANNER.format(version=self.version))
         self.update_handler.check_update()
         self.create_folders([("general_config", "tooldir"),
                             ("general_config", "scandir"),

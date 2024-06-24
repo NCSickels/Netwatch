@@ -21,8 +21,9 @@ import requests
 import argparse
 from tabulate import tabulate
 from requests import ConnectionError
-from modules.logos import NETBREACH_LOGO
+from modules.banners import NETBREACH_BANNER
 from logger import Logger
+from config import ConfigManager
 
 urllib3.disable_warnings()
 
@@ -30,6 +31,13 @@ urllib3.disable_warnings()
 class Netbreach:
     def __init__(self):
         self.logger = Logger()
+        self.version = ConfigManager().get("general_config", "__version__")
+
+    def ascii_banner(self):
+
+    def start(self):
+        pass
+        # print(NETBREACH_BANNER.format(version=self.version), end="\n")
 
     def find_leaks_proxynova(self, email, proxy, number):
         url = f"https://api.proxynova.com/comb?query={email}"
@@ -149,7 +157,7 @@ class Netbreach:
 
 
 if __name__ == '__main__':
-    print(NETBREACH_LOGO)
+    print(NETBREACH_BANNER)
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--database", default="ProxyNova",
                         help="Database used for the search (ProxyNova or LocalFile)")

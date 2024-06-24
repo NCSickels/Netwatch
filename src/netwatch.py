@@ -55,10 +55,10 @@ class Netwatch:
 
         match choice:
             case "0":
-                print(AUTOATTACK_LOGO)
+                print(AUTOATTACK_BANNER)
                 AutoAttack()
             case "1":
-                print(INFO_LOGO)
+                print(INFO_BANNER)
                 InformationGathering()
             case _:
                 self.__init__()
@@ -117,10 +117,10 @@ class InformationGathering:
 
         match choice_info:  # .strip()
             case "1":
-                print(NMAP_LOGO)
+                print(NMAP_BANNER)
                 NmapMenu()
             case "2":
-                print(PYDISCOVER_LOGO)
+                print(PYDISCOVER_BANNER)
                 PyDiscover()
             case "3":
                 SagemodeMenu()
@@ -193,7 +193,7 @@ class NmapMenu:
             Netwatch()
 
     def menu(self) -> None:
-        print(NMAP_LOGO)
+        print(NMAP_BANNER)
         self.logger.info(f'Scan Path -> {self.scan_path}')
         try:
             choice_nmap = input(self.netwatch_prompt)
@@ -282,8 +282,8 @@ class SagemodeMenu:
         self.run()
 
     def run(self):
-        self.sagemode.start(SAGEMODE_LOGO,
-                            SAGEMODE_LOGO_TEXT, delay=0.001)
+        self.sagemode.start(SAGEMODE_BANNER,
+                            SAGEMODE_BANNER_TEXT, delay=0.001)
 
 
 def main():

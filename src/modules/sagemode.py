@@ -2,10 +2,11 @@ import threading
 from modules import *
 from bs4 import BeautifulSoup
 from rich.console import Console
+from rich import print as rprint
 import datetime
 import random
 from modules import sites, soft404_indicators, user_agents
-from modules.logos import SAGEMODE_LOGO
+from modules.banners import SAGEMODE_BANNER
 
 
 class Sagemode:
@@ -26,10 +27,10 @@ class Sagemode:
         self.result_file = self.result_dir + self.username + ".txt"
         self.found_only = False
         self.__version__ = "1.1.3"
-        # self.start(SAGEMODE_LOGO, self.sagemodeLogoText, delay=0.001)
+        # self.start(SAGEMODE_BANNER, self.sagemodeLogoText, delay=0.001)
 
-    def print_logo(self) -> None:
-        for line in SAGEMODE_LOGO.split("\n"):
+    def print_banner(self) -> None:
+        for line in SAGEMODE_BANNER.split("\n"):
             for character in line:
                 if character in ["█"]:
                     rprint(f"[yellow]{character}", end="", flush=True)

@@ -8,6 +8,7 @@ import colorama
 from modules.sites import sites
 from config import settings as settings
 from modules import constants
+# from banners import *
 
 
 class Singleton(type):

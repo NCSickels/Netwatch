@@ -8,5 +8,5 @@ from .sites import *
 from .nmap import *
 from .commandhandler import *
 from .progutils import *
-from .logos import *
+from .banners import *
 from .sagemode import Sagemode
