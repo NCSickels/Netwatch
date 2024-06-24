@@ -30,8 +30,8 @@ RELEASE_DATE = "2023-11-28"
 class ParserProgram:
     def __init__(self):
         self.helpers = NmapHelpers()
-        self.colorConfig = ColorConfig()
-        self.lamePrint = LamePrint()
+        self.color_config = ColorConfig()
+        self.lame_print = LamePrint()
 
     def run(self):
         parser = argparse.ArgumentParser(
@@ -79,98 +79,99 @@ class ParserProgram:
             return
 
         # Determine whether to output headings
-        settings.PARSER_SETTINGS.printHumanFriendlyText = not args.raw
-        settings.PARSER_SETTINGS.colorSupported = self.colorConfig.supportsColor()
+        settings.PARSER_SETTINGS.print_human_friendly_text = not args.raw
+        settings.PARSER_SETTINGS.color_supported = self.color_config.color_support()
 
         # Find all XML files
-        nmapXmlFilenames = []
+        xml_filenames = []
         for arg in args.xml_files:
-            nmapXmlFilenames.extend(
-                self.helpers.getNmapFiles(arg, recurse=args.recurse))
+            xml_filenames.extend(
+                self.helpers.get_nmap_files(arg, recurse=args.recurse))
 
         # Exit if no XML files found
-        if nmapXmlFilenames == []:
+        if xml_filenames == []:
             print('No Nmap XML files found.\n')
             parser.print_help()
             sys.exit(1)
 
-        portFilter = []
-        serviceFilter = []
+        port_filter = []
+        service_filter = []
         filters = NmapFilters()
         if not args.interactive:
             # Check if only specific ports should be parsed
             if args.ports:
-                portFilter = list(map(int, args.ports.split(',')))
-                filters.ports = portFilter
-                self.lamePrint.hprint(f'Set port filter to {portFilter}')
+                port_filter = list(map(int, args.ports.split(',')))
+                filters.ports = port_filter
+                self.lame_print.hprint(f'Set port filter to {port_filter}')
 
             # Check if only specific ports should be parsed
             if args.svcFilter:
-                serviceFilter = args.svcFilter.split(',')
-                filters.services = serviceFilter
-                self.lamePrint.hprint(f'Set service filter to {serviceFilter}')
+                service_filter = args.svcFilter.split(',')
+                filters.services = service_filter
+                self.lame_print.hprint(
+                    f'Set service filter to {service_filter}')
 
         # Parse nmap files
-        nmapOutput = NmapOutput(nmapXmlFilenames)
+        nmap_output = NmapOutput(xml_filenames)
         # Output successfully loaded and any failed files
-        self.helpers.printImportSummary(nmapOutput, False)
+        self.helpers.print_import_summary(nmap_output, False)
 
         # Print import summary if requested
         if args.importedFiles:
-            self.lamePrint.header('Import Summary')
-            self.helpers.printImportSummary(nmapOutput, True)
+            self.lame_print.header('Import Summary')
+            self.helpers.print_import_summary(nmap_output, True)
 
         # Check if default flags were used
         defaultFlags = not args.ipList and not args.aliveHosts and not args.servicelist and not args.verbose and not args.cmd and not args.combine and not args.uniquePorts and not args.importedFiles
 
         if args.combine:
-            nmapOutput.generateNmapParseXml(args.combine)
+            nmap_output.generate_nmap_parse_xml(args.combine)
 
         if not args.interactive:
             if (defaultFlags):
                 defaultFilters = NmapFilters()
                 defaultFilters.onlyAlive = False
                 defaultFilters.mustHavePorts = False
-                self.helpers.printHosts(nmapOutput, filters=defaultFilters)
-                self.helpers.printUniquePorts(
-                    nmapOutput.getHostDictionary(), filters=defaultFilters)
+                self.helpers.print_hosts(nmap_output, filters=defaultFilters)
+                self.helpers.print_unique_ports(
+                    nmap_output.get_host_dict(), filters=defaultFilters)
 
             if args.ipList:
-                self.helpers.printHosts(nmapOutput, filters=filters)
+                self.helpers.print_hosts(nmap_output, filters=filters)
 
             if (args.uniquePorts):
-                self.helpers.printUniquePorts(nmapOutput.getHostDictionary(
+                self.helpers.print_unique_ports(nmap_output.get_host_dict(
                     filters=filters), filters=filters)
 
             if args.aliveHosts:
-                self.helpers.printAliveIps(nmapOutput)
+                self.helpers.print_alive_ips(nmap_output)
 
             if args.servicelist or args.verbose:
-                self.helpers.printServiceList(
-                    nmapOutput, filters=filters, verbose=args.verbose)
+                self.helpers.print_service_list(
+                    nmap_output, filters=filters, verbose=args.verbose)
 
             if args.cmd:
-                self.helpers.executeCommands(
-                    args.cmd, nmapOutput, filters=filters)
+                self.helpers.execute_commands(
+                    args.cmd, nmap_output, filters=filters)
 
-            if settings.PARSER_SETTINGS.printHumanFriendlyText and (defaultFlags or args.hostSummary):
-                self.lamePrint.hprint('\nSummary\n-------')
-                self.lamePrint.hprint(
-                    f'Total hosts: {str(len(nmapOutput.Hosts))}')
-                self.lamePrint.hprint(
-                    f'Alive hosts: {str(len(nmapOutput.getAliveHosts(filters)))}')
+            if settings.PARSER_SETTINGS.print_human_friendly_text and (defaultFlags or args.hostSummary):
+                self.lame_print.hprint('\nSummary\n-------')
+                self.lame_print.hprint(
+                    f'Total hosts: {str(len(nmap_output.Hosts))}')
+                self.lame_print.hprint(
+                    f'Alive hosts: {str(len(nmap_output.get_alive_hosts(filters)))}')
         else:
-            enterInteractiveShell(nmapOutput)
+            enterInteractiveShell(nmap_output)
 
 
-def enterInteractiveShell(nmapOutput):
-    prompt = interactive.NmapTerminal(nmapOutput)
+def enterInteractiveShell(nmap_output):
+    prompt = interactive.NmapTerminal(nmap_output)
     sys.exit(prompt.cmdloop())
 
 
 def main():
-    parserProgram = ParserProgram()
-    parserProgram.run()
+    parser_program = ParserProgram()
+    parser_program.run()
 
 
 if __name__ == "__main__":

@@ -143,7 +143,7 @@ class Netbreach:
                     self.logger.info(
                         f'Data saved successfully in {output}!\n')
         else:
-            self.logger.info(f'Done.\n')
+            self.logger.info('Done.\n')
             print(tabulate(table_data, headers, showindex="never"))
             print()
 
@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
     except ConnectionError:
         logger.error(
-            f'Can\'t connect to service! Check your internet connection.\n')
+            'Can\'t connect to service! Check your internet connection.\n')
 
     except KeyboardInterrupt:
         print('\n Bye.\n')

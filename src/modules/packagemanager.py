@@ -16,7 +16,7 @@ class PackageManager:
         except subprocess.CalledProcessError:
             return False
 
-    def installPackage(self) -> bool:
+    def install_package(self) -> bool:
         try:
             subprocess.check_call(
                 ["sudo", "apt", "install", "-y", self.program_name])
@@ -26,11 +26,11 @@ class PackageManager:
             self.logger.error(f"Exception occurred: {e}")
             return False
 
-    def checkForPackage(self) -> bool:
+    def find_package(self) -> bool:
         if not self.installed():
             self.logger.warning(
                 f"{self.program_name} not found. Attempting to install...")
-            return self.installPackage()
+            return self.install_package()
         else:
             self.logger.info(
                 f"{self.program_name} found. Skipping installation.")

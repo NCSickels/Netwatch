@@ -179,3 +179,4 @@ examples/*.txt
 .history
 requirements-dev.txt
 src/modules/notify-DEPRECATED.py
+.vscode

@@ -16,22 +16,22 @@ class Program:
     """A class for main program functions"""
 
     def __init__(self):
-        self.configManager = ConfigManager()
-        self.updateHandler = UpdateHandler()
+        self.config_manager = ConfigManager()
+        self.update_handler = UpdateHandler()
         self.logger = Logger()
         self.version = ConfigManager().get("general_config", "__version__")
 
     def start(self) -> None:
-        self.clearScreen()
+        self.clear_screen()
         print(NETWATCH_LOGO.format(version=self.version))
-        self.updateHandler.checkForUpdate()
-        self.createFolders([("general_config", "tooldir"),
+        self.update_handler.check_update()
+        self.create_folders([("general_config", "tooldir"),
                             ("general_config", "scandir"),
                             ("sagemode", "datadir")])
 
-    def createFolders(self, paths: any) -> None:
+    def create_folders(self, paths: list) -> None:
         for section, option in paths:
-            path = self.configManager.getPath(section, option)
+            path = self.config_manager.get_path(section, option)
             if not os.path.isdir(path):
                 os.makedirs(path)
 
@@ -75,7 +75,7 @@ class Program:
             raise FileNotFoundError(
                 f'{Color.RED}Path {path} does not exist!{Color.END}\n')
 
-    def printPath(self, module: str) -> None:
+    def print_path(self, module: str) -> None:
         _split_module = module.split("/")
         if (len(_split_module) <= 1):  # if module is in root directory (Netwatch/)
             print(f'\n[*] Module -> {_split_module[0]}')
@@ -90,11 +90,11 @@ class Program:
             #     f'\nModule -> {_split_module[len(_split_module)-1]}')
             # self.logger.info(f'Path   -> {module+"/"}')
 
-    def clearScreen(self) -> None:
+    def clear_screen(self) -> None:
         print("\033[H\033[J", end="")
         # os.system('cls' if os.name == 'nt' else 'clear')
 
-    def findFiles(self, file_type: any, directory='/') -> str:
+    def find_files(self, file_type: any, directory='/') -> str:
         self.logger.info(f'Searching for {file_type} files...')
         try:
             search_path = os.path.join(directory, '**/*'+file_type)
@@ -106,7 +106,7 @@ class Program:
                 self.logger.info(f'Found file {filename}')
                 response = input("Use this file? [y/n]: ").lower()
                 if response in ["y", "yes"]:
-                    self.configManager.set(
+                    self.config_manager.set(
                         "general_config", "ovpn_path", filename)
                     self.logging.info(f'Selected file {filename}')
                     return filename

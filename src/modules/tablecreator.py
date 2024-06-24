@@ -9,18 +9,18 @@ from config import settings
 class TableCreator:
     """A class for creating help menu tables from JSON data"""
 
-    def __init__(self, jsonFile=None):
+    def __init__(self, json_file=None):
         self.console = Console()
-        self.jsonFile = os.path.dirname(os.path.abspath(
-            __file__)) + '/../json/menuData.json'  # if jsonFile is None else jsonFile
+        self.json_file = os.path.dirname(os.path.abspath(
+            __file__)) + '/../json/menu_data.json'  # if json_file is None else json_file
 
     @staticmethod
-    def readJson(file_path: str) -> dict:
+    def read_json(file_path: str) -> dict:
         with open(file_path) as f:
             data = json.load(f)
             return data
 
-    def createTable(self, header_data: dict, column_data: list, row_data: list, column_keys: list) -> None:
+    def create_table(self, header_data: dict, column_data: list, row_data: list, column_keys: list) -> None:
         table = Table(
             show_header=header_data.get("show_header", True),
             header_style=header_data.get("header_style", "bold white"),
@@ -40,7 +40,7 @@ class TableCreator:
             table.add_row(*row_values)
         return table
 
-    def displayTable(self, jsonData: dict, module: str) -> None:
+    def display_table(self, json_data: dict, module: str) -> None:
         column_keys_dict = {
             "Main": ["option", "modules", "description"],
             "Core": ["command", "description"],
@@ -49,22 +49,22 @@ class TableCreator:
             "Nmap_Commands": ["command", "description"],
             "DataParser": ["command", "description"],
         }
-        for table in jsonData[module]:
+        for table in json_data[module]:
             header_data = table.get("header", [{}])[0]
             column_data = table.get("columns", [])
             row_data = table.get("rows", [])
             column_keys = column_keys_dict.get(module, [])
-            table = self.createTable(
+            table = self.create_table(
                 header_data, column_data, row_data, column_keys)
             self.console.print(table)
             print("\n")
 
     # TODO - Implement tabulation for non-rich tables
-    def displayTableFromFile(self, module: str) -> None:
-        if settings.GENERAL_SETTINGS.useRichTables:
-            jsonData = self.readJson(self.jsonFile)
-            self.displayTable(jsonData, module)
+    def display_table_from_file(self, module: str) -> None:
+        if settings.GENERAL_SETTINGS.use_rich_tables:
+            json_data = self.read_json(self.json_file)
+            self.display_table(json_data, module)
         else:
             pass
-        # jsonData = self.readJson(self.jsonFile)
-        # self.displayTable(jsonData, module)
+        # json_data = self.read_json(self.json_file)
+        # self.display_table(json_data, module)

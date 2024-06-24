@@ -13,14 +13,14 @@ class UpdateHandler:
     """A class for handling updates for the Netwatch tool"""
 
     def __init__(self):
-        self.configManager = ConfigManager()
+        self.config_manager = ConfigManager()
         self.console = Console()
         self.logger = Logger()
 
-        self.local_version = self.configManager.get(
+        self.local_version = self.config_manager.get(
             "general_config", "__version__")
 
-    def checkForUpdate(self) -> None:
+    def check_update(self) -> None:
         try:
             # Add support for deprecated config file type
             file_names = ["netwatch.ini", "netwatch.cfg"]

@@ -1,8 +1,8 @@
 class GENERAL_SETTINGS:
-    useRichTables = True
-    colorSupported = True
+    use_rich_tables = True
+    color_supported = True
 
 
 class PARSER_SETTINGS:
-    printHumanFriendlyText = True
-    colorSupported = True
+    print_human_friendly_text = True
+    color_supported = True

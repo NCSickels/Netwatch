@@ -30,26 +30,28 @@ class Netwatch:
 
     def __init__(self):
         self.program = Program()
-        self.configManager = ConfigManager()
-        self.commandHandler = CommandHandler()
-        self.tableCreator = TableCreator()
+        self.config_manager = ConfigManager()
+        self.command_handler = CommandHandler()
+        self.table_creator = TableCreator()
         self.logger = Logger()
 
-        self.netwatchPrompt = self.configManager.get(
+        self.netwatch_prompt = self.config_manager.get(
             'general_config', 'prompt') + ' '
-        self.toolDir = self.configManager.getPath('general_config', 'tooldir')
-        self.scanDir = self.configManager.getPath('general_config', 'scandir')
-        self.storeHistory = self.configManager.getbool(
-            'general_config', 'storehistory')
+        self.tooldir = self.config_manager.get_path(
+            'general_config', 'tooldir')
+        self.scandir = self.config_manager.get_path(
+            'general_config', 'scandir')
+        # self.store_history = self.config_manager.getbool(
+        #     'general_config', 'storehistory')
 
         self.run()
 
     def run(self) -> None:
-        choice = input(self.netwatchPrompt).strip()
-        choice = self.commandHandler.autocomplete(choice)
+        choice = input(self.netwatch_prompt).strip()
+        choice = self.command_handler.autocomplete(choice)
 
         if choice:
-            self.commandHandler.execute(choice)
+            self.command_handler.execute(choice)
 
         match choice:
             case "0":
@@ -67,27 +69,27 @@ class AutoAttack:
 
     def __init__(self):
         self.program = Program()
-        self.configManager = ConfigManager()
-        self.commandHandler = CommandHandler()
+        self.config_manager = ConfigManager()
+        self.command_handler = CommandHandler()
         self.logger = Logger()
-        self.tableCreator = TableCreator()
+        self.table_creator = TableCreator()
         self.run()
 
     def run(self) -> None:
-        self.program.clearScreen()
-        updatedConfigPath = self.program.findFiles(
+        self.program.clear_screen()
+        updated_config_path = self.program.find_files(
             '.ovpn', os.path.expanduser('~'))
         # Run .ovpn file if found
         # Check for default value in config file
-        if updatedConfigPath:
-            self.startOvpn(updatedConfigPath)
+        if updated_config_path:
+            self.start_ovpn(updated_config_path)
 
-    def startOvpn(self, updatedConfigPath: str) -> None:
+    def start_ovpn(self, updated_config_path: str) -> None:
         try:
             self.logger.info('Starting OpenVPN profile...')
             # print(os.getenv("TERM"))
-            # subprocess.Popen(["gnome-terminal", "--", "sudo", "openvpn", updatedConfigPath])
-            # subprocess.run(["sudo", "openvpn", updatedConfigPath])
+            # subprocess.Popen(["gnome-terminal", "--", "sudo", "openvpn", updated_config_path])
+            # subprocess.run(["sudo", "openvpn", updated_config_path])
         except subprocess.CalledProcessError as e:
             self.logger.error(f'An error occurred: {e}')
             print("\n")
@@ -100,20 +102,20 @@ class InformationGathering:
 
     def __init__(self):
         self.program = Program()
-        self.configManager = ConfigManager()
-        self.commandHandler = CommandHandler()
+        self.config_manager = ConfigManager()
+        self.command_handler = CommandHandler()
         self.logger = Logger()
 
-        self.netwatchPrompt = self.configManager.get(
+        self.netwatch_prompt = self.config_manager.get(
             'general_config', 'prompt') + ' '
 
         self.run()
 
     def run(self) -> None:
-        choiceInfo = input(self.netwatchPrompt).strip()
-        choiceInfo = self.commandHandler.autocomplete(choiceInfo)
+        choice_info = input(self.netwatch_prompt).strip()
+        choice_info = self.command_handler.autocomplete(choice_info)
 
-        match choiceInfo:  # .strip()
+        match choice_info:  # .strip()
             case "1":
                 print(NMAP_LOGO)
                 NmapMenu()
@@ -131,17 +133,17 @@ class InformationGathering:
                 # print(Host2IP.host2ipLogo)
                 # Host2IP()
             case "?" | "help":
-                [self.commandHandler.execute(choiceInfo, choice) for choice in [
+                [self.command_handler.execute(choice_info, choice) for choice in [
                     "Information_Gathering", "Core"]]
             case "clear" | "cls":
-                self.commandHandler.execute(choiceInfo)
+                self.command_handler.execute(choice_info)
             case "clean":
-                self.commandHandler.execute(choiceInfo)
+                self.command_handler.execute(choice_info)
             case "path" | "pwd":
-                self.commandHandler.execute(
-                    choiceInfo, "Netwatch/Information_Gathering")
+                self.command_handler.execute(
+                    choice_info, "Netwatch/Information_Gathering")
             case "exit" | "quit" | "end":
-                self.commandHandler.execute(choiceInfo)
+                self.command_handler.execute(choice_info)
             case "back":
                 self.logger.info("Returning to previous context menu...")
                 Netwatch()
@@ -157,33 +159,33 @@ class NmapMenu:
 
     def __init__(self):
         self.program = Program()
-        self.configManager = ConfigManager()
-        self.commandHandler = CommandHandler()
+        self.config_manager = ConfigManager()
+        self.command_handler = CommandHandler()
         self.logger = Logger()
         self.nmap = Nmap()
-        self.netwatchPrompt = "netwatch ~# "
-        self.gitRepo = "https://github.com/nmap/nmap.git"
-        self.targetPrompt = "\nEnter target IP: "
-        self.scanFileNamePrompt = "\nEnter scan file name: "
+        self.netwatch_prompt = "netwatch ~# "
+        self.gitrepo = "https://github.com/nmap/nmap.git"
+        self.target_prompt = "\nEnter target IP: "
+        self.scan_file_name_prompt = "\nEnter scan file name: "
         self.target = None
-        self.scanPath = None
+        self.scan_path = None
 
         self.run()
 
     def run(self):
-        if self.nmap.checkForNmap():
+        if self.nmap.check_nmap():
             # try:
-            self.target = input(self.targetPrompt)
-            self.scanPath = "nmap-" + "-" + \
+            self.target = input(self.target_prompt)
+            self.scan_path = "nmap-" + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-            if os.path.isfile(self.scanPath):
+            if os.path.isfile(self.scan_path):
                 self.logger.info("File name already exists!")
                 self.logger.info("Would you like to overwrite this file?")
                 response = input("[y/n]: ")
                 if response.lower() in ["y", "yes"]:
                     self.menu()
             else:
-                self.program.clearScreen()
+                self.program.clear_screen()
                 self.menu()
         else:
             self.logger.error(
@@ -191,35 +193,35 @@ class NmapMenu:
             Netwatch()
 
     def menu(self) -> None:
-        print(self.nmapLogo)
-        self.logger.info("Scan Path -> " + self.scanPath)
+        print(NMAP_LOGO)
+        self.logger.info(f'Scan Path -> {self.scan_path}')
         try:
-            choiceNmap = input(self.netwatchPrompt)
-            match choiceNmap:
+            choice_nmap = input(self.netwatch_prompt)
+            match choice_nmap:
                 case "default" | "default scan" | "defaultscan":
-                    self.nmap.scan(self.target, self.scanPath, "default_scan")
-                    self.getInput()
+                    self.nmap.scan(self.target, self.scan_path, "default_scan")
+                    self.get_input()
                 case "quick scan" | "quick" "quickscan":
-                    self.nmap.scan(self.target, self.scanPath, "quick_scan")
-                    self.getInput()
+                    self.nmap.scan(self.target, self.scan_path, "quick_scan")
+                    self.get_input()
                 case "intense scan" | "intense" | "intensescan":
-                    self.nmap.scan(self.target, self.scanPath, "intense_scan")
-                    self.getInput()
+                    self.nmap.scan(self.target, self.scan_path, "intense_scan")
+                    self.get_input()
                 case "vuln" | "vuln scan" | "vulnscan" | "vulnerability" | "vulnerability scan":
-                    self.nmap.scan(self.target, self.scanPath, "vuln_scan")
-                    self.getInput()
-                case _ if choiceNmap.startswith("set "):
-                    self.setParameters(choiceNmap)
+                    self.nmap.scan(self.target, self.scan_path, "vuln_scan")
+                    self.get_input()
+                case _ if choice_nmap.startswith("set "):
+                    self.set_parameters(choice_nmap)
                 case "?" | "help":
-                    [self.commandHandler.execute(choiceNmap, choice) for choice in [
+                    [self.command_handler.execute(choice_nmap, choice) for choice in [
                         "Nmap_Scans", "Nmap_Commands", "Core"]]
                 case "clear" | "cls":
-                    self.commandHandler.execute(choiceNmap, "Nmap")
+                    self.command_handler.execute(choice_nmap, "Nmap")
                 case "clean":
-                    self.commandHandler.execute(choiceNmap, "Nmap")
+                    self.command_handler.execute(choice_nmap, "Nmap")
                 case "path" | "pwd":
-                    self.commandHandler.execute(
-                        choiceNmap, "Netwatch/Information_Gathering/Nmap")
+                    self.command_handler.execute(
+                        choice_nmap, "Netwatch/Information_Gathering/Nmap")
                     self.menu()
                 # case "exit" | "quit" | "end":
                 #     self.program.end()
@@ -231,12 +233,12 @@ class NmapMenu:
                     self.menu()
             self.menu()
         except Exception as e:
-            print("\n")
+            self.logger.error(f"An error occurred: {e}\n")
             self.logger.info("Returning to main menu...")
             Netwatch()
 
-    def getInput(self):
-        response = self.nmap.promptForInput(
+    def get_input(self):
+        response = self.nmap.prompt_input(
             "Would you like to run another scan? [y/n]: ")
         if response.lower() in ["y", "yes"]:
             self.run()
@@ -245,22 +247,22 @@ class NmapMenu:
             Netwatch()
 
     # update scan file after using set target?
-    def setParameters(self, input: str) -> None:
+    def set_parameters(self, input: str) -> None:
         # _, param, value = input.split(" ", 2)
         parts = input.split(" ")
         if len(parts) < 3:
             self.logger.error("Invalid syntax! Usage: 'set <param> <value>'")
             return
-            # self.menu(target, scanPath)
+            # self.menu(target, scan_path)
         _, param, value = parts
         if param == "target":
             self.target = value
-        elif param == "log" | "scan":
-            scanName, _, self.scanPath = value.partition(" ")
-            if not self.scanPath:
-                self.scanPath = "nmap-" + scanName + "-" + \
+        elif param == "log" or "scan":
+            scan_name, _, self.scan_path = value.partition(" ")
+            if not self.scan_path:
+                self.scan_path = "nmap-" + scan_name + "-" + \
                     strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
-            self.scanPath = "nmap-" + scanName + "-" + \
+            self.scan_path = "nmap-" + scan_name + "-" + \
                 strftime("%Y-%m-%d_%H:%M", gmtime()) + ".log"
         self.menu()
 

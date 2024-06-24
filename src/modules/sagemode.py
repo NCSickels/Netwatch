@@ -5,6 +5,7 @@ from rich.console import Console
 import datetime
 import random
 from modules import sites, soft404_indicators, user_agents
+from modules.logos import SAGEMODE_LOGO
 
 
 class Sagemode:
@@ -12,23 +13,23 @@ class Sagemode:
     # Author: @senran101604, https://github.com/senran101604/sagemode
 
     def __init__(self):
-        self.colorConfig = ColorConfig()
+        self.color_config = ColorConfig()
         self.console = Console()
-        self.configManager = ConfigManager()
-        self.lamePrint = LamePrint()
+        self.config_manager = ConfigManager()
+        self.lame_print = LamePrint()
         # self.logger = Logger()
-        self.notifySagemode = NotifySagemode()
+        self.notify_sagemode = NotifySagemode()
         self.positive_count = 0
-        self.usernamePrompt = "\nEnter target username: "
-        self.username = input(self.usernamePrompt)
-        self.resultDir = self.configManager.getPath("sagemode", "datadir")
-        self.result_file = self.resultDir + self.username + ".txt"
+        self.prompt = "\nEnter target username: "
+        self.username = input(self.prompt)
+        self.result_dir = self.config_manager.get_path("sagemode", "datadir")
+        self.result_file = self.result_dir + self.username + ".txt"
         self.found_only = False
         self.__version__ = "1.1.3"
-        # self.start(self.sagemodeLogo, self.sagemodeLogoText, delay=0.001)
+        # self.start(SAGEMODE_LOGO, self.sagemodeLogoText, delay=0.001)
 
-    def printLogo(self) -> None:
-        for line in self.sagemodeLogo.split("\n"):
+    def print_logo(self) -> None:
+        for line in SAGEMODE_LOGO.split("\n"):
             for character in line:
                 if character in ["█"]:
                     rprint(f"[yellow]{character}", end="", flush=True)
@@ -72,15 +73,15 @@ class Sagemode:
                 # counts simultaneously and prevent race conditions.
                 with threading.Lock():
                     self.positive_count += 1
-                self.console.print(self.notifySagemode.found(site, url))
+                self.console.print(self.notify_sagemode.found(site, url))
                 with open(self.result_file, "a") as f:
                     f.write(f"{url}\n")
             # the site reurned 404 (user not found)
             else:
                 if not self.found_only:
-                    self.console.print(self.notifySagemode.not_found(site))
+                    self.console.print(self.notify_sagemode.not_found(site))
         except Exception as e:
-            self.notifySagemode.exception(site, e)
+            self.notify_sagemode.exception(site, e)
 
     def start(self, bannerText: str, bannerLogo: str, delay=0.001):
         """
@@ -106,7 +107,7 @@ class Sagemode:
         """
         Start the search.
         """
-        self.console.print(self.notifySagemode.start(
+        self.console.print(self.notify_sagemode.start(
             self.username, len(sites)))
 
         current_datetime = datetime.datetime.now()
@@ -139,12 +140,12 @@ class Sagemode:
 
             # notify how many sites the username has been found
             self.console.print(
-                self.notifySagemode.positive_res(
+                self.notify_sagemode.positive_res(
                     self.username, self.positive_count)
             )
             # notify where the result is stored
             self.console.print(
-                self.notifySagemode.stored_result(self.result_file))
+                self.notify_sagemode.stored_result(self.result_file))
             # self.notify.previousContextMenu("Information Gathering")
             return
         except Exception:

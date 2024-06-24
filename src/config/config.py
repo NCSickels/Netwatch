@@ -14,20 +14,20 @@ class ConfigManager:
             cls._instance.config = configparser.ConfigParser()
             # cls._instance.logger = Logger()
             # cls._instance.logger = get_central_logger()
-            cls._instance.configFile = os.path.join(
+            cls._instance.config_file = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)), 'netwatch.ini')
-            cls._instance.themesFile = os.path.join(
+            cls._instance.themes_file = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)), '..', 'themes', 'themes.ini')
             cls._instance.config.read(
-                cls._instance.configFile)
+                cls._instance.config_file)
             cls._instance.config.read(
-                cls._instance.themesFile)
-            cls._instance.installDir = os.path.dirname(
+                cls._instance.themes_file)
+            cls._instance.install_dir = os.path.dirname(
                 os.path.abspath(__file__)) + '/'
         return cls._instance
 
-    def getConfigFile(self) -> str:
-        return self.configFile
+    def get_config_file(self) -> str:
+        return self.config_file
 
     def get(self, section: any, option: any) -> str:
         return self.config.get(section, option)
@@ -40,14 +40,14 @@ class ConfigManager:
             if not self.config.has_section(section):
                 self.config.add_section(section)
             self.config.set(section, key, value)
-            with open(self.configFile, 'w') as f:
+            with open(self.config_file, 'w') as f:
                 self.config.write(f)
         except Exception as e:
             # self.logger.error(e)
             print(e)
 
-    def getPath(self, section: any, option: any) -> str:
-        return self.installDir + self.config.get(section, option)
+    def get_path(self, section: any, option: any) -> str:
+        return self.install_dir + self.config.get(section, option)
 
     def getbool(self, section: str, option: str) -> bool:
         return self.config.getboolean(section, option)

@@ -22,14 +22,14 @@ class Singleton(type):
 
 class ColorConfig(metaclass=Singleton):
     def __init__(self):
-        self.color_supported = self.checkColorSupport()
-        # self.color_supported = settings.PARSER_SETTINGS.colorSupported
+        self.color_supported = self.check_color_support()
+        # self.color_supported = settings.PARSER_SETTINGS.color_supported
 
-    def checkColorSupport(self):
-        return True if (self.supportsColor() and settings.PARSER_SETTINGS.colorSupported) else False
+    def check_color_support(self):
+        return True if (self.color_support() and settings.PARSER_SETTINGS.color_supported) else False
 
     # Source: https://github.com/django/django/blob/master/django/core/management/color.py
-    def supportsColor(self):
+    def color_support(self):
         """
         Returns True if the running system's terminal supports color, and False otherwise.
         """
@@ -48,40 +48,40 @@ class LamePrint:
 
     # Color output green (successprint)
     def sprint(self, *args, **kwargs) -> None:
-        self.coloredPrint("\033[1;32m", args, kwargs)
+        self.colored_print("\033[1;32m", args, kwargs)
 
     def eprint(self, *args, **kwargs) -> None:
-        self.coloredPrint("\033[1;31m", args, kwargs)
+        self.colored_print("\033[1;31m", args, kwargs)
 
     # Print text with specified color code
-    def coloredPrint(self, color, args, kwargs) -> None:
+    def colored_print(self, color, args, kwargs) -> None:
         color_config = ColorConfig()
         if not color_config.color_supported:
             print(args, kwargs)
             return
-        # if (not settings.PARSER_SETTINGS.colorSupported):
+        # if (not settings.PARSER_SETTINGS.color_supported):
         #     print(args, kwargs)
         #     return
 
-        coloredArgs = []
+        colored_args = []
         for arg in args:
             if arg == None or not isinstance(arg, str):
-                coloredArgs.append('')
+                colored_args.append('')
                 continue
-            coloredArgs.append(color + arg + "\033[1;m")
-        print(*coloredArgs, file=sys.stderr, **kwargs)
+            colored_args.append(color + arg + "\033[1;m")
+        print(*colored_args, file=sys.stderr, **kwargs)
 
     # Print only if raw option hasnt been set
     def hprint(self, *args, **kwargs) -> None:
-        settings.PARSER_SETTINGS.printHumanFriendlyText
-        if (settings.PARSER_SETTINGS.printHumanFriendlyText):
+        settings.PARSER_SETTINGS.print_human_friendly_text
+        if (settings.PARSER_SETTINGS.print_human_friendly_text):
             print(*args, **kwargs)
 
-    def getHeader(self, text: str) -> None:
+    def get_header(self, text: str) -> None:
         return f"\n{text}\n{'-' * len(text)}\n"
 
     def header(self, text: str) -> None:
-        print(self.getHeader(text))
+        print(self.get_header(text))
 
     def __str__(self):
         return ""
@@ -136,32 +136,32 @@ class TextOutput():
     def __init__(self):
         self.entries = []
 
-    def addMain(self, text):
+    def add_main(self, text):
         self.entries.append(TextOutputEntry(
             text, constants.TEXT_NORMAL, colorama.Fore.RESET))
 
-    def addHumn(self, text):
+    def add_humn(self, text):
         self.entries.append(TextOutputEntry(
             text, constants.TEXT_FRIENDLY, colorama.Style.DIM))
 
-    def addErrr(self, text):
+    def add_error(self, text):
         self.entries.append(TextOutputEntry(
             text, constants.TEXT_ERROR, colorama.Fore.RED))
 
-    def addGood(self, text):
+    def add_good(self, text):
         self.entries.append(TextOutputEntry(
             text, constants.TEXT_SUCCESS, colorama.Fore.GREEN))
 
-    def printToConsole(self):
+    def print_to_console(self):
         for line in self.entries:
-            shouldPrint = False
+            should_print = False
             if (line.output == constants.TEXT_NORMAL or line.output == constants.TEXT_ERROR):
-                shouldPrint = True
-            elif (settings.PARSER_SETTINGS.printHumanFriendlyText):
-                shouldPrint = True
+                should_print = True
+            elif (settings.PARSER_SETTINGS.print_human_friendly_text):
+                should_print = True
 
-            if shouldPrint:
-                print(line.getText())
+            if should_print:
+                print(line.get_text())
 
 
 class TextOutputEntry():
@@ -175,8 +175,8 @@ class TextOutputEntry():
         self.output = output
         self.color = color
 
-    def getText(self):
-        if settings.PARSER_SETTINGS.colorSupported:
+    def get_text(self):
+        if settings.PARSER_SETTINGS.color_supported:
             return "%s%s%s" % (self.color, self.text, colorama.Style.RESET_ALL)
         else:
             return self.text

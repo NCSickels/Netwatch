@@ -16,20 +16,20 @@ from logger import *
 
 
 class TerminalBase(cmd2.Cmd):
-    def printTextOutput(self, textOutput):
-        for line in textOutput.entries:
+    def print_text_output(self, text_output):
+        for line in text_output.entries:
             if (line.output == constants.TEXT_NORMAL):
-                self.poutput(line.getText())
+                self.poutput(line.get_text())
             elif (line.output == constants.TEXT_ERROR):
-                self.perror(line.getText())
-            # elif (not self.quiet) and (not self.redirecting) and settings.printHumanFriendlyText:
-            elif (not self.quiet) and settings.PARSER_SETTINGS.printHumanFriendlyText:
+                self.perror(line.get_text())
+            # elif (not self.quiet) and (not self.redirecting) and settings.print_human_friendly_text:
+            elif (not self.quiet) and settings.PARSER_SETTINGS.print_human_friendly_text:
                 if (line.output == constants.TEXT_FRIENDLY):
-                    self.pfeedback(line.getText())
+                    self.pfeedback(line.get_text())
                 elif (line.output == constants.TEXT_SUCCESS):
-                    self.pfeedback(line.getText())
+                    self.pfeedback(line.get_text())
                 else:
-                    self.poutput(line.getText())
+                    self.poutput(line.get_text())
 
 
 class NmapTerminal(TerminalBase):
@@ -56,7 +56,7 @@ class NmapTerminal(TerminalBase):
     - __init__: Initializes the NmapTerminal object.
     - complete_unset: Completes the unset command by providing suggestions for unsettable options.
     - complete_set: Completes the set command by providing suggestions for settable options.
-    - tryMatchService: Tries to match a service based on the given text and prefix.
+    - match_service: Tries to match a service based on the given text and prefix.
     - ip_completer: Completes the IP address argument for the host command.
     - complete_file: Completes the file argument for the file command.
     - complete_ports: Completes the option argument for the ports command.
@@ -95,13 +95,13 @@ class NmapTerminal(TerminalBase):
 
     # endregion
 
-    def __init__(self, nmapOutput, *args, **kwargs):
+    def __init__(self, nmap_output, *args, **kwargs):
         super().__init__(*args, **kwargs, allow_cli_args=False)
-        self.printRandomBanner()
-        self.nmapOutput = nmapOutput
+        self.print_random_banner()
+        self.nmap_output = nmap_output
         self.helpers = NmapHelpers()
-        self.colorConfig = ColorConfig()
-        self.lamePrint = LamePrint()
+        self.color_config = ColorConfig()
+        self.lame_print = LamePrint()
         self.color = Color()
         self.prompt = '\n\033[4m\033[1;30mnmap-parse\033[1;30m\033[0m\033[1;30m ~#\033[0;m '
 
@@ -129,58 +129,58 @@ class NmapTerminal(TerminalBase):
     # region Completion Methods
     def complete_unset(self, text: any, line: any, begidx: any, endidx: any) -> List[str]:
         # remove 'unset' from first array slot
-        splitText = line.split()[1:]
+        split_text = line.split()[1:]
         if (line.strip() == 'unset'):
             return [option for option in self.settable]
-        if (len(splitText) == 1):
-            return [option for option in self.settable if option.startswith(splitText[0].lower()) and not (option == splitText[0].lower())]
+        if (len(split_text) == 1):
+            return [option for option in self.settable if option.startswith(split_text[0].lower()) and not (option == split_text[0].lower())]
 
     def complete_set(self, text: any, line: any, begidx: any, endidx: any) -> List[str]:
         # remove 'set' from first array slot
-        tmpSplit = line.split()[1:]
+        tmp_split = line.split()[1:]
         # Remove any additional flags (e.g. -v)
-        splitText = [i for i in tmpSplit if not i.startswith("-")]
+        split_text = [i for i in tmp_split if not i.startswith("-")]
         if (line.strip() == 'set'):
             return [option for option in self.settable]
-        if (len(splitText) == 1):
-            return [option for option in self.settable if option.startswith(splitText[0].lower()) and not (option == splitText[0].lower())]
-        if (len(splitText) == 2):
-            if splitText[0] == constants.OPT_SERVICE_FILTER:
+        if (len(split_text) == 1):
+            return [option for option in self.settable if option.startswith(split_text[0].lower()) and not (option == split_text[0].lower())]
+        if (len(split_text) == 2):
+            if split_text[0] == constants.OPT_SERVICE_FILTER:
                 # need to split this value on comma incase user specified more than one service
                 # then use last split. Also remove quotes
-                tmpText = splitText[1].replace("\"", "")
-                tmpServices = tmpText.split(',')
-                curService = tmpServices[-1:][0]
+                tmp_text = split_text[1].replace("\"", "")
+                tmp_services = tmp_text.split(',')
+                cur_service = tmp_services[-1:][0]
                 prefix = ''
-                if len(tmpServices) > 1:
-                    prefix = ','.join(tmpServices[:-1]) + ','
-                return self.tryMatchService(curService, prefix)
-            elif splitText[0] == constants.OPT_HOST_FILTER:
+                if len(tmp_services) > 1:
+                    prefix = ','.join(tmp_services[:-1]) + ','
+                return self.match_service(cur_service, prefix)
+            elif split_text[0] == constants.OPT_HOST_FILTER:
                 # need to split this value on comma incase user specified more than one IP
                 # then use last split. Also remove quotes
-                tmpText = splitText[1].replace("\"", "")
-                tmpHosts = tmpText.split(',')
-                curHost = tmpHosts[-1:][0]
+                tmp_text = split_text[1].replace("\"", "")
+                tmp_hosts = tmp_text.split(',')
+                cur_host = tmp_hosts[-1:][0]
                 prefix = ''
-                if len(tmpHosts) > 1:
-                    prefix = ','.join(tmpHosts[:-1]) + ','
-                return [(prefix + ip) for ip in self.nmapOutput.Hosts if curHost in ip]
+                if len(tmp_hosts) > 1:
+                    prefix = ','.join(tmp_hosts[:-1]) + ','
+                return [(prefix + ip) for ip in self.nmap_output.Hosts if cur_host in ip]
         return [text]
 
-    def tryMatchService(self, text: any, prefix: any) -> List[str]:
+    def match_service(self, text: any, prefix: any) -> List[str]:
         matches = []
         try:
-            serviceFiles = ['/usr/share/nmap/nmap-services', '/etc/services',
-                            'C:\\windows\\system32\\drivers\\etc\\services']
-            for serviceFile in serviceFiles:
-                if (os.path.isfile(serviceFile)):
-                    fhServices = open(serviceFile, 'r')
-                    tmpRegex = '(' + text + r'\S*)\s+\d+/(?:tcp|udp)'
-                    reg = re.compile(tmpRegex)
-                    for line in fhServices:
+            service_files = ['/usr/share/nmap/nmap-services', '/etc/services',
+                             'C:\\windows\\system32\\drivers\\etc\\services']
+            for service_file in service_files:
+                if (os.path.isfile(service_file)):
+                    fhservices = open(service_file, 'r')
+                    tmp_regex = '(' + text + r'\S*)\s+\d+/(?:tcp|udp)'
+                    reg = re.compile(tmp_regex)
+                    for line in fhservices:
                         matches += [match for match in reg.findall(
                             line) if match not in matches]
-                    fhServices.close()
+                    fhservices.close()
                     break
         except:
             raise
@@ -192,11 +192,11 @@ class NmapTerminal(TerminalBase):
     # arg_tokens = dictionary of tokens
     def ip_completer(self, text: any, line: any, begidx: any, endidx: any, arg_tokens: any) -> List[str]:
         sText = text.strip()
-        ips = [x for x in self.nmapOutput.Hosts.keys() if x.startswith(sText)]
+        ips = [x for x in self.nmap_output.Hosts.keys() if x.startswith(sText)]
         return ips
 
     def complete_file(self, text: any, line: any, begidx: any, endidx: any) -> List[str]:
-        return [file for file in self.nmapOutput.FilesImported if file.startswith(text)]
+        return [file for file in self.nmap_output.FilesImported if file.startswith(text)]
 
     def complete_ports(self, text: any, line: any, begidx: any, endidx: any) -> List[str]:
         return self.basic_complete(text, line, begidx, endidx, constants.PORT_OPTIONS)
@@ -219,24 +219,24 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_FILTER)
     def do_unset_all(self, inp: str) -> None:
         '''"unset_all" will reset all user options to default values'''
-        consoleOutput = TextOutput()
+        console_output = TextOutput()
         for option in self.settable:
-            if (self.unsetOption(option)):
-                consoleOutput.addHumn("Unset [" + option + "]")
+            if (self.unset_option(option)):
+                console_output.add_humn("Unset [" + option + "]")
             else:
-                consoleOutput.addErrr("Failed to unset [%s]" % option)
-        self.printTextOutput(consoleOutput)
+                console_output.add_error("Failed to unset [%s]" % option)
+        self.print_text_output(console_output)
 
     @cmd2.with_category(constants.CMD_CAT_FILTER)
     def do_unset(self, inp: str) -> None:
         '''"unset [option]" will unset the specified user option'''
-        splitText = inp.split()
-        if (len(splitText) != 1):
+        split_text = inp.split()
+        if (len(split_text) != 1):
             print("Invalid use of unset command")
         else:
-            success = self.unsetOption(splitText[0].lower())
+            success = self.unset_option(split_text[0].lower())
             if (success):
-                print("Unset [" + splitText[0].lower() + "] ==> ''")
+                print("Unset [" + split_text[0].lower() + "] ==> ''")
 
     host_parser = cmd2.Cmd2ArgumentParser()
     host_parser.add_argument(
@@ -248,65 +248,66 @@ class NmapTerminal(TerminalBase):
         '''Print details for specified host
         Useage: "host [ip address]'''
         ip = args.ip.strip()
-        if (ip not in self.nmapOutput.Hosts):
+        if (ip not in self.nmap_output.Hosts):
             self.perror("Host not found: " + ip)
             return
-        curHost = self.nmapOutput.Hosts[ip]
-        self.printTextOutput(self.helpers.getHostDetails(curHost))
+        cur_host = self.nmap_output.Hosts[ip]
+        self.print_text_output(self.helpers.get_host_details(cur_host))
 
     banner_parser = cmd2.Cmd2ArgumentParser()
     banner_parser.add_argument(
-        'service', help="Show banner for specified service", type=str, completer=tryMatchService)
+        'service', help="Show banner for specified service", type=str, completer=match_service)
 
     # BUG: This command is not working
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_banner(self, inp: str) -> None:
         '''Print banner for specified service'''
         service = inp.strip()
-        if (service not in self.nmapOutput.Services):
+        if (service not in self.nmap_output.Services):
             self.perror("Service not found: " + service)
             return
-        curService = self.nmapOutput.Services[service]
-        self.printTextOutput(self.helpers.getServiceBanner(curService))
+        cur_service = self.nmap_output.Services[service]
+        # TODO: Check this
+        self.print_text_output(self.helpers.getServiceBanner(cur_service))
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_list(self, inp: str) -> None:
         '''List all IP's matching filter'''
-        consoleOutput = self.helpers.getHostListOutput(self.nmapOutput, includePorts=self.include_ports, filters=self.getFilters(
-        ), includeHostname=self.include_hostname, isTable=False)
-        self.printTextOutput(consoleOutput)
+        console_output = self.helpers.get_host_list_output(self.nmap_output, include_ports=self.include_ports, filters=self.get_filters(
+        ), include_hostname=self.include_hostname, is_table=False)
+        self.print_text_output(console_output)
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_tlist(self, inp: str) -> None:
         '''List all IP's matching filter as table'''
-        consoleOutput = self.helpers.getHostListOutput(self.nmapOutput, includePorts=self.include_ports, filters=self.getFilters(
-        ), includeHostname=self.include_hostname, isTable=True)
-        self.printTextOutput(consoleOutput)
+        console_output = self.helpers.get_host_list_output(self.nmap_output, include_ports=self.include_ports, filters=self.get_filters(
+        ), include_hostname=self.include_hostname, is_table=True)
+        self.print_text_output(console_output)
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_file(self, inp: str) -> None:
         '''Print details for specified file'''
         file = inp.strip().replace("\"", "")
-        if (file not in self.nmapOutput.FilesImported):
+        if (file not in self.nmap_output.FilesImported):
             self.perror("File not found: " + file)
             return
 
-        filters = self.getFilters()
-        self.pfeedback(self.helpers.getNmapFiltersString(filters))
-        hosts = self.nmapOutput.getHostsWithinFile(file, filters=filters)
+        filters = self.get_filters()
+        self.pfeedback(self.helpers.get_filters_string(filters))
+        hosts = self.nmap_output.get_hosts_within_file(file, filters=filters)
 
-        self.pfeedback(self.lamePrint.getHeader("Hosts within file"))
+        self.pfeedback(self.lame_print.get_header("Hosts within file"))
         if self.verbose:
             headers = ['IP', 'Hostname', 'State',
                        'TCP Ports (count)', 'UDP Ports (count)']
-            verboseOutput = []
+            verbose_output = []
             for host in hosts:
-                verboseOutput.append([host.ip, host.getHostname(), host.getState(),
-                                      len(host.getUniquePortIds(
+                verbose_output.append([host.ip, host.get_hostname(), host.get_state(),
+                                      len(host.get_unique_port_ids(
                                           constants.PORT_OPT_TCP)),
-                                      len(host.getUniquePortIds(constants.PORT_OPT_UDP))])
+                                      len(host.get_unique_port_ids(constants.PORT_OPT_UDP))])
             self.poutput(tabulate.tabulate(
-                verboseOutput, headers=headers, tablefmt="github"))
+                verbose_output, headers=headers, tablefmt="github"))
         else:
             for host in hosts:
                 self.poutput(host.ip)
@@ -314,9 +315,9 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_services(self, inp: str) -> None:
         '''Lists all services (supports verbose output)'''
-        consoleOutput = self.helpers.getServiceListOutput(self.nmapOutput, filters=self.getFilters(
-        ), verbose=self.verbose, includePorts=self.include_ports)
-        self.printTextOutput(consoleOutput)
+        console_output = self.helpers.get_service_list_output(self.nmap_output, filters=self.get_filters(
+        ), verbose=self.verbose, include_ports=self.include_ports)
+        self.print_text_output(console_output)
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_ports(self, inp: str) -> None:
@@ -325,10 +326,10 @@ class NmapTerminal(TerminalBase):
         userOp = inp.strip().lower()
         if (userOp in constants.PORT_OPTIONS):
             option = userOp
-        filters = self.getFilters()
-        consoleOutput = self.helpers.getUniquePortsOutput(
-            self.nmapOutput.getHostDictionary(filters), option, filters=filters)
-        self.printTextOutput(consoleOutput)
+        filters = self.get_filters()
+        console_output = self.helpers.get_unique_ports_output(
+            self.nmap_output.get_host_dict(filters), option, filters=filters)
+        self.print_text_output(console_output)
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     @cmd2.with_argument_list
@@ -341,59 +342,61 @@ class NmapTerminal(TerminalBase):
             self.perror(
                 'import requires a path to a file/directory as an argument')
             return
-        allFiles = []
+        all_files = []
         for file in args:
-            allFiles.extend(self.helpers.getNmapFiles(file, recurse=True))
-        self.nmapOutput.parseNmapXmlFiles(allFiles)
+            all_files.extend(self.helpers.get_nmap_files(file, recurse=True))
+        self.nmap_output.parse_nmap_xml(all_files)
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_import_summary(self, inp: str) -> None:
         '''Displays list of imported files'''
 
-        self.pfeedback(self.lamePrint.getHeader("Successfully Imported Files"))
-        if (len(self.nmapOutput.FilesImported) > 0):
+        self.pfeedback(self.lame_print.get_header(
+            "Successfully Imported Files"))
+        if (len(self.nmap_output.FilesImported) > 0):
             if self.verbose:
                 headers = ['Filename', 'Hosts Scanned', 'Alive Hosts']
-                verboseOutput = []
-                filesWithNoHosts = []
+                verbose_output = []
+                files_without_hosts = []
                 filters = NmapFilters(defaultBool=False)
-                hostsByFile = self.nmapOutput.getHostsByFile(filters)
-                for file in self.nmapOutput.FilesImported:
-                    if file in hostsByFile:
-                        scannedHosts = hostsByFile[file]
-                        aliveHostCount = len(
-                            [host for host in scannedHosts if host.alive])
-                        verboseOutput.append(
-                            [file, len(scannedHosts), aliveHostCount])
+                hosts_by_file = self.nmap_output.get_hosts_by_file(filters)
+                for file in self.nmap_output.FilesImported:
+                    if file in hosts_by_file:
+                        scanned_hosts = hosts_by_file[file]
+                        alive_host_count = len(
+                            [host for host in scanned_hosts if host.alive])
+                        verbose_output.append(
+                            [file, len(scanned_hosts), alive_host_count])
                     else:
-                        verboseOutput.append([file, 0, 0])
-                        filesWithNoHosts.append(file)
-                self.poutput(tabulate.tabulate(verboseOutput, headers=headers))
-                if (len(filesWithNoHosts) > 0):
+                        verbose_output.append([file, 0, 0])
+                        files_without_hosts.append(file)
+                self.poutput(tabulate.tabulate(
+                    verbose_output, headers=headers))
+                if (len(files_without_hosts) > 0):
                     self.perror("\nThe following file(s) had no hosts:")
-                    for file in filesWithNoHosts:
+                    for file in files_without_hosts:
                         self.perror("  - " + file)
             else:
-                for file in self.nmapOutput.FilesImported:
+                for file in self.nmap_output.FilesImported:
                     self.poutput(file)
         else:
             self.perror("No files were imported successfully.")
         print()
 
-        if (len(self.nmapOutput.FilesFailedToImport) > 0):
-            self.pfeedback(self.lamePrint.getHeader("Failed Imports"))
-            for file in self.nmapOutput.FilesFailedToImport:
+        if (len(self.nmap_output.FilesFailedToImport) > 0):
+            self.pfeedback(self.lame_print.get_header("Failed Imports"))
+            for file in self.nmap_output.FilesFailedToImport:
                 self.perror(file)
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_scanned_hosts(self, inp: str) -> None:
         '''List all hosts scanned'''
-        self.pfeedback(self.lamePrint.getHeader('Scanned Hosts'))
+        self.pfeedback(self.lame_print.get_header('Scanned Hosts'))
 
-        filters = self.getFilters()
+        filters = self.get_filters()
         filters.onlyAlive = False
 
-        for line in [host.ip for host in self.nmapOutput.getHosts(filters=filters)]:
+        for line in [host.ip for host in self.nmap_output.get_hosts(filters=filters)]:
             self.poutput(line)
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
@@ -404,18 +407,18 @@ class NmapTerminal(TerminalBase):
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_alive_hosts(self, inp: str) -> None:
         '''List alive hosts'''
-        self.pfeedback(self.lamePrint.getHeader('Alive Hosts'))
-        for ip in self.nmapOutput.getAliveHosts(self.getFilters()):
+        self.pfeedback(self.lame_print.get_header('Alive Hosts'))
+        for ip in self.nmap_output.get_alive_hosts(self.get_filters()):
             self.poutput(ip)
 
     @cmd2.with_category(constants.CMD_CAT_NMAP)
     def do_nmap_cmdline(self, inp: str) -> None:
         '''Prints the nmap command line arguments used to generate the scan output'''
-        self.poutput(self.nmapOutput.getNmapCmdline())
+        self.poutput(self.nmap_output.get_nmap_cmdline())
     # endregion
 
     # region Helper Methods
-    def unsetOption(self, option: any) -> bool:
+    def unset_option(self, option: any) -> bool:
         match(option):
             case constants.OPT_HAVE_PORTS:
                 self.have_ports = True
@@ -439,34 +442,36 @@ class NmapTerminal(TerminalBase):
                 return False
         return True
 
-    def getPortFilter(self) -> List[int]:
-        portFilter = []
-        rawPortFilterString = self.port_filter
+    def get_port_filter(self) -> List[int]:
+        port_filter = []
+        raw_port_filter_string = self.port_filter
         # Check only contains valid chars
-        if (re.match(r'^([\d\s,]+)$', rawPortFilterString)):
+        if (re.match(r'^([\d\s,]+)$', raw_port_filter_string)):
             # Remove any excess white space (start/end/between commas)
-            curPortFilterString = re.sub(r'[^\d,]', '', rawPortFilterString)
+            cur_port_filter_string = re.sub(
+                r'[^\d,]', '', raw_port_filter_string)
             # Split filter on comma, ignore empty entries and assign to filter
-            portFilter = [int(port) for port in curPortFilterString.split(
+            port_filter = [int(port) for port in cur_port_filter_string.split(
                 ',') if len(port) > 0]
-        return portFilter
+        return port_filter
 
-    def getHostFilter(self) -> NmapHostFilter:
-        return self.helpers.stringToHostFilter(self.host_filter)
+    def get_host_filter(self) -> NmapHostFilter:
+        return self.helpers.string_to_host_filter(self.host_filter)
 
-    def getServiceFilter(self) -> List[str]:
+    def get_service_filter(self) -> List[str]:
         return [option for option in self.service_filter.split(',') if len(option.strip()) > 0]
 
-    def getFilters(self) -> NmapFilters:
+    def get_filters(self) -> NmapFilters:
         filters = NmapFilters()
-        filters.services = self.getServiceFilter()
-        filters.ports = self.getPortFilter()
-        filters.hosts = self.getHostFilter()
+        filters.services = self.get_service_filter()
+        filters.ports = self.get_port_filter()
+        # TODO: Check this
+        filters.hosts = self.get_host_filter()
         filters.onlyAlive = self.only_up
         filters.mustHavePorts = self.have_ports
         return filters
 
-    def printRandomBanner(self) -> None:
+    def print_random_banner(self) -> None:
         banners = ["""
           ███╗   ██╗███╗   ███╗ █████╗ ██████╗
           ████╗  ██║████╗ ████║██╔══██╗██╔══██╗
@@ -498,17 +503,17 @@ class NmapTerminal(TerminalBase):
         | $$      | $$  | $$| $$  | $$|  $$$$$$/| $$$$$$$$
         |__/      |__/  |__/|__/  |__/ \______/ |________/
                         """]
-        curBanner = textwrap.dedent(random.choice(banners)).replace(
+        cur_banner = textwrap.dedent(random.choice(banners)).replace(
             os.linesep, os.linesep + "  ")
-        maxLen = 0
-        for line in curBanner.split('\n'):
-            if len(line) > maxLen:
-                maxLen = len(line)
-        curBanner = ("-" * maxLen) + \
-            f"\n[{Color.AC1}]" + curBanner + \
-            f"[bright_white] \n" + ("-" * maxLen)
-        # "\n\033[1;34m" + curBanner + "\033[0;m \n" + ("-" * maxLen)
-        Console().print(curBanner)
-        # self.poutput(curBanner)
+        max_len = 0
+        for line in cur_banner.split('\n'):
+            if len(line) > max_len:
+                max_len = len(line)
+        cur_banner = ("-" * max_len) + \
+            f"\n[{Color.AC1}]" + cur_banner + \
+            f"[bright_white] \n" + ("-" * max_len)
+        # "\n\033[1;34m" + cur_banner + "\033[0;m \n" + ("-" * max_len)
+        Console().print(cur_banner)
+        # self.poutput(cur_banner)
 
     # endregion

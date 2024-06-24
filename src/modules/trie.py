@@ -24,7 +24,7 @@ class Trie:
             node = node.children[char]
         return node.end_of_word
 
-    def starts_with(self, prefix):
+    def startswith(self, prefix):
         node = self.root
         for char in prefix:
             if char not in node.children:
