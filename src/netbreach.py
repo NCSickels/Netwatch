@@ -19,10 +19,10 @@ import json
 import urllib3
 import requests
 import argparse
+from rich.console import Console
 from tabulate import tabulate
 from requests import ConnectionError
 from modules.banners import NETBREACH_BANNER
-from logger import Logger
 from config import ConfigManager
 
 urllib3.disable_warnings()
@@ -30,10 +30,11 @@ urllib3.disable_warnings()
 
 class Netbreach:
     def __init__(self):
-        self.logger = Logger()
+        self.console = Console()
+        # self.logger = Logger()
         self.version = ConfigManager().get("general_config", "__version__")
 
-    def ascii_banner(self):
+    # def ascii_banner(self):
 
     def start(self):
         pass
@@ -52,19 +53,19 @@ class Netbreach:
         if response.status_code == 200:
             data = json.loads(response.text)
             total_results = data.get("count", 0)
-            self.logger.info(
+            self.console.print(
                 f'Found {total_results} different records in database.')
 
             lines = data.get("lines", [])[:number]
             return lines
         else:
-            self.logger.error(f'Failed to fetch results from ProxyNova. Status code:' +
-                              f'{response.status_code}\n')
+            self.console.print(
+                f'Failed to fetch results from ProxyNova. Status code:[red]{response.status_code}')
             return []
 
     def find_leaks_local_db(self, database, keyword, number):
         if not os.path.exists(database):
-            self.logger.error(f'Local database file not found: {database}\n')
+            print(f'Local database file not found: {database}\n')
             exit(-1)
 
         if database.endswith('.json'):
@@ -73,8 +74,7 @@ class Netbreach:
                     data = json.load(json_file)
                     lines = data.get("lines", [])
                 except json.JSONDecodeError:
-                    self.logger.error(
-                        f'Failed to parse local database as JSON.\n')
+                    print(f'Failed to parse local database as JSON.\n')
                     exit(-1)
         else:
             file_length = os.path.getsize(database)
@@ -95,7 +95,7 @@ class Netbreach:
                             line for line in block if keyword.lower() in line.lower()]
                         results.extend(filtered_block)
 
-                        self.logger.info(
+                        self.console.print(
                             f'Reading {line_count} lines in database...')
 
                         if number is not None and len(results) >= number:
@@ -104,15 +104,13 @@ class Netbreach:
             except KeyboardInterrupt:
                 print("\n Bye.\n")
                 exit(-1)
-
             except:
                 pass
 
             return results[:number] if number is not None else results
 
     def main(self, database, keyword, output=None, proxy=None, number=20):
-        self.logger.info(
-            f'Searching for {keyword} leaks in {database}..')
+        print(f'Searching for {keyword} leaks in {database}..')
 
         if database.lower() == "proxynova":
             results = self.find_leaks_proxynova(keyword.strip(), proxy, number)
@@ -121,19 +119,19 @@ class Netbreach:
                 database.strip(), keyword.strip(), number)
 
         if not results:
-            self.logger.info(f'No leaks found in {database}!\n')
+            print(f'No leaks found in database {database}!\n')
         else:
             self.print_results(results, output, number)
 
     def print_results(self, results, output, number):
-        self.logger.info(
-            f'Selecting the first {len(results)} results..')
+        print(f'Selecting the first {len(results)} results..')
 
         headers = ["Username@Domain", "Password"]
         table_data = []
 
         for line in results:
             parts = line.split(":")
+            print(parts)
             if len(parts) == 2:
                 username_domain, password = parts
                 table_data.append([username_domain, password])
@@ -142,16 +140,14 @@ class Netbreach:
             if output.endswith('.json'):
                 with open(output, 'w') as json_file:
                     json.dump({"lines": results}, json_file, indent=2)
-                    self.logger.info(
-                        f'Data saved successfully in {output}!\n')
+                    print(f'Data saved successfully in {output}!\n')
             else:
                 with open(output, 'w') as txt_file:
                     txt_file.write(
                         tabulate(table_data, headers, showindex="never"))
-                    self.logger.info(
-                        f'Data saved successfully in {output}!\n')
+                    print(f'Data saved successfully in {output}!\n')
         else:
-            self.logger.info('Done.\n')
+            print('Done.\n')
             print(tabulate(table_data, headers, showindex="never"))
             print()
 
@@ -175,20 +171,17 @@ if __name__ == '__main__':
         parser.print_help()
         exit(-1)
 
-    logger = Logger()
-
     try:
         netbreach = Netbreach()
         netbreach.main(args.database, args.keyword,
                        args.output, args.proxy, args.number)
 
     except ConnectionError:
-        logger.error(
-            'Can\'t connect to service! Check your internet connection.\n')
+        print('Can\'t connect to service! Check your internet connection.\n')
 
     except KeyboardInterrupt:
         print('\n Bye.\n')
         exit(-1)
 
     except Exception as e:
-        logger.error(f'An error occurred: {e}\n')
+        print(f'An error occurred: {e}\n')
