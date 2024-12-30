@@ -26,7 +26,7 @@
 
 Netbreach is a breach searching tool that allows you to search for breaches using the various breach APIs or by using a local breach database.
 
-#### Usage
+#### Netbreach Usage
 
 ```bash
 > python netbreach.py --help
@@ -58,11 +58,11 @@ options:
                         Set HTTP/S proxy (like http://localhost:8080)
 ```
 
-### Nmap Scan Parser
+### Nmap Data Parser
 
 Command-line Nmap XML parser. Accepts an Nmap XML file and allows you to iterate through the data and extract information from the scan.
 
-#### Usage
+#### Parser Usage
 
 ```bash
 > nmap-parse --help
@@ -93,7 +93,7 @@ Options:
 -V, --version         Print version info
 ```
 
-##### Example
+##### Default Usage Example (Non-interative)
 
 **Command:**
 
@@ -168,7 +168,7 @@ Available flags for the Nmap Parser are as follows:
 
 Interactive mode allows you to manually filter through different aspects of the provided input files.
 
-##### Example
+##### Interactive Mode Example
 
 **Command:**
 
