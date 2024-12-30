@@ -20,7 +20,21 @@
 
 ## Features
 
-### Automated HackTheBox & TryHackMe Basic Initial Enumeration
+### Automated HackTheBox & TryHackMe Basic Initial Enumeration *WIP*
+
+This module automates the initial enumeration process for HackTheBox and TryHackMe machines. It will automatically start your provided OpenVPN connection (if enabled), scan the target machine, and provide you with the necessary information to begin your attack.
+
+Additionally, based on the services found, it will automatically launch the appropriate tools to further enumerate the target machine. For example, if the scan finds an HTTP service, it will automatically launch `gobuster` to search for directories and files.
+
+#### Planned Automation Integration
+
+* [ ] **Nmap** - Initial scan of the target machine.
+* [ ] **Nmap Data Parser** - Parse Nmap XML files using custom module.
+* [ ] **Gobuster** - Directory and file enumeration.
+* [ ] **Nikto** - Web server vulnerability scanner.
+* [ ] **WPScan** - WordPress vulnerability scanner.
+* [ ] **SQLMap** - SQL injection scanner.
+* [ ] **AutoRecon** - Automated enumeration tool.
 
 ### Netbreach - Breach Searching Tool
 
