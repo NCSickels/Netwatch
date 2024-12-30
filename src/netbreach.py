@@ -40,7 +40,7 @@ class Netbreach:
         pass
         # print(NETBREACH_BANNER.format(version=self.version), end="\n")
 
-    def find_leaks_proxynova(self, email, proxy, number):
+    def find_leaks_proxynova(self, email: str, proxy: any, number: int) -> list:
         url = f"https://api.proxynova.com/comb?query={email}"
         headers = {'User-Agent': 'curl'}
         session = requests.session()
@@ -63,7 +63,7 @@ class Netbreach:
                 f'Failed to fetch results from ProxyNova. Status code:[red]{response.status_code}')
             return []
 
-    def find_leaks_local_db(self, database, keyword, number):
+    def find_leaks_local_db(self, database: any, keyword: str, number: int) -> list:
         if not os.path.exists(database):
             print(f'Local database file not found: {database}\n')
             exit(-1)
@@ -74,7 +74,7 @@ class Netbreach:
                     data = json.load(json_file)
                     lines = data.get("lines", [])
                 except json.JSONDecodeError:
-                    print(f'Failed to parse local database as JSON.\n')
+                    print('Failed to parse local database as JSON.\n')
                     exit(-1)
         else:
             file_length = os.path.getsize(database)
@@ -104,12 +104,13 @@ class Netbreach:
             except KeyboardInterrupt:
                 print("\n Bye.\n")
                 exit(-1)
-            except:
-                pass
+            except Exception as e:
+                print(f'An error occurred: {e}\n')
+                exit(-1)
 
             return results[:number] if number is not None else results
 
-    def main(self, database, keyword, output=None, proxy=None, number=20):
+    def main(self, database: any, keyword: str, output=None, proxy=None, number=20) -> None:
         print(f'Searching for {keyword} leaks in {database}..')
 
         if database.lower() == "proxynova":
@@ -123,7 +124,7 @@ class Netbreach:
         else:
             self.print_results(results, output, number)
 
-    def print_results(self, results, output, number):
+    def print_results(self, results: list, output: any, number: int) -> None:
         print(f'Selecting the first {len(results)} results..')
 
         headers = ["Username@Domain", "Password"]
